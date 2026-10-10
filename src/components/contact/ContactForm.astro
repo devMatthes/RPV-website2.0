@@ -1,0 +1,92 @@
+---
+import FormField from './FormField.astro';
+interface Props { service?: boolean; }
+const {service=false}=Astro.props;
+const home=import.meta.env.BASE_URL;
+const installations=['Fotowoltaika','Magazyn energii','Pompa ciepła','Klimatyzacja','Instalacja elektryczna','Inna instalacja'];
+---
+<div class="form-panel" id="formularz">
+  <nav class="topic-switch" aria-label="Rodzaj kontaktu"><a href={`${home}kontakt/`} aria-current={!service?'page':undefined}>Kontakt</a><a href={`${home}serwis/`} aria-current={service?'page':undefined}>Zgłoś serwis</a></nav>
+  <div class="form-introduction"><h2>{service?'Zgłoszenie serwisowe':'Napisz do nas'}</h2><p>{service?'Podaj dane instalacji i opisz, co wymaga sprawdzenia.':'Zapytaj o wycenę, rozwiązania lub współpracę.'}</p></div>
+  <form data-contact-form novalidate method="post">
+    <div class="fields">
+      <div class="field-row"><FormField name="name" label="Imię i nazwisko *" placeholder="Jak się nazywasz?" required autocomplete="name" /><FormField name="phone" label={service?'Telefon *':'Telefon (opcjonalnie)'} placeholder="Numer telefonu" type="tel" required={service} autocomplete="tel" maxlength={30} /></div>
+      <FormField name="email" label="Adres e-mail *" placeholder="twoj@email.pl" type="email" required autocomplete="email" maxlength={254} />
+      {service ? <><FormField name="address" label="Adres instalacji *" placeholder="Ulica, numer i miejscowość" required autocomplete="street-address" /><FormField name="installation" label="Rodzaj instalacji *" placeholder="Wybierz rodzaj instalacji" kind="select" required options={installations} /><FormField name="inverter" label="Nr seryjny falownika (opcjonalnie)" placeholder="Numer seryjny falownika" /><FormField name="battery" label="Nr seryjny magazynu energii elektrycznej (opcjonalnie)" placeholder="Numer seryjny magazynu" /></> : <FormField name="topic" label="Temat wiadomości *" placeholder="Wybierz temat" kind="select" required options={['Wycena instalacji',...installations,'Współpraca','Inne pytanie']} />}
+      <FormField name="message" label={service?'Opis problemu *':'Wiadomość *'} placeholder={service?'Opisz, co się dzieje. Możesz podać komunikat błędu i kiedy pojawił się problem.':'Opisz, czego potrzebujesz. Możesz podać miejscowość i rodzaj planowanej instalacji.'} kind="textarea" required maxlength={5000} />
+      {service && <div class="attachments"><label id="attachments-label" for="attachments">Zdjęcia lub dokumenty (opcjonalnie)</label><input class="attachment-input" aria-labelledby="attachments-label" id="attachments" name="attachments" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.pdf" aria-describedby="attachment-help attachment-error" /><label class="attachment-button" for="attachments">+ Dodaj załączniki</label><p id="attachment-help">Dodaj zdjęcie problemu lub tabliczki znamionowej. Do 5 plików, 10 MB na plik i 20 MB łącznie.</p><p class="file-error" id="attachment-error" hidden></p><ul class="file-list" aria-label="Wybrane załączniki"></ul></div>}
+    </div>
+    <p class="privacy">Dane wykorzystamy do obsługi Twojej wiadomości.<br />Więcej informacji w polityce prywatności.</p>
+    <p class="preview-note">Podgląd formularza — wysyłka nie jest jeszcze uruchomiona. Możesz skontaktować się z nami telefonicznie lub mailowo.</p>
+    <div class="form-feedback" role="status" aria-live="polite" tabindex="-1" hidden></div>
+    <button class="button submit" type="submit" disabled>{service?'Wyślij zgłoszenie':'Wyślij wiadomość'}</button>
+    <noscript><p>Do obsługi podglądu formularza włącz JavaScript. Napisz na <a href="mailto:kontakt@rpv.pl">kontakt@rpv.pl</a> lub zadzwoń: <a href="tel:+48515114676">515 114 676</a>.</p></noscript>
+    <p class="required-note">* Pola wymagane</p>
+  </form>
+</div>
+<script>
+  import { validPhone, validateAttachments } from '../../lib/form-validation';
+  const form=document.querySelector<HTMLFormElement>('[data-contact-form]');
+  if(form){
+    const submit=form.querySelector<HTMLButtonElement>('[type="submit"]')!;
+    const feedback=form.querySelector<HTMLElement>('.form-feedback')!;
+    const fields=Array.from(form.querySelectorAll<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>('.fields input:not([type="file"]),.fields textarea,.fields select'));
+    const fileInput=form.querySelector<HTMLInputElement>('[type="file"]');
+    const fileError=form.querySelector<HTMLElement>('.file-error');
+    const fileList=form.querySelector<HTMLElement>('.file-list');
+    let selectedFiles:File[]=[];
+    let attempted=false;
+    submit.disabled=false;
+    const errorFor=(field:HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement)=>{
+      if(field.required&&!field.value.trim())return 'Uzupełnij to pole.';
+      if(field.name==='email'&&field.validity.typeMismatch)return 'Podaj poprawny adres e-mail.';
+      if(field.name==='phone'&&field.value.trim()&&!validPhone(field.value))return 'Podaj numer telefonu zawierający od 7 do 15 cyfr.';
+      return '';
+    };
+    const validateField=(field:HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement)=>{
+      const message=errorFor(field);
+      const error=document.getElementById(`${field.id}-error`)!;
+      error.textContent=message;error.hidden=!message;
+      if(message)field.setAttribute('aria-invalid','true');else field.removeAttribute('aria-invalid');
+      return !message;
+    };
+    const renderFiles=()=>{
+      if(!fileList)return;
+      fileList.replaceChildren();
+      selectedFiles.forEach((file,index)=>{
+        const li=document.createElement('li');
+        const label=document.createElement('span');label.textContent=`${file.name} (${Math.ceil(file.size/1024)} kB)`;
+        const remove=document.createElement('button');remove.type='button';remove.textContent='Usuń';remove.setAttribute('aria-label',`Usuń ${file.name}`);
+        remove.addEventListener('click',()=>{selectedFiles.splice(index,1);renderFiles();if(fileError)fileError.hidden=true;fileInput?.removeAttribute('aria-invalid');fileInput?.focus();});
+        li.append(label,remove);fileList.append(li);
+      });
+    };
+    fileInput?.addEventListener('change',()=>{
+      const next=[...selectedFiles,...Array.from(fileInput.files??[])];
+      const error=validateAttachments(next);
+      if(fileError){fileError.textContent=error;fileError.hidden=!error;}
+      if(error)fileInput.setAttribute('aria-invalid','true');else{fileInput.removeAttribute('aria-invalid');selectedFiles=next;renderFiles();}
+      fileInput.value='';
+    });
+    fields.forEach(field=>field.addEventListener('input',()=>{if(attempted)validateField(field);feedback.hidden=true;}));
+    form.addEventListener('submit',event=>{
+      event.preventDefault();attempted=true;
+      const results=fields.map(validateField);
+      if(results.some(valid=>!valid)){
+        feedback.textContent='Sprawdź zaznaczone pola. Dane nie zostały wysłane.';feedback.hidden=false;
+        fields.find((_,i)=>!results[i])?.focus();return;
+      }
+      feedback.textContent='Wysyłka formularza nie jest jeszcze dostępna. Twoje dane nie zostały wysłane i pozostają w formularzu. Skontaktuj się z RPV: kontakt@rpv.pl lub +48 515 114 676.';
+      feedback.hidden=false;feedback.focus();
+    });
+  }
+</script>
+<style>
+.form-panel{display:flex;flex-direction:column;gap:24px;min-width:0;width:100%;padding:24px;border:1px solid var(--color-border);border-radius:16px;background:var(--color-card)}
+.topic-switch{display:flex;gap:8px;padding:4px;border-radius:999px;background:var(--color-page);width:100%}.topic-switch a{display:flex;align-items:center;justify-content:center;min-height:44px;flex:1;min-width:0;font:600 14px/21px var(--font-ui);border-radius:999px;white-space:nowrap}.topic-switch [aria-current="page"]{background:var(--color-accent)}
+.form-introduction{display:flex;flex-direction:column;gap:8px}h2{font:600 24px/34px var(--font-ui)}.form-introduction p{font:400 14px/20px var(--font-ui);color:var(--color-muted)}
+form{width:100%;display:flex;flex-direction:column;align-items:start;gap:24px}.fields{width:100%;display:flex;flex-direction:column;gap:20px}.field-row{display:grid;gap:20px;width:100%;grid-template-columns:minmax(0,1fr)}
+.privacy,.preview-note,.required-note{font:400 12px/17px var(--font-ui);color:var(--color-muted)}.form-feedback{padding:16px;border:1px solid var(--color-border);border-radius:8px;font:400 14px/21px var(--font-body)}.submit{min-width:190px;min-height:52px}.submit:disabled{opacity:.6;cursor:not-allowed}
+.attachments{display:flex;flex-direction:column;gap:8px;font:400 12px/18px var(--font-ui)}.attachments label{font:600 14px/21px var(--font-ui)}.attachments .attachment-input{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}.attachments .attachment-button{display:inline-flex;align-items:center;justify-content:center;align-self:start;min-height:48px;padding:12px 16px;border:1px solid var(--color-border);border-radius:8px;background:transparent;color:var(--color-text);font:600 14px/21px var(--font-ui);cursor:pointer}.attachment-input:focus-visible + .attachment-button{outline:2px solid #8dccff;outline-offset:5px}.attachments p{color:var(--color-muted)}.attachments .file-error{color:#ff9d9d}.file-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;width:100%}.file-list :global(li){display:flex;gap:16px;align-items:center;justify-content:space-between}.file-list :global(span){overflow-wrap:anywhere;min-width:0}.file-list :global(button){background:none;border:1px solid var(--color-border);border-radius:8px;min-height:44px;padding:8px}
+@media(min-width:700px){.form-panel{padding:32px}.field-row{grid-template-columns:repeat(2,minmax(0,1fr))}h2{font-size:28px;line-height:39px}}
+</style>

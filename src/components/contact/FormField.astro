@@ -1,0 +1,22 @@
+---
+interface Props {
+  name: string; label: string; placeholder: string; required?: boolean;
+  type?: 'text' | 'email' | 'tel'; kind?: 'input' | 'textarea' | 'select';
+  autocomplete?: string; options?: string[]; maxlength?: number;
+}
+const {name,label,placeholder,required=false,type='text',kind='input',autocomplete,options=[],maxlength=200}=Astro.props;
+const id=`field-${name}`;
+---
+<div class="field">
+  <label for={id}>{label}</label>
+  {kind==='textarea' ? <textarea id={id} name={name} placeholder={placeholder} required={required} maxlength={maxlength} aria-describedby={`${id}-error`}></textarea> : kind==='select' ? <select id={id} name={name} required={required} aria-describedby={`${id}-error`}><option value="">{placeholder}</option>{options.map(value=><option value={value}>{value}</option>)}</select> : <input id={id} name={name} type={type} placeholder={placeholder} required={required} autocomplete={autocomplete} maxlength={maxlength} aria-describedby={`${id}-error`} />}
+  <p id={`${id}-error`} class="field-error" hidden></p>
+</div>
+<style>
+.field{display:flex;flex-direction:column;gap:8px;min-width:0;width:100%}
+label{font:600 14px/21px var(--font-ui)}
+input,select,textarea{width:100%;min-width:0;border:1px solid var(--color-border);border-radius:8px;background:var(--color-page);color:var(--color-text);font:400 14px/20px var(--font-ui);padding:16px;height:52px;color-scheme:dark}
+textarea{height:128px;resize:vertical;min-height:128px}
+input::placeholder,textarea::placeholder,select:has(option[value=""]:checked){color:var(--color-muted);opacity:1}
+[aria-invalid="true"]{border-color:#ff9d9d}.field-error{color:#ff9d9d;font:400 12px/18px var(--font-body)}
+</style>
