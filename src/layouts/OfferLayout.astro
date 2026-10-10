@@ -1,0 +1,16 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import OfferHero from '../components/offer/OfferHero.astro';
+import OfferSections from '../components/offer/OfferSections.astro';
+import type { OfferPageData } from '../data/offers';
+interface Props { page: OfferPageData; }
+const { page } = Astro.props;
+---
+<BaseLayout title={`${page.name} — RPV`} description={page.hero.description}><div class="offer-page"><Header /><main id="main"><OfferHero page={page} /><OfferSections page={page} /></main><Footer extended={page.kind !== 'pv'} /></div></BaseLayout>
+<style>
+  .offer-page { position: relative; isolation: isolate; max-width: 1920px; margin-inline: auto; }
+  .offer-page::before { content: ''; position: absolute; inset: 0 0 auto; height: 840px; background: linear-gradient(to bottom,#1b85e81a,transparent); z-index: -1; pointer-events: none; }
+  @media (min-width: 700px) { .offer-page::before { height: 680px; } }
+</style>

@@ -1,0 +1,9 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import { offerPages } from '../data/offers';
+import OfferLayout from '../layouts/OfferLayout.astro';
+export const getStaticPaths = (() => offerPages.filter(page => page.kind === 'audience').map(page => ({ params: { audience: page.slug }, props: { page } }))) satisfies GetStaticPaths;
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { page } = Astro.props;
+---
+<OfferLayout page={page} />

@@ -1,0 +1,12 @@
+---
+import type { TextBlockData } from '../../data/offers';
+interface Props { block: TextBlockData; }
+const { block } = Astro.props;
+---
+<div class="text-block"><p class="index">{block.index}</p><h3>{block.title}</h3><p class="description">{block.description}</p></div>
+<style>
+  .text-block { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .index { color: var(--color-accent); font: 600 14px/21px var(--font-ui); }
+  h3 { font: 600 22px/32px var(--font-ui); }
+  .description { color: var(--color-muted); font: 400 16px/24px var(--font-body); }
+</style>

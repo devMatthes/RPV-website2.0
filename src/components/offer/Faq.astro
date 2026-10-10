@@ -1,0 +1,17 @@
+---
+import type { FaqItem } from '../../data/offers';
+interface Props { items: FaqItem[]; }
+const { items } = Astro.props;
+---
+<div class="faq-list">{items.map(item => <details><summary><span>{item.question}</span><span class="toggle" aria-hidden="true"></span></summary><p>{item.answer}</p></details>)}</div>
+<style>
+  .faq-list { min-width: 0; width: 100%; }
+  details { padding-block: 24px; border-bottom: 1px solid var(--color-border); }
+  summary { display: flex; align-items: center; gap: 24px; cursor: pointer; font: 600 16px/24px var(--font-body); list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary > span:first-child { flex: 1; min-width: 0; }
+  .toggle { flex: none; width: 24px; text-align: center; color: var(--color-accent); font: 400 20px/30px var(--font-body); }
+  .toggle::before { content: '+'; }
+  details[open] .toggle::before { content: '−'; }
+  p { margin-top: 16px; font: 400 16px/24px var(--font-body); color: var(--color-muted); }
+</style>

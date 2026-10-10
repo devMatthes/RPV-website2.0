@@ -1,0 +1,12 @@
+---
+import { Picture } from 'astro:assets';
+import house from '../../assets/figma/desktop-imgPhotoResidentialSolarInstallation.png';
+import technician from '../../assets/figma/desktop-imgPhotoSolarPanelInstallationTechnician.png';
+interface Props { image: 'house' | 'technician'; alt: string; priority?: boolean; class?: string; }
+const { image, alt, priority = false, class: className } = Astro.props;
+---
+<Picture src={image === 'house' ? house : technician} alt={alt} formats={['avif','webp']} fallbackFormat="webp" widths={[342,512,754]} sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) calc(100vw - 80px), 600px" quality={80} priority={priority} pictureAttributes={{ class: `offer-image ${className ?? ''}` }} />
+<style>
+  .offer-image { display: block; width: 100%; border-radius: var(--radius); overflow: hidden; }
+  .offer-image :global(img) { width: 100%; height: 100%; object-fit: cover; }
+</style>
