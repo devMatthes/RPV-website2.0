@@ -16,7 +16,7 @@ const home = import.meta.env.BASE_URL;
       {section.kind === 'equipment' ? <div class="equipment-blocks">{section.blocks.map(block => <TextBlock block={block} />)}</div> : section.blocks.map(block => section.kind === 'links' ? <article class="linked-block"><TextBlock block={block} /><a href={`${home}uslugi/${block.slug}/`} aria-label={`Zobacz usługę: ${block.title}`}>Zobacz usługę →</a></article> : <TextBlock block={block} />)}
     </div>}
     {section.kind === 'examples' && <div class="examples">{section.examples?.map(example => <figure><OfferImage image={example.image} alt={example.title === 'Na dachu domu' ? 'Panele fotowoltaiczne na dachu domu' : 'Montaż paneli fotowoltaicznych'} class="example-photo" /><figcaption><h3>{example.title}</h3><p>{example.description}</p></figcaption></figure>)}</div>}
-    {section.kind === 'evidence' && <a class="text-link" href={`${home}#realizacje`}>Zobacz realizacje →</a>}
+    {section.kind === 'evidence' && <a class="text-link" href={`${home}realizacje/`}>Zobacz realizacje →</a>}
     {section.kind === 'faq' && <div class="questions"><Faq items={section.faq ?? []} />{section.sources && <div class="official-sources"><p>{section.sourceNote}</p>{section.sources.map(source => <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>)}</div>}</div>}
   </>}
 </section>)}

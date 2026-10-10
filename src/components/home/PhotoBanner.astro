@@ -7,11 +7,12 @@ import landscape from '../../assets/figma/desktop-img03LandscapeBanner.png';
 import technician from '../../assets/figma/desktop-imgPhotoSolarPanelInstallationTechnician.png';
 interface Props { variant?: 'landscape' | 'technician'; }
 const { variant = 'landscape' } = Astro.props;
+const home = import.meta.env.BASE_URL;
 ---
 <section class:list={['banner', `banner--${variant}`]} aria-label="Instalacje dla Twoich potrzeb">
   <Picture src={variant === 'landscape' ? landscape : technician} alt="" formats={['avif','webp']} fallbackFormat="webp" widths={[390, 780, 1200, 1920]} sizes="(max-width: 1920px) 100vw, 1920px" quality={80} pictureAttributes={{ class: 'banner-image' }} />
   <Brand variant="banner" />
-  <div class="banner-content"><h2>Instalacje dla Twoich potrzeb</h2><p>{bannerCopy}</p><Button href="#realizacje" variant="secondary">Nasze realizacje</Button></div>
+  <div class="banner-content"><h2>Instalacje dla Twoich potrzeb</h2><p>{bannerCopy}</p><Button href={`${home}realizacje/`} variant="secondary">Nasze realizacje</Button></div>
 </section>
 <style>
   .banner { position: relative; isolation: isolate; min-height: 690px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
