@@ -1,0 +1,407 @@
+[
+  {
+    "variant": "desktop",
+    "name": "imgAvatar",
+    "file": "desktop-imgAvatar.png",
+    "bytes": 439690
+  },
+  {
+    "variant": "desktop",
+    "name": "imgAvatar1",
+    "file": "desktop-imgAvatar1.png",
+    "bytes": 353647
+  },
+  {
+    "variant": "desktop",
+    "name": "imgAvatar2",
+    "file": "desktop-imgAvatar2.png",
+    "bytes": 420401
+  },
+  {
+    "variant": "desktop",
+    "name": "imgAvatar3",
+    "file": "desktop-imgAvatar3.png",
+    "bytes": 417296
+  },
+  {
+    "variant": "desktop",
+    "name": "imgAvatar4",
+    "file": "desktop-imgAvatar4.png",
+    "bytes": 372053
+  },
+  {
+    "variant": "desktop",
+    "name": "imgArrowDiagonal",
+    "file": "desktop-imgArrowDiagonal.svg",
+    "bytes": 377,
+    "dimensions": {
+      "width": "20",
+      "height": "20",
+      "viewBox": "0 0 20 20"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgSolarModuleLineDrawing",
+    "file": "desktop-imgSolarModuleLineDrawing.svg",
+    "bytes": 771,
+    "dimensions": {
+      "width": "260",
+      "height": "116",
+      "viewBox": "0 0 260 116"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgArrowDiagonal1",
+    "file": "desktop-imgArrowDiagonal1.svg",
+    "bytes": 377,
+    "dimensions": {
+      "width": "20",
+      "height": "20",
+      "viewBox": "0 0 20 20"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgArrowDiagonal2",
+    "file": "desktop-imgArrowDiagonal2.svg",
+    "bytes": 377,
+    "dimensions": {
+      "width": "20",
+      "height": "20",
+      "viewBox": "0 0 20 20"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgPhotoResidentialSolarInstallation",
+    "file": "desktop-imgPhotoResidentialSolarInstallation.png",
+    "bytes": 442665
+  },
+  {
+    "variant": "desktop",
+    "name": "imgPhotoSolarPanelInstallationTechnician",
+    "file": "desktop-imgPhotoSolarPanelInstallationTechnician.png",
+    "bytes": 418318
+  },
+  {
+    "variant": "desktop",
+    "name": "img03LandscapeBanner",
+    "file": "desktop-img03LandscapeBanner.png",
+    "bytes": 7439670
+  },
+  {
+    "variant": "desktop",
+    "name": "imgPhotoRpvTeam",
+    "file": "desktop-imgPhotoRpvTeam.png",
+    "bytes": 121509
+  },
+  {
+    "variant": "desktop",
+    "name": "imgSymbol",
+    "file": "desktop-imgSymbol.svg",
+    "bytes": 561,
+    "dimensions": {
+      "width": "41.6861",
+      "height": "36.3511",
+      "viewBox": "0 0 41.6861 36.3511"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgSymbol1",
+    "file": "desktop-imgSymbol1.svg",
+    "bytes": 620,
+    "dimensions": {
+      "width": "92.4127",
+      "height": "80.0159",
+      "viewBox": "0 0 92.4127 80.0159"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgRpv",
+    "file": "desktop-imgRpv.svg",
+    "bytes": 1822,
+    "dimensions": {
+      "width": "108.796",
+      "height": "38.596",
+      "viewBox": "0 0 108.796 38.596"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgSymbol2",
+    "file": "desktop-imgSymbol2.svg",
+    "bytes": 615,
+    "dimensions": {
+      "width": "130.159",
+      "height": "112.698",
+      "viewBox": "0 0 130.159 112.698"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgRpv1",
+    "file": "desktop-imgRpv1.svg",
+    "bytes": 1824,
+    "dimensions": {
+      "width": "153.234",
+      "height": "54.3608",
+      "viewBox": "0 0 153.234 54.3608"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgVector",
+    "file": "desktop-imgVector.svg",
+    "bytes": 26341,
+    "dimensions": {
+      "width": "1042.3",
+      "height": "982.553",
+      "viewBox": "0 0 1042.3 982.553"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgEllipse2",
+    "file": "desktop-imgEllipse2.svg",
+    "bytes": 562,
+    "dimensions": {
+      "width": "16",
+      "height": "16",
+      "viewBox": "0 0 16 16"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgRpv2",
+    "file": "desktop-imgRpv2.svg",
+    "bytes": 1816,
+    "dimensions": {
+      "width": "108.796",
+      "height": "38.5961",
+      "viewBox": "0 0 108.796 38.5961"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgSymbol3",
+    "file": "desktop-imgSymbol3.svg",
+    "bytes": 620,
+    "dimensions": {
+      "width": "69.418",
+      "height": "60.1058",
+      "viewBox": "0 0 69.418 60.1058"
+    }
+  },
+  {
+    "variant": "desktop",
+    "name": "imgRpv3",
+    "file": "desktop-imgRpv3.svg",
+    "bytes": 1829,
+    "dimensions": {
+      "width": "81.7247",
+      "height": "28.9923",
+      "viewBox": "0 0 81.7247 28.9923"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgAvatar",
+    "file": "mobile-imgAvatar.png",
+    "bytes": 439690
+  },
+  {
+    "variant": "mobile",
+    "name": "imgAvatar1",
+    "file": "mobile-imgAvatar1.png",
+    "bytes": 353647
+  },
+  {
+    "variant": "mobile",
+    "name": "imgAvatar2",
+    "file": "mobile-imgAvatar2.png",
+    "bytes": 420401
+  },
+  {
+    "variant": "mobile",
+    "name": "imgAvatar3",
+    "file": "mobile-imgAvatar3.png",
+    "bytes": 417296
+  },
+  {
+    "variant": "mobile",
+    "name": "imgAvatar4",
+    "file": "mobile-imgAvatar4.png",
+    "bytes": 372053
+  },
+  {
+    "variant": "mobile",
+    "name": "imgArrowDiagonal",
+    "file": "mobile-imgArrowDiagonal.svg",
+    "bytes": 377,
+    "dimensions": {
+      "width": "20",
+      "height": "20",
+      "viewBox": "0 0 20 20"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgSolarModuleLineDrawing",
+    "file": "mobile-imgSolarModuleLineDrawing.svg",
+    "bytes": 985,
+    "dimensions": {
+      "width": "161.2",
+      "height": "71.92",
+      "viewBox": "0 0 161.2 71.92"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgArrowDiagonal1",
+    "file": "mobile-imgArrowDiagonal1.svg",
+    "bytes": 377,
+    "dimensions": {
+      "width": "20",
+      "height": "20",
+      "viewBox": "0 0 20 20"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgArrowDiagonal2",
+    "file": "mobile-imgArrowDiagonal2.svg",
+    "bytes": 377,
+    "dimensions": {
+      "width": "20",
+      "height": "20",
+      "viewBox": "0 0 20 20"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgPhotoResidentialSolarInstallation",
+    "file": "mobile-imgPhotoResidentialSolarInstallation.png",
+    "bytes": 442665
+  },
+  {
+    "variant": "mobile",
+    "name": "imgPhotoSolarPanelInstallationTechnician",
+    "file": "mobile-imgPhotoSolarPanelInstallationTechnician.png",
+    "bytes": 418318
+  },
+  {
+    "variant": "mobile",
+    "name": "img03LandscapeBanner",
+    "file": "mobile-img03LandscapeBanner.png",
+    "bytes": 7439670
+  },
+  {
+    "variant": "mobile",
+    "name": "imgPhotoRpvTeam",
+    "file": "mobile-imgPhotoRpvTeam.png",
+    "bytes": 121509
+  },
+  {
+    "variant": "mobile",
+    "name": "imgSymbol",
+    "file": "mobile-imgSymbol.svg",
+    "bytes": 561,
+    "dimensions": {
+      "width": "41.6861",
+      "height": "36.3511",
+      "viewBox": "0 0 41.6861 36.3511"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgSymbol1",
+    "file": "mobile-imgSymbol1.svg",
+    "bytes": 624,
+    "dimensions": {
+      "width": "45.9892",
+      "height": "39.8201",
+      "viewBox": "0 0 45.9892 39.8201"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgRpv",
+    "file": "mobile-imgRpv.svg",
+    "bytes": 1812,
+    "dimensions": {
+      "width": "54.1431",
+      "height": "19.2075",
+      "viewBox": "0 0 54.1431 19.2075"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgSymbol2",
+    "file": "mobile-imgSymbol2.svg",
+    "bytes": 618,
+    "dimensions": {
+      "width": "56.4021",
+      "height": "48.836",
+      "viewBox": "0 0 56.4021 48.836"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgRpv1",
+    "file": "mobile-imgRpv1.svg",
+    "bytes": 1818,
+    "dimensions": {
+      "width": "66.4013",
+      "height": "23.5563",
+      "viewBox": "0 0 66.4013 23.5563"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgProjectsPolandMap",
+    "file": "mobile-imgProjectsPolandMap.svg",
+    "bytes": 27720,
+    "dimensions": {
+      "width": "342.756",
+      "height": "323.109",
+      "viewBox": "0 0 342.756 323.109"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgSymbol3",
+    "file": "mobile-imgSymbol3.svg",
+    "bytes": 624,
+    "dimensions": {
+      "width": "45.9892",
+      "height": "39.8201",
+      "viewBox": "0 0 45.9892 39.8201"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgSymbol4",
+    "file": "mobile-imgSymbol4.svg",
+    "bytes": 620,
+    "dimensions": {
+      "width": "69.418",
+      "height": "60.1058",
+      "viewBox": "0 0 69.418 60.1058"
+    }
+  },
+  {
+    "variant": "mobile",
+    "name": "imgRpv2",
+    "file": "mobile-imgRpv2.svg",
+    "bytes": 1754,
+    "dimensions": {
+      "width": "81.7248",
+      "height": "28.9922",
+      "viewBox": "0 0 81.7248 28.9922"
+    }
+  }
+]

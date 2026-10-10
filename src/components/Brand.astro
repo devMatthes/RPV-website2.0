@@ -1,0 +1,37 @@
+---
+import symbolHeader from '../assets/figma/desktop-imgSymbol.svg?url';
+import symbolBanner from '../assets/figma/desktop-imgSymbol1.svg?url';
+import wordBanner from '../assets/figma/desktop-imgRpv.svg?url';
+import symbolBannerMobile from '../assets/figma/mobile-imgSymbol1.svg?url';
+import wordBannerMobile from '../assets/figma/mobile-imgRpv.svg?url';
+import symbolExperience from '../assets/figma/desktop-imgSymbol2.svg?url';
+import wordExperience from '../assets/figma/desktop-imgRpv1.svg?url';
+import symbolExperienceMobile from '../assets/figma/mobile-imgSymbol2.svg?url';
+import wordExperienceMobile from '../assets/figma/mobile-imgRpv1.svg?url';
+import symbolFooter from '../assets/figma/desktop-imgSymbol3.svg?url';
+import wordFooter from '../assets/figma/desktop-imgRpv3.svg?url';
+interface Props { variant?: 'header' | 'banner' | 'experience' | 'footer'; }
+const { variant = 'header' } = Astro.props;
+const sets = {
+  banner: { symbol: symbolBanner, word: wordBanner, mobileSymbol: symbolBannerMobile, mobileWord: wordBannerMobile, sw:92.4127, sh:80.0159, ww:108.796, wh:38.596, msw:45.9892, msh:39.8201, mww:54.1431, mwh:19.2075 },
+  experience: { symbol: symbolExperience, word: wordExperience, mobileSymbol: symbolExperienceMobile, mobileWord: wordExperienceMobile, sw:130.159, sh:112.698, ww:153.234, wh:54.3608, msw:56.4021, msh:48.836, mww:66.4013, mwh:23.5563 },
+  footer: { symbol: symbolFooter, word: wordFooter, mobileSymbol: symbolFooter, mobileWord: wordFooter, sw:69.418, sh:60.1058, ww:81.7247, wh:28.9923, msw:69.418, msh:60.1058, mww:81.7247, mwh:28.9923 },
+};
+const asset = variant === 'header' ? null : sets[variant];
+---
+<span class:list={['brand', `brand--${variant}`]} aria-label="RPV" role="img">
+  {asset ? <>
+    <picture><source media="(max-width: 699px)" srcset={asset.mobileSymbol} width={asset.msw} height={asset.msh} /><img src={asset.symbol} width={asset.sw} height={asset.sh} alt="" loading="lazy" /></picture>
+    <picture><source media="(max-width: 699px)" srcset={asset.mobileWord} width={asset.mww} height={asset.mwh} /><img src={asset.word} width={asset.ww} height={asset.wh} alt="" loading="lazy" /></picture>
+  </> : <><img src={symbolHeader} width="41.6861" height="36.3511" alt="" /><span>RPV</span></>}
+</span>
+<style>
+  .brand { display: inline-flex; align-items: center; gap: 12px; flex: none; }
+  .brand--header { gap: 4px; font: 900 24px/1 var(--font-body); color: white; }
+  .brand--banner picture:last-child { transform: translateY(7px); }
+  .brand--experience { gap: 16.61px; }
+  .brand--experience picture:last-child { transform: translateY(10px); }
+  .brand--footer { gap: 8.86px; }
+  .brand--footer picture:last-child { transform: translateY(5px); }
+  @media (max-width: 699px) { .brand--banner { gap: 5.8px; } .brand--banner picture:last-child { transform: translateY(3px); } .brand--experience { gap: 7.2px; } .brand--experience picture:last-child { transform: translateY(4px); } }
+</style>

@@ -1,0 +1,24 @@
+---
+import '../styles/global.css';
+import robotoLatin from '@fontsource-variable/roboto/files/roboto-latin-wght-normal.woff2?url';
+import robotoExtended from '@fontsource-variable/roboto/files/roboto-latin-ext-wght-normal.woff2?url';
+interface Props { title?: string; description?: string; }
+const { title = 'RPV — Twoja energia ze słońca', description = 'Instalacje fotowoltaiczne i systemy energetyczne dla domów, firm i inwestycji. Poznaj ofertę RPV.' } = Astro.props;
+---
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#000000" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="preload" href={robotoLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={robotoExtended} as="font" type="font/woff2" crossorigin />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Przejdź do treści</a>
+    <slot />
+  </body>
+</html>

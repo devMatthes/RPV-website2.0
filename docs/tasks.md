@@ -3,7 +3,7 @@
 Każde ukończone zadanie kończy się osobnym commitem. Nie publikujemy witryny ani nie podłączamy backendu w tym etapie.
 
 - [x] 01. Repozytorium, Astro, strict TypeScript, podstawowy build. `astro check`: 0 błędów; statyczny build poprawny.
-- [ ] 02. Lokalne zasoby Figma, trzy rodziny fontów, tokeny i layout.
+- [x] 02. Lokalne zasoby Figma, trzy rodziny fontów, tokeny i layout. Oryginalne rastry i SVG pobrane; fonty latin/latin-ext; wspólne BaseLayout, Brand, Button.
 - [ ] 03. Responsywny nagłówek, menu, hero i partnerzy.
 - [ ] 04. Sekcje strony głównej: segmenty, bannery, usługi, opinie, mapa, statystyki, stopka.
 - [ ] 05. Kontrola wizualna, dostępność, pomiary i poprawki wydajności.
