@@ -1,0 +1,8 @@
+---
+import {Picture} from 'astro:assets';
+import house from '../../assets/figma/mobile-imgPhotoResidentialSolarInstallation.png';
+interface Props { class?: string; sizes: string; priority?: boolean; }
+const {class:className,sizes,priority=false}=Astro.props;
+---
+<Picture src={house} alt="Instalacja fotowoltaiczna na dachu domu" formats={['avif','webp']} fallbackFormat="webp" widths={[342,684,760,1280]} sizes={sizes} quality={80} priority={priority} pictureAttributes={{class:`content-image ${className??''}`}} />
+<style>.content-image{display:block;width:100%;overflow:hidden;border-radius:16px}.content-image :global(img){width:100%;height:100%;object-fit:cover}</style>
