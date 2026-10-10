@@ -10,12 +10,13 @@ import symbolExperienceMobile from '../assets/figma/mobile-imgSymbol2.svg?url';
 import wordExperienceMobile from '../assets/figma/mobile-imgRpv1.svg?url';
 import symbolFooter from '../assets/figma/desktop-imgSymbol3.svg?url';
 import wordFooter from '../assets/figma/desktop-imgRpv3.svg?url';
-interface Props { variant?: 'header' | 'banner' | 'experience' | 'footer'; }
-const { variant = 'header' } = Astro.props;
+import projectWordMobile from '../assets/figma/projects-mobile-wordmark.svg?url';
+interface Props { projectFooter?: boolean; variant?: 'header' | 'banner' | 'experience' | 'footer'; }
+const { variant = 'header', projectFooter = false } = Astro.props;
 const sets = {
   banner: { symbol: symbolBanner, word: wordBanner, mobileSymbol: symbolBannerMobile, mobileWord: wordBannerMobile, sw:92.4127, sh:80.0159, ww:108.796, wh:38.596, msw:45.9892, msh:39.8201, mww:54.1431, mwh:19.2075 },
   experience: { symbol: symbolExperience, word: wordExperience, mobileSymbol: symbolExperienceMobile, mobileWord: wordExperienceMobile, sw:130.159, sh:112.698, ww:153.234, wh:54.3608, msw:56.4021, msh:48.836, mww:66.4013, mwh:23.5563 },
-  footer: { symbol: symbolFooter, word: wordFooter, mobileSymbol: symbolFooter, mobileWord: wordFooter, sw:69.418, sh:60.1058, ww:81.7247, wh:28.9923, msw:69.418, msh:60.1058, mww:81.7247, mwh:28.9923 },
+  footer: { symbol: symbolFooter, word: wordFooter, mobileSymbol: symbolFooter, mobileWord: projectFooter ? projectWordMobile : wordFooter, sw:69.418, sh:60.1058, ww:81.7247, wh:28.9923, msw:69.418, msh:60.1058, mww:projectFooter ? 81.7248 : 81.7247, mwh:28.9923 },
 };
 const asset = variant === 'header' ? null : sets[variant];
 ---

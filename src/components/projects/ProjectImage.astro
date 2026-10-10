@@ -1,0 +1,12 @@
+---
+import { Picture } from 'astro:assets';
+import house from '../../assets/figma/desktop-imgPhotoResidentialSolarInstallation.png';
+interface Props { class?: string; sizes: string; priority?: boolean; full?: boolean; }
+const { class: className, sizes, priority = false, full = false } = Astro.props;
+---
+<Picture src={house} alt="Przykładowa instalacja fotowoltaiczna na dachu domu" formats={['avif','webp']} fallbackFormat="webp" widths={full ? [684,1280,1920] : [342,684,760,1280]} sizes={sizes} quality={80} priority={priority} loading={priority ? 'eager' : 'lazy'} pictureAttributes={{ class: `project-image ${className ?? ''}` }} />
+<style>
+  .project-image { display: block; width: 100%; border-radius: var(--radius); overflow: hidden; }
+  .project-image :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .project-image.full :global(img) { height: auto; max-height: 75dvh; object-fit: contain; }
+</style>

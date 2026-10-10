@@ -1,0 +1,45 @@
+---
+import { getImage } from 'astro:assets';
+import house from '../../assets/figma/desktop-imgPhotoResidentialSolarInstallation.png';
+import ProjectImage from './ProjectImage.astro';
+const fullImage = await getImage({ src: house, format: 'webp', quality: 80 });
+---
+<section class="project-section container gallery" aria-label="Zdjęcia realizacji" data-gallery>
+  <a href={fullImage.src} class="gallery-open" data-gallery-open aria-label="Powiększ zdjęcie instalacji" aria-haspopup="dialog"><ProjectImage class="gallery-photo" priority sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) calc(100vw - 80px), 1280px" /></a>
+  <div class="caption"><p>01 / Widok instalacji · zdjęcie przykładowe</p><a href={fullImage.src} class="button button--ghost" data-gallery-open aria-haspopup="dialog">Powiększ zdjęcie</a></div>
+  <dialog class="lightbox" aria-labelledby="gallery-title"><div class="lightbox-content"><div class="lightbox-heading"><h2 id="gallery-title">Widok instalacji</h2><button type="button" class="button button--outline" data-gallery-close autofocus>Zamknij</button></div><ProjectImage full class="full" sizes="(max-width: 699px) calc(100vw - 48px), 1280px" /><p class="project-note">01 / Zdjęcie przykładowe z projektu strony</p></div></dialog>
+</section>
+<script>
+  const gallery = document.querySelector<HTMLElement>('[data-gallery]');
+  const dialog = gallery?.querySelector<HTMLDialogElement>('dialog');
+  if (gallery && dialog) {
+    let trigger: HTMLElement | null = null;
+    let previousOverflow = '';
+    gallery.querySelectorAll<HTMLAnchorElement>('[data-gallery-open]').forEach(link => link.addEventListener('click', event => {
+      event.preventDefault(); trigger = link; previousOverflow = document.body.style.overflow;
+      dialog.showModal(); document.body.style.overflow = 'hidden';
+    }));
+    gallery.querySelector('[data-gallery-close]')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => {
+      if (event.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
+    });
+    dialog.addEventListener('close', () => { document.body.style.overflow = previousOverflow; trigger?.focus(); });
+  }
+</script>
+<style>
+  .gallery { padding-top: 0 !important; gap: 16px !important; }
+  .gallery-open { display: block; width: 100%; border-radius: var(--radius); }
+  .gallery-open :global(.gallery-photo) { height: 270px; }
+  .caption { display: flex; flex-direction: column; align-items: start; gap: 16px; }
+  .caption p { color: var(--color-muted); font: 400 14px/21px var(--font-body); flex: 1; }
+  .caption .button { padding-inline: 20px; }
+  .lightbox { width: min(1328px,calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-page); color: var(--color-text); }
+  .lightbox::backdrop { background: #000d; }
+  .lightbox-content { display: flex; flex-direction: column; gap: 16px; }
+  .lightbox-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .lightbox h2 { font: 500 20px/28px var(--font-heading); }
+  @media (min-width: 700px) { .gallery-open :global(.gallery-photo) { height: 420px; } .caption { flex-direction: row; align-items: center; } }
+  @media (min-width: 1100px) { .gallery-open :global(.gallery-photo) { height: 600px; } }
+</style>

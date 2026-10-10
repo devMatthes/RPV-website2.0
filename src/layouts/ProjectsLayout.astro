@@ -1,0 +1,41 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+interface Props { title: string; description: string; }
+const { title, description } = Astro.props;
+---
+<BaseLayout title={`${title} — RPV`} description={description}>
+  <div class="projects-page"><Header /><main id="main"><slot /></main><Footer extended projectFooter /></div>
+</BaseLayout>
+<style>
+  .projects-page { position: relative; isolation: isolate; max-width: 1920px; margin-inline: auto; }
+  .projects-page::before { content: ''; position: absolute; inset: 0 0 auto; height: 600px; background: linear-gradient(to bottom,#1b85e81a,transparent); z-index: -1; pointer-events: none; }
+  .projects-page :global(.project-section) { display: flex; flex-direction: column; gap: 32px; padding-block: 48px; }
+  .projects-page :global(h1) { font: 500 42px/48px var(--font-heading); letter-spacing: -.7px; white-space: pre-line; overflow-wrap: break-word; }
+  .projects-page :global(.project-heading) { font: 400 32px/37px var(--font-heading); letter-spacing: -.7px; }
+  .projects-page :global(.project-description) { font: 400 16px/24px var(--font-body); color: var(--color-muted); }
+  .projects-page :global(.project-note) { font: 400 12px/18px var(--font-body); color: var(--color-muted); }
+  .projects-page :global(.project-columns) { display: grid; grid-template-columns: minmax(0,1fr); gap: 32px; }
+  .projects-page :global(.project-divider) { width: 100%; border-top: 1px solid var(--color-border); }
+  .projects-page :global(.project-intro) { padding-block: 48px 32px; gap: 24px; }
+  .projects-page :global(.project-breadcrumbs) { color: var(--color-muted); font: 400 14px/21px var(--font-body); }
+  .projects-page :global(.project-breadcrumbs a:hover) { text-decoration: underline; }
+  @media (min-width: 700px) {
+    .projects-page::before { height: 620px; }
+    .projects-page :global(.project-section) { padding-block: 64px; }
+    .projects-page :global(.project-intro) { padding-block: 64px 32px; }
+    .projects-page :global(h1) { font-size: 56px; line-height: 64px; }
+    .projects-page :global(.project-heading) { font-size: 40px; line-height: 46px; }
+    .projects-page :global(.project-description) { font-size: 18px; line-height: 27px; }
+    .projects-page :global(.project-columns) { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  }
+  @media (min-width: 1100px) {
+    .projects-page::before { height: 600px; }
+    .projects-page :global(.project-section) { padding-block: 80px; }
+    .projects-page :global(.project-intro) { padding-block: 80px 32px; }
+    .projects-page :global(h1) { font-size: 72px; line-height: 83px; }
+    .projects-page :global(.project-heading) { font-size: 48px; line-height: 55px; }
+    .projects-page :global(.project-intro .project-description) { font-size: 20px; line-height: 30px; }
+  }
+</style>

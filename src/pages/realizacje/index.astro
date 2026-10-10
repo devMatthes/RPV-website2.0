@@ -1,0 +1,15 @@
+---
+import ProjectsLayout from '../../layouts/ProjectsLayout.astro';
+import ProjectResults from '../../components/projects/ProjectResults.astro';
+import ProjectCta from '../../components/projects/ProjectCta.astro';
+import TextBlock from '../../components/offer/TextBlock.astro';
+import { projectEvidence } from '../../data/projects';
+const home = import.meta.env.BASE_URL;
+const description = 'Zdjęcia, rozwiązania i szczegóły instalacji. Sprawdź, jak może wyglądać projekt dopasowany do Twoich potrzeb.';
+---
+<ProjectsLayout title="Realizacje" description={description}>
+  <section class="project-section project-intro container" aria-labelledby="projects-title"><nav class="project-breadcrumbs" aria-label="Okruszki"><a href={home}>Strona główna</a> / <span aria-current="page">Realizacje</span></nav><h1 id="projects-title">Realizacje,<br /> które mówią same za siebie.</h1><p class="project-description">{description}</p></section>
+  <ProjectResults />
+  <section class="project-section container" aria-labelledby="evidence-title"><div class="project-divider"></div><h2 class="project-heading" id="evidence-title">Szczegóły robią różnicę.</h2><p class="project-description">Każda karta projektu ma miejsce na to, co pozwala ocenić instalację bez domysłów.</p><div class="project-columns">{projectEvidence.map(block => <TextBlock block={block} />)}</div></section>
+  <ProjectCta />
+</ProjectsLayout>

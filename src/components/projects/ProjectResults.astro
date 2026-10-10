@@ -1,0 +1,64 @@
+---
+import { projects, projectCategories } from '../../data/projects';
+import ProjectImage from './ProjectImage.astro';
+const home = import.meta.env.BASE_URL;
+---
+<section class="project-section container results" aria-label="Lista realizacji" data-project-results>
+  <div class="filters" role="group" aria-label="Filtruj realizacje według kategorii">{projectCategories.map(category => <button type="button" data-category={category.id} aria-pressed={category.id === 'all' ? 'true' : 'false'} aria-controls="project-list" disabled>{category.label}</button>)}</div>
+  <p class="count" role="status" aria-live="polite" data-result-count>01 / Przykładowy projekt</p>
+  <div id="project-list">{projects.map(project => <article class="project-card" data-project-category={project.category}>
+    <ProjectImage class="card-photo" priority sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) calc(100vw - 80px), 760px" />
+    <div class="card-copy"><p class="tag">{project.tag}</p><h2><a href={`${home}realizacje/${project.slug}/`}>{project.title}</a></h2><p class="project-description">{project.description}</p><p class="project-note">Szablon realizacji · dane do uzupełnienia</p><a class="project-link" href={`${home}realizacje/${project.slug}/`}>Zobacz projekt →</a></div>
+  </article>)}</div>
+  <div class="empty" data-empty hidden><h2>Brak realizacji w tej kategorii.</h2><p class="project-description">Materiały kolejnych projektów zostaną dodane po uzupełnieniu danych.</p><button type="button" class="button button--ghost" data-reset>Pokaż wszystkie realizacje</button></div>
+</section>
+<script>
+  const results = document.querySelector<HTMLElement>('[data-project-results]');
+  if (results) {
+    const filters = [...results.querySelectorAll<HTMLButtonElement>('[data-category]')];
+    const cards = [...results.querySelectorAll<HTMLElement>('[data-project-category]')];
+    const count = results.querySelector<HTMLElement>('[data-result-count]')!;
+    const empty = results.querySelector<HTMLElement>('[data-empty]')!;
+    const choose = (category: string, updateUrl = true) => {
+      const selected = filters.some(button => button.dataset.category === category) ? category : 'all';
+      filters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.category === selected)));
+      cards.forEach(card => { card.hidden = selected !== 'all' && card.dataset.projectCategory !== selected; });
+      const visible = cards.filter(card => !card.hidden).length;
+      count.textContent = visible === 1 ? '01 / Przykładowy projekt' : `${String(visible).padStart(2, '0')} / Realizacje`;
+      empty.hidden = visible > 0;
+      if (updateUrl) {
+        const url = new URL(location.href);
+        if (selected === 'all') url.searchParams.delete('kategoria'); else url.searchParams.set('kategoria', selected);
+        history.pushState({}, '', url);
+      }
+    };
+    filters.forEach(button => { button.disabled = false; button.addEventListener('click', () => choose(button.dataset.category!)); });
+    results.querySelector('[data-reset]')?.addEventListener('click', () => { choose('all'); filters[0].focus(); });
+    const restore = () => choose(new URL(location.href).searchParams.get('kategoria') ?? 'all', false);
+    window.addEventListener('popstate', restore);
+    restore();
+  }
+</script>
+<style>
+  .results { padding-top: 24px !important; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  .filters button { height: 48px; padding: 0 20px; border: 1px solid var(--color-border); border-radius: 999px; background: transparent; font: 600 14px/21px var(--font-ui); }
+  .filters button[aria-pressed='true'] { background: var(--color-accent); border-color: var(--color-accent); }
+  .filters button:hover { border-color: var(--color-accent); }
+  .filters button:nth-child(1) { width: 108px; }
+  .filters button:nth-child(2) { width: 150px; }
+  .filters button:nth-child(3) { width: 188px; }
+  .filters button:nth-child(4) { width: 146px; }
+  .filters button:nth-child(5) { width: 126px; }
+  .count { color: var(--color-muted); font: 400 14px/21px var(--font-body); }
+  .project-card { display: grid; border-radius: var(--radius); background: var(--color-card); overflow: hidden; }
+  .project-card :global(.card-photo) { height: 240px; }
+  .card-copy { display: flex; flex-direction: column; align-items: start; gap: 24px; padding: 24px; min-width: 0; }
+  .tag { color: var(--color-accent); font: 600 14px/21px var(--font-ui); }
+  h2 { font: 400 24px/36px var(--font-heading); }
+  h2 a:hover, .project-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .project-link { display: inline-flex; align-items: center; min-height: 48px; font: 600 14px/21px var(--font-ui); }
+  .empty { display: flex; flex-direction: column; align-items: start; gap: 24px; padding-block: 32px; }
+  @media (min-width: 700px) { .project-card :global(.card-photo) { height: 400px; } .card-copy { padding: 32px; } h2 { font-size: 32px; line-height: 37px; } }
+  @media (min-width: 1100px) { .project-card { grid-template-columns: minmax(0,760fr) minmax(0,520fr); } .project-card :global(.card-photo) { height: 440px; } }
+</style>

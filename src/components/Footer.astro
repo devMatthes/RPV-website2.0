@@ -1,15 +1,15 @@
 ---
 import Brand from './Brand.astro';
 import { audiences } from '../data/home';
-interface Props { extended?: boolean; }
-const { extended = false } = Astro.props;
+interface Props { extended?: boolean; projectFooter?: boolean; }
+const { extended = false, projectFooter = false } = Astro.props;
 const home = import.meta.env.BASE_URL;
 ---
-<footer class="footer" id="kontakt">
+<footer class:list={['footer', { 'footer--projects': projectFooter }]} id="kontakt">
   <div class="footer-columns container">
-    <div class="footer-brand"><Brand variant="footer" /><p>RPV to firma specjalizująca się w projektowaniu i montażu instalacji fotowoltaicznych oraz systemów energetycznych dla domów, firm i dużych inwestycji na terenie całej Polski.</p></div>
+    <div class="footer-brand"><Brand variant="footer" projectFooter={projectFooter} /><p>RPV to firma specjalizująca się w projektowaniu i montażu instalacji fotowoltaicznych oraz systemów energetycznych dla domów, firm i dużych inwestycji na terenie całej Polski.</p></div>
     <nav aria-label="Oferta"><h2>Oferta</h2>{audiences.map(a => <a href={`${home}${a.slug}/`}>{a.title}</a>)}</nav>
-    <nav aria-label="Linki w stopce"><h2>Linki</h2><a href={`${home}#realizacje`}>Realizacje</a><a href={`${home}#o-nas`}>O nas</a><a href="#kontakt">Kontakt</a><span>Poradnik</span>{extended && <><a href="#faq">FAQ</a><span>Ustawienia cookies</span></>}</nav>
+    <nav aria-label="Linki w stopce"><h2>Linki</h2><a href={`${home}#realizacje`}>Realizacje</a><a href={`${home}#o-nas`}>O nas</a><a href="#kontakt">Kontakt</a><span>Poradnik</span>{extended && <>{projectFooter ? <span>FAQ</span> : <a href="#faq">FAQ</a>}<span>Ustawienia cookies</span></>}</nav>
     <div class="contact"><h2>Napisz do nas</h2><a href="tel:+48515114676">(48) 515 114 676</a><a href="mailto:kontakt@rpv.pl">kontakt@rpv.pl</a></div>
   </div>
   <div class="footer-bottom container"><p>@ Copyright by Consmatt. All rights reserved.</p><nav aria-label="Informacje prawne"><span>Polityka prywatności</span><span>Polityka cookies</span><span>Regulamin</span></nav></div>
@@ -26,5 +26,6 @@ const home = import.meta.env.BASE_URL;
   .footer-bottom { border-top: 1px solid var(--color-border); padding-top: 48px; margin-top: 48px; display: flex; flex-direction: column; gap: 32px; }
   .footer-bottom p { color: var(--color-muted); font: 400 14px/21px var(--font-heading); }
   @media (min-width: 700px) { .footer-columns { grid-template-columns: 1fr 1fr; gap: 48px 64px; } .footer-bottom nav { flex-direction: row; gap: 32px; flex-wrap: wrap; } }
+  @media (min-width: 700px) and (max-width: 1099px) { .footer--projects { padding-block: 120px 40px; } .footer--projects .footer-columns { grid-template-columns: minmax(0,1fr); gap: 64px; } .footer--projects .footer-brand p { max-width: none; } }
   @media (min-width: 1100px) { .footer { padding-block: 120px 40px; } .footer-columns { max-width: 1242px; grid-template-columns: 360fr 230fr 230fr 230fr; gap: 64px; } .footer-bottom { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; } }
 </style>
