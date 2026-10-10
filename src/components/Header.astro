@@ -4,7 +4,7 @@ import Button from './Button.astro';
 const links = [{ label: 'O nas', href: '#o-nas' }, { label: 'Usługi', href: '#uslugi' }, { label: 'Realizacje', href: '#realizacje' }, { label: 'Kontakt', href: '#kontakt' }];
 ---
 <header class="header">
-  <a class="home" href="/" aria-label="RPV — strona główna"><Brand /></a>
+  <a class="home" href={import.meta.env.BASE_URL} aria-label="RPV — strona główna"><Brand /></a>
   <nav class="desktop-nav" aria-label="Główna nawigacja">
     {links.map(link => <a href={link.href}>{link.label}</a>)}
   </nav>
@@ -14,7 +14,7 @@ const links = [{ label: 'O nas', href: '#o-nas' }, { label: 'Usługi', href: '#u
   </div>
 </header>
 <dialog class="mobile-menu" aria-labelledby="menu-title">
-  <div class="menu-heading"><a href="/" aria-label="RPV — strona główna"><Brand /></a><button class="button button--ghost" data-menu-close autofocus>Zamknij</button></div>
+  <div class="menu-heading"><a href={import.meta.env.BASE_URL} aria-label="RPV — strona główna"><Brand /></a><button class="button button--ghost" data-menu-close autofocus>Zamknij</button></div>
   <h2 id="menu-title" class="sr-only">Menu strony</h2>
   <nav aria-label="Nawigacja mobilna">{links.map(link => <a href={link.href}>{link.label}</a>)}</nav>
   <div class="menu-actions"><Button href="#kontakt">Darmowa wycena</Button><Button href="#kontakt" variant="outline">Zgłoś serwis</Button></div>
