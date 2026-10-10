@@ -1,0 +1,20 @@
+---
+import { audiences } from '../../data/home';
+---
+<section class="audiences container" aria-labelledby="audiences-title">
+  <h2 class="section-title" id="audiences-title">Energia, która pracuje na Twój zysk.</h2>
+  <div class="audience-grid">{audiences.map(audience => <article id={audience.slug}>
+    <h3>{audience.title}</h3><p>{audience.description}</p>
+    <a href="#uslugi" aria-label={`Dowiedz się więcej — ${audience.title.toLowerCase()}`}>Dowiedz się więcej</a>
+  </article>)}</div>
+</section>
+<style>
+  .audiences { padding-block: 32px 64px; }
+  .audience-grid { display: grid; gap: 40px; margin-top: 40px; }
+  article { display: flex; flex-direction: column; gap: 20px; font-family: var(--font-heading); }
+  h3 { font-size: 24px; line-height: 36px; font-weight: 400; }
+  p { color: var(--color-muted); font-size: 16px; line-height: 24px; }
+  a { display: flex; align-items: center; min-height: 44px; font: 600 14px/21px var(--font-ui); align-self: start; }
+  a:hover { text-decoration: underline; text-underline-offset: 5px; }
+  @media (min-width: 700px) { .audiences { padding-block: 80px; } .audience-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin-top: 64px; } a { margin-top: auto; } }
+</style>

@@ -1,0 +1,50 @@
+---
+import { services } from '../../data/home';
+import arrow from '../../assets/figma/desktop-imgArrowDiagonal.svg?url';
+import darkArrow from '../../assets/figma/desktop-imgArrowDiagonal1.svg?url';
+import lightArrow from '../../assets/figma/desktop-imgArrowDiagonal2.svg?url';
+import module from '../../assets/figma/desktop-imgSolarModuleLineDrawing.svg?url';
+import moduleMobile from '../../assets/figma/mobile-imgSolarModuleLineDrawing.svg?url';
+---
+<section class="services container" id="uslugi" aria-labelledby="services-title">
+  <div class="intro"><p class="eyebrow">Nasze Usługi</p><h2 id="services-title">Kompleksowe rozwiązania energetyczne dla domu i firmy</h2><p class="subtitle">Innowacyjne technologie i profesjonalne doradztwo w jednym miejscu.</p></div>
+  <div class="service-grid">{services.map(service => <article class:list={['service-card', `service-card--${service.slug}`]}>
+    <div class="category"><span>{service.category}</span><span>{service.number}</span></div>
+    <h3><a class="card-link" href="#kontakt">{service.title}</a></h3>
+    <p class="description">{service.description}</p>
+    {service.slug === 'fotowoltaika' && <>
+      <ul class="benefits">{['Dobór instalacji','Montaż i uruchomienie','Wsparcie po montażu'].map(benefit => <li>{benefit}<span aria-hidden="true">✓</span></li>)}</ul>
+      <div class="module"><picture><source media="(max-width: 699px)" srcset={moduleMobile} width="161.2" height="71.92" /><img src={module} width="260" height="116" alt="" loading="lazy" /></picture></div>
+      <a class="quote" href="#kontakt">Darmowa wycena<img src={darkArrow} width="20" height="20" alt="" loading="lazy" /></a>
+    </>}
+    <div class="offer-link" aria-hidden="true">{service.slug === 'dofinansowania-oze' ? 'Sprawdź dofinansowania' : 'Zobacz ofertę'}<img src={service.slug === 'fotowoltaika' ? lightArrow : arrow} width="20" height="20" alt="" loading="lazy" /></div>
+  </article>)}</div>
+</section>
+<style>
+  .services { padding-block: 64px; font-family: var(--font-ui); }
+  .intro { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .eyebrow { font-weight: 700; font-size: 14px; line-height: 21px; color: var(--color-muted); }
+  h2 { max-width: 800px; font-size: 32px; line-height: 37px; letter-spacing: -.7px; }
+  .subtitle { max-width: 700px; font-size: 16px; line-height: 23px; color: var(--color-muted); }
+  .service-grid { display: grid; gap: 16px; margin-top: 40px; }
+  .service-card { position: relative; padding: 24px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius); display: flex; flex-direction: column; gap: 12px; transition: border-color 160ms; }
+  .service-card:hover { border-color: #6baee7; }
+  .category { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; line-height: 18px; color: var(--color-muted); letter-spacing: 1px; }
+  h3 { font-size: 24px; line-height: 35px; font-weight: 600; }
+  .card-link::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius); }
+  .card-link:focus-visible { outline: none; }
+  .card-link:focus-visible::after { outline: 2px solid #8dccff; outline-offset: 3px; }
+  .description { font-size: 14px; line-height: 20px; color: var(--color-muted); }
+  .offer-link { margin-top: auto; padding-top: 4px; display: flex; justify-content: space-between; font-size: 14px; font-weight: 500; line-height: 24px; }
+  .service-card--fotowoltaika { background: var(--color-accent); gap: 16px; color: var(--color-on-accent); }
+  .service-card--fotowoltaika .category, .service-card--fotowoltaika .description { color: var(--color-on-accent); }
+  .service-card--fotowoltaika h3 { font-size: 32px; line-height: 37px; letter-spacing: -.7px; }
+  .service-card--fotowoltaika .description { font-size: 16px; line-height: 23px; }
+  .benefits { list-style: none; margin: 0; padding: 0; }
+  .benefits li { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #66b0ed; padding: 2px 0; font-size: 14px; line-height: 20px; }
+  .module { display: flex; justify-content: center; align-items: center; min-height: 72px; flex: 1; }
+  .quote { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 14px 20px; border-radius: 999px; background: white; color: var(--color-ink); font-size: 16px; line-height: 23px; font-weight: 600; }
+  .quote:hover { background: #e5f1fc; }
+  @media (min-width: 700px) and (max-width: 1099px) { .service-grid { grid-template-columns: 1fr 1fr; gap: 24px; } .service-card--fotowoltaika { grid-row: span 2; } .service-card { min-height: 240px; } }
+  @media (min-width: 1100px) { .services { padding-block: 70px 120px; } h2 { font-size: 48px; line-height: 55px; } .subtitle { font-size: 18px; line-height: 27px; } .service-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: 232px 200px 8px 248px; gap: 24px; margin-top: 60px; } .service-card { padding: 32px; gap: 12px; } .service-card--fotowoltaika { grid-column: 2; grid-row: 1 / 5; } .service-card--pompy-ciepla { grid-column: 1; grid-row: 1 / 3; } .service-card--magazyny-energii { grid-column: 1; grid-row: 3 / 5; } .service-card--dofinansowania-oze { grid-column: 3; grid-row: 1; } .service-card--klimatyzacje { grid-column: 3; grid-row: 2 / 4; } .service-card--rozdzielnice-i-elektryka { grid-column: 3; grid-row: 4; } .service-card--fotowoltaika { gap: 16px; } .service-card--fotowoltaika h3 { font-size: 40px; line-height: 48px; letter-spacing: -1px; } .benefits li { padding-block: 4px; } .quote { min-height: 60px; } .service-card--pompy-ciepla h3 { font-size: 32px; line-height: 37px; } .service-card--pompy-ciepla .description { font-size: 16px; line-height: 23px; } .service-card--rozdzielnice-i-elektryka h3 { font-size: 22px; line-height: 32px; } }
+</style>

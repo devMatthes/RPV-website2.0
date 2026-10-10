@@ -1,0 +1,58 @@
+---
+import { Picture } from 'astro:assets';
+import Brand from '../Brand.astro';
+import Button from '../Button.astro';
+import team from '../../assets/figma/desktop-imgPhotoRpvTeam.png';
+import map from '../../assets/figma/desktop-imgVector.svg?url';
+import mapMobile from '../../assets/figma/mobile-imgProjectsPolandMap.svg?url';
+import dot from '../../assets/figma/desktop-imgEllipse2.svg?url';
+---
+<section class="experience container" id="realizacje" aria-labelledby="experience-title">
+  <div class="brand-statement" id="o-nas">
+    <div class="brand-photo"><Brand variant="experience" /><Picture src={team} alt="Zespół pracujący przy instalacji" widths={[120,200,400]} sizes="(max-width: 699px) 120px, 200px" formats={['avif','webp']} fallbackFormat="webp" pictureAttributes={{ class: 'team-photo' }} /></div>
+    <h2 id="experience-title"><span>znani z</span><span>innowacyjnych<br />rozwiązań</span></h2>
+  </div>
+  <div class="map-and-info">
+    <div class="map" aria-label="Mapa przykładowych realizacji z projektu">
+      <picture><source media="(max-width: 699px)" srcset={mapMobile} width="342.756" height="323.109" /><img src={map} alt="Kontur Polski z lokalizacjami instalacji" width="1042.3" height="982.553" loading="lazy" /></picture>
+      {[1,2,3].map(n => <a class:list={['pin', `pin--${n}`]} href="#kontakt" aria-label={`Realizacja ${n}: Warszawa, moc 3,320 kW`}><img class="pin-dot" src={dot} width="16" height="16" alt="" loading="lazy" /><span class="pin-label"><strong>Warszawa</strong><span class="power-label">MOC</span><span>3,320 kW</span></span></a>)}
+    </div>
+    <div class="supporting-info">
+      <div class="leadership"><p>Numer 1 w regionie</p><p class="muted">Lider montażu fotowoltaiki</p></div>
+      <dl class="statistics"><div><dt>Instalacji</dt><dd>500+</dd></div><div><dt>Lat doświadczenia</dt><dd>20+</dd></div></dl>
+      <div class="invitation"><p>Poznaj galerię doskonałości</p><p class="muted">Nasze starannie wykonane instalacje łączą precyzję i wydajność</p><Button href="#o-nas">O nas →</Button></div>
+    </div>
+  </div>
+</section>
+<style>
+  .experience { display: flex; flex-direction: column; align-items: center; gap: 40px; padding-block: 32px 64px; }
+  .brand-statement { text-align: center; }
+  .brand-photo { display: flex; justify-content: center; align-items: center; gap: 16px; }
+  .brand-photo :global(.team-photo) { width: 120px; height: 60px; border-radius: var(--radius); overflow: hidden; }
+  .brand-photo :global(.team-photo img) { width: 100%; height: 100%; object-fit: cover; }
+  h2 { margin-top: 12px; font: 700 36px/43px var(--font-body); letter-spacing: -.7px; }
+  h2 span { display: block; }
+  h2 span:first-child { font-size: 44px; line-height: 51px; margin-bottom: 12px; }
+  .map-and-info { width: 100%; max-width: 1040px; }
+  .map { position: relative; width: 100%; aspect-ratio: 1040/980.988; }
+  .map picture { display: block; }
+  .map picture img { max-width: 100%; height: auto; }
+  .pin { position: absolute; font-size: 9px; line-height: 12px; }
+  .pin--1 { left: 54.97%; top: 42.47%; }
+  .pin--2 { left: 71.35%; top: 24.18%; }
+  .pin--3 { left: 32.16%; top: 29.14%; }
+  .pin-label { display: flex; flex-direction: column; gap: 2px; background: #090d13; border: 1px solid #1a4d7399; padding: 5px 7px; border-radius: 6px; min-width: 88px; }
+  .pin strong { font-size: 10px; font-weight: 600; }
+  .pin-label > span { color: var(--color-muted); }
+  .pin-dot, .power-label { display: none; }
+  .supporting-info { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 40px; font-size: 14px; line-height: 21px; text-align: center; }
+  .leadership p + p { margin-top: 8px; }
+  .statistics { display: flex; justify-content: center; gap: 24px; margin: 0; width: 100%; }
+  .statistics div { display: flex; flex-direction: column-reverse; gap: 8px; flex: 1; max-width: 150px; }
+  dt { color: var(--color-muted); } dd { margin: 0; font-size: 40px; line-height: 46px; font-weight: 700; letter-spacing: -.7px; }
+  .invitation { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .invitation :global(.button) { min-height: 44px; width: 120px; }
+  @media (max-width: 359px) { .pin-label { min-width: 74px; padding-inline: 4px; } }
+  @media (min-width: 700px) { .experience { padding-block: 96px 64px; gap: 0; } .brand-photo { gap: 32px; } .brand-photo :global(.team-photo) { width: 200px; height: 100px; } h2, h2 span:first-child { font-size: 72px; line-height: 83px; } .brand-statement { margin-bottom: -40px; position: relative; z-index: 1; } }
+  @media (min-width: 1100px) { h2, h2 span:first-child { font-size: 96px; line-height: 110px; } .map-and-info { position: relative; } .supporting-info { position: absolute; inset: auto 0 64px; margin-inline: auto; max-width: 900px; flex-direction: row; align-items: start; justify-content: space-between; gap: 40px; text-align: left; } .leadership { flex: 1; } .statistics { flex: none; width: 328px; padding-top: 48px; text-align: center; } dd { font-size: 48px; line-height: 55px; } .invitation { flex: 1; align-items: end; text-align: right; } .pin { font-size: 8px; line-height: normal; } .pin--1 { left: 54.3%; top: 40.77%; } .pin--2 { left: 70.67%; top: 30.17%; } .pin--3 { left: 31.34%; top: 35.27%; } .pin-label { width: 160px; min-height: 60px; padding: 10px; gap: 0; border-radius: 10px; } .pin strong { font-size: 12px; margin-bottom: 6px; } .power-label { display: block; } .pin-dot { display: block; position: absolute; left: -25px; top: 72px; } }
+</style>

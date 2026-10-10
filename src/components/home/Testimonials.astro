@@ -1,0 +1,60 @@
+---
+import { Image } from 'astro:assets';
+import { reviews } from '../../data/home';
+import avatar0 from '../../assets/figma/desktop-imgAvatar.png';
+import avatar1 from '../../assets/figma/desktop-imgAvatar1.png';
+import avatar2 from '../../assets/figma/desktop-imgAvatar2.png';
+import avatar3 from '../../assets/figma/desktop-imgAvatar3.png';
+import avatar4 from '../../assets/figma/desktop-imgAvatar4.png';
+const avatars = [avatar0,avatar1,avatar2,avatar3,avatar4];
+---
+<section class="testimonials" aria-labelledby="testimonials-title">
+  <h2 class="container" id="testimonials-title">Zaufali nam profesjonaliści</h2>
+  <p class="subtitle container">Zobacz, co nasi klienci mówią o współpracy z RPV.pl. Jakość i innowacja potwierdzona przez Google Reviews.</p>
+  <div class="carousel" tabindex="0" aria-label="Opinie — przewijaj poziomo lub zatrzymaj animację">
+    <div class="track">{[0,1].map(copy => <div class="review-group" aria-hidden={copy === 1 ? 'true' : undefined}>
+      {reviews.map((review,i) => <figure class="review">
+        <p class="stars" aria-label="5 na 5 gwiazdek">★★★★★</p>
+        <blockquote>„{review.quote}”</blockquote>
+        <figcaption><Image src={avatars[i]} alt="" width={48} height={48} widths={[48,96]} sizes="48px" format="webp" /><div><p class="reviewer-name">{review.name}</p><p class="reviewer-role">{review.role}</p></div></figcaption>
+      </figure>)}
+    </div>)}</div>
+  </div>
+  <button class="pause-button" type="button" aria-pressed="false">Zatrzymaj animację opinii</button>
+</section>
+<script>
+  const section = document.querySelector<HTMLElement>('.testimonials');
+  const button = section?.querySelector<HTMLButtonElement>('.pause-button');
+  button?.addEventListener('click', () => {
+    const paused = button.getAttribute('aria-pressed') !== 'true';
+    button.setAttribute('aria-pressed', String(paused));
+    button.textContent = paused ? 'Wznów animację opinii' : 'Zatrzymaj animację opinii';
+    section?.classList.toggle('user-paused', paused);
+  });
+  if (section) {
+    new IntersectionObserver(entries => section.classList.toggle('offscreen', !entries[0].isIntersecting)).observe(section);
+  }
+</script>
+<style>
+  .testimonials { padding-block: 32px 64px; display: flex; flex-direction: column; align-items: center; gap: 40px; --review-width: 312px; --review-gap: 24px; }
+  h2 { font: 700 32px/37px var(--font-body); letter-spacing: -.7px; text-align: center; }
+  .subtitle { max-width: 700px; color: var(--color-muted); text-align: center; font-size: 16px; line-height: 24px; }
+  .carousel { width: 100%; overflow: hidden; }
+  .track { display: flex; width: max-content; animation: review-loop 70s linear infinite; }
+  .review-group { display: flex; gap: var(--review-gap); padding-right: var(--review-gap); }
+  .review { width: var(--review-width); min-height: 304px; padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius); display: flex; flex-direction: column; gap: 20px; }
+  .stars { color: var(--color-accent); font: 500 20px/30px var(--font-ui); }
+  blockquote { font: 300 16px/24px var(--font-body); flex: 1; }
+  figcaption { display: flex; align-items: center; gap: 16px; }
+  figcaption :global(img) { border-radius: 50%; object-fit: cover; }
+  .reviewer-name { font-size: 16px; line-height: 24px; font-weight: 600; }
+  .reviewer-role { font-size: 12px; line-height: 18px; color: var(--color-muted); margin-top: 4px; }
+  .pause-button { background: transparent; border: 1px solid var(--color-border); border-radius: 8px; font: 500 12px/18px var(--font-ui); padding: 8px 12px; min-height: 44px; }
+  .carousel:hover .track, .carousel:focus-within .track, .user-paused .track, .offscreen .track { animation-play-state: paused; }
+  .user-paused .carousel { overflow-x: auto; }
+  .user-paused .track { animation: none; }
+  .user-paused .review-group[aria-hidden] { display: none; }
+  @keyframes review-loop { to { transform: translateX(-50%); } }
+  @media (min-width: 700px) { .testimonials { --review-width: 400px; padding-block: 0 80px; } h2 { font-size: 48px; line-height: 55px; } .subtitle { font-size: 18px; line-height: 27px; } .review { min-height: 280px; padding: 32px; } }
+  @media (prefers-reduced-motion: reduce) { .track { animation: none; } .carousel { overflow-x: auto; } .review-group[aria-hidden], .pause-button { display: none; } }
+</style>
