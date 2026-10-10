@@ -1,0 +1,20 @@
+---
+import type {GetStaticPaths} from 'astro';
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import Breadcrumbs from '../../components/content/Breadcrumbs.astro';
+import ContentCta from '../../components/content/ContentCta.astro';
+import ContentImage from '../../components/content/ContentImage.astro';
+import TextBlock from '../../components/offer/TextBlock.astro';
+import {articleSlug,articleTitle,articleSections,related} from '../../data/content';
+export const getStaticPaths=(()=>[{params:{slug:articleSlug}}]) satisfies GetStaticPaths;
+const home=import.meta.env.BASE_URL;
+---
+<ContentLayout title={articleTitle} description="Co przygotować przed rozmową o fotowoltaice: informacje o budynku, zużyciu energii i przyszłych planach." editorial>
+<article>
+<header class="content-section container"><a class="text-link" href={`${home}poradnik/`}>← Wróć do poradnika</a><Breadcrumbs label="Fotowoltaika" guide /><p class="eyebrow">FOTOWOLTAIKA / PRZED MONTAŻEM</p><h1>{articleTitle}</h1><p class="intro-description">Pierwsza rozmowa nie wymaga gotowego projektu. Kilka podstawowych informacji pomoże uporządkować potrzeby i przygotować dalsze pytania.</p><p class="byline">Redakcja RPV · przykładowy artykuł · treść robocza</p><figure><ContentImage class="article-photo" sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) calc(100vw - 80px), 1280px" /><figcaption class="byline">Zdjęcie poglądowe z obecnego projektu strony.</figcaption></figure></header>
+<div class="content-section container"><div class="reading-layout"><nav class="toc" aria-label="Spis treści artykułu"><h2>W tym poradniku</h2>{articleSections.map(s=><a href={`#${s.id}`}>{s.index} / {s.title}</a>)}</nav><div class="article-body">{articleSections.map(s=><section id={s.id} aria-labelledby={`${s.id}-title`}><p class="eyebrow">{s.index}</p><h2 id={`${s.id}-title`}>{s.title}</h2>{s.paragraphs.map(p=><p>{p}</p>)}</section>)}<aside class="takeaway"><h2>Nie musisz mieć wszystkich odpowiedzi.</h2><p>Zacznij od tego, co wiesz o budynku i swoich potrzebach. Brakujące informacje ustalimy w rozmowie.</p><a class="text-link" href={`${home}uslugi/fotowoltaika/`}>Zobacz ofertę fotowoltaiki →</a></aside></div></div></div>
+<section class="content-section container"><h2 class="content-heading">Od wiedzy do konkretów.</h2><div class="related">{related.map((block,i)=><div><TextBlock block={block} /><a class="text-link" href={i===0?`${home}uslugi/fotowoltaika/`:`${home}realizacje/`}>{i===0?'Zobacz usługę →':'Zobacz realizacje →'}</a></div>)}</div></section>
+</article><ContentCta editorial title={'Porozmawiajmy\no Twoim planie.'} />
+</ContentLayout>
+<style>figure{display:flex;flex-direction:column;gap:32px;width:100%}figure :global(.article-photo){height:240px}.byline{color:var(--color-muted);font:400 14px/21px var(--font-body)}.reading-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:40px;width:100%}.toc{display:flex;flex-direction:column;gap:16px}.toc h2,.takeaway h2{font:600 16px/24px var(--font-body)}.toc a{display:flex;align-items:center;min-height:64px;font:600 14px/21px var(--font-ui)}.article-body{display:flex;flex-direction:column;gap:48px;min-width:0}.article-body section{display:flex;flex-direction:column;gap:24px;scroll-margin-top:24px}.article-body section h2{font:400 32px/37px var(--font-heading);letter-spacing:-.7px}.article-body section p:not(.eyebrow),.takeaway p{font:400 18px/27px var(--font-body);color:var(--color-muted)}.takeaway{display:flex;flex-direction:column;gap:24px;padding:24px;border-radius:16px;background:var(--color-card)}.related{display:grid;gap:32px;width:100%}.related>div{display:flex;flex-direction:column;align-items:start;gap:24px}@media(min-width:700px){figure :global(.article-photo){height:380px}.article-body section h2{font-size:40px;line-height:46px}.related{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(min-width:1100px){figure :global(.article-photo){height:460px}.reading-layout{grid-template-columns:280px minmax(0,1fr);gap:64px}.toc a{min-height:48px}}
+</style>

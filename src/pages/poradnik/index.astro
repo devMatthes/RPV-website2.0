@@ -1,0 +1,17 @@
+---
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import Breadcrumbs from '../../components/content/Breadcrumbs.astro';
+import ContentCta from '../../components/content/ContentCta.astro';
+import ContentImage from '../../components/content/ContentImage.astro';
+import TextBlock from '../../components/offer/TextBlock.astro';
+import {topics,articleSlug,articleTitle} from '../../data/content';
+const home=import.meta.env.BASE_URL;
+const articleHref=`${home}poradnik/${articleSlug}/`;
+---
+<ContentLayout title="Poradnik" description="Instalacje, energia i codzienne użytkowanie — wyjaśnione prostym językiem." editorial>
+<section class="content-section container"><Breadcrumbs label="Poradnik" /><p class="eyebrow">PORADNIK RPV</p><h1>Dobra decyzja zaczyna<br class="desktop-break" /> się od wiedzy.</h1><p class="intro-description">Instalacje, energia i codzienne użytkowanie — wyjaśnione prostym językiem.</p></section>
+<section class="content-section container" aria-labelledby="featured-label"><h2 id="featured-label" class="featured-label">NA POCZĄTEK</h2><article class="featured"><ContentImage class="featured-photo" sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) calc(100vw - 80px), 760px" /><div class="featured-copy"><p class="eyebrow">FOTOWOLTAIKA / PRZED MONTAŻEM</p><h3><a href={articleHref}>{articleTitle}</a></h3><p class="excerpt">Zbierz podstawowe informacje o budynku, zużyciu energii i swoich planach. Ułatwisz rozmowę o przyszłej instalacji.</p><p class="content-note">Przykładowy artykuł · treść robocza</p><a class="text-link" href={articleHref}>Czytaj poradnik →</a></div></article></section>
+<section class="content-section container"><h2 class="content-heading">O czym chcesz przeczytać?</h2><p class="topics-note">Przykładowe tematy do uzupełnienia po przygotowaniu materiałów.</p><div class="content-columns">{topics.map(block=><TextBlock block={block} />)}</div></section>
+<ContentCta editorial title={'Masz pytanie\no swoją instalację?'} />
+</ContentLayout>
+<style>.featured-label{font:600 14px/21px var(--font-body);color:var(--color-muted)}.featured{position:relative;width:100%;display:grid;border-radius:16px;background:var(--color-card)}.featured :global(.featured-photo){height:240px}.featured-copy{padding:32px;display:flex;flex-direction:column;gap:24px;align-items:start;min-width:0}h3{font:400 28px/32px var(--font-heading);letter-spacing:-.7px}h3 a::after{content:'';position:absolute;inset:0;border-radius:16px}h3 a:focus-visible::after{outline:2px solid var(--color-accent);outline-offset:4px}.featured .text-link{position:relative;z-index:1}.excerpt,.topics-note{font:400 16px/24px var(--font-body);color:var(--color-muted)}.desktop-break{display:none}@media(min-width:700px){.featured :global(.featured-photo){height:400px}h3{font-size:32px;line-height:37px}}@media(min-width:1100px){.desktop-break{display:initial}.featured{grid-template-columns:minmax(0,760fr) minmax(0,520fr)}.featured :global(.featured-photo){height:440px}}</style>
