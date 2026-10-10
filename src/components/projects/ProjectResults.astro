@@ -51,13 +51,16 @@ const home = import.meta.env.BASE_URL;
   .filters button:nth-child(4) { width: 146px; }
   .filters button:nth-child(5) { width: 126px; }
   .count { color: var(--color-muted); font: 400 14px/21px var(--font-body); }
-  .project-card { display: grid; border-radius: var(--radius); background: var(--color-card); overflow: hidden; }
+  .project-card { position: relative; display: grid; border-radius: var(--radius); background: var(--color-card); overflow: hidden; }
   .project-card :global(.card-photo) { height: 240px; }
   .card-copy { display: flex; flex-direction: column; align-items: start; gap: 24px; padding: 24px; min-width: 0; }
   .tag { color: var(--color-accent); font: 600 14px/21px var(--font-ui); }
   h2 { font: 400 24px/36px var(--font-heading); }
   h2 a:hover, .project-link:hover { text-decoration: underline; text-underline-offset: 4px; }
-  .project-link { display: inline-flex; align-items: center; min-height: 48px; font: 600 14px/21px var(--font-ui); }
+  h2 a::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius); }
+  h2 a:focus-visible { outline: none; }
+  h2 a:focus-visible::after { outline: 2px solid #8dccff; outline-offset: -3px; }
+  .project-link { position: relative; z-index: 1; display: inline-flex; align-items: center; min-height: 48px; font: 600 14px/21px var(--font-ui); }
   .empty { display: flex; flex-direction: column; align-items: start; gap: 24px; padding-block: 32px; }
   @media (min-width: 700px) { .project-card :global(.card-photo) { height: 400px; } .card-copy { padding: 32px; } h2 { font-size: 32px; line-height: 37px; } }
   @media (min-width: 1100px) { .project-card { grid-template-columns: minmax(0,760fr) minmax(0,520fr); } .project-card :global(.card-photo) { height: 440px; } }
