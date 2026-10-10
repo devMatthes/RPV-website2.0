@@ -1,7 +1,12 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/home/Hero.astro';
 ---
-<!doctype html>
-<html lang="pl">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>RPV — wdrożenie</title></head>
-  <body><main><h1>RPV</h1><p>Wdrożenie projektu strony.</p></main></body>
-</html>
+<BaseLayout>
+  <div class="page"><Header /><main id="main"><Hero /></main></div>
+</BaseLayout>
+<style>
+  .page { max-width: 1920px; margin-inline: auto; position: relative; isolation: isolate; }
+  .page::before { content: ''; position: absolute; inset: 0 0 auto; height: 581px; background: linear-gradient(#1b85e81a, transparent); pointer-events: none; z-index: -1; }
+</style>

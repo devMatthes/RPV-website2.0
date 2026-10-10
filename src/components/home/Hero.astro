@@ -1,0 +1,35 @@
+---
+import { Picture } from 'astro:assets';
+import Button from '../Button.astro';
+import house from '../../assets/figma/desktop-imgPhotoResidentialSolarInstallation.png';
+import installer from '../../assets/figma/desktop-imgPhotoSolarPanelInstallationTechnician.png';
+---
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-intro">
+    <h1 id="hero-title">Twoja energia ze słońca z RPV</h1>
+    <p>Projektujemy i montujemy zaawansowane instalacje fotowoltaiczne dla domów i firm. Oszczędzaj na rachunkach i dbaj o planetę z profesjonalistami.</p>
+    <div class="hero-actions"><Button href="#kontakt">Darmowa wycena</Button><Button href="#realizacje" variant="ghost">Nasze realizacje</Button></div>
+  </div>
+  <div class="hero-photos">
+    <Picture src={house} alt="Dach domu z instalacją fotowoltaiczną" formats={['avif','webp']} fallbackFormat="webp" widths={[342, 684, 800, 1200, 1562]} sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) 50vw, 781px" quality={80} loading="eager" fetchpriority="high" pictureAttributes={{ class: 'house-photo' }} />
+    <Picture src={installer} alt="Monter pracujący przy panelach fotowoltaicznych" formats={['avif','webp']} fallbackFormat="webp" widths={[342, 563, 684, 1126]} sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) 35vw, 563px" quality={80} loading="lazy" pictureAttributes={{ class: 'installer-photo' }} />
+  </div>
+  <div class="partners"><p>Partnerzy technologiczni</p><ul>{['HUAWEI','LONGI','SolarEdge','FRONIUS','Jinko'].map(partner => <li>{partner}</li>)}</ul></div>
+</section>
+<style>
+  .hero { position: relative; display: flex; flex-direction: column; align-items: center; gap: 32px; padding: 48px var(--gutter) 64px; }
+  .hero-intro { display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; max-width: 896px; text-align: center; }
+  h1 { max-width: 342px; font: 500 42px/48px var(--font-heading); letter-spacing: -.7px; }
+  .hero-intro p { max-width: 680px; font: 400 16px/24px var(--font-body); color: var(--color-muted); }
+  .hero-actions { display: flex; justify-content: center; gap: 8px; }
+  .hero-actions :global(.button) { padding-inline: 14px; }
+  .hero-photos { display: grid; gap: 16px; width: 100%; max-width: 1392px; }
+  .hero-photos :global(picture) { display: block; border-radius: var(--radius); overflow: hidden; min-width: 0; height: 240px; }
+  .hero-photos :global(picture.installer-photo) { height: 200px; }
+  .hero-photos :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .partners { padding-top: 32px; font-weight: 700; text-align: center; color: var(--color-muted); font-size: 14px; line-height: 21px; }
+  .partners ul { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px 20px; padding: 0; margin: 24px 0 0; list-style: none; }
+  @media (max-width: 359px) { h1 { font-size: 36px; line-height: 42px; } .hero-actions { flex-wrap: wrap; } }
+  @media (min-width: 700px) { .hero { padding-block: 96px; } h1 { max-width: 896px; font-size: 56px; line-height: 64px; } .hero-intro p { font-size: 20px; line-height: 30px; } .hero-photos { grid-template-columns: 781fr 563fr; gap: 48px; } .hero-photos :global(picture), .hero-photos :global(picture.installer-photo) { height: 300px; } .hero-actions { gap: 12px; } .hero-actions :global(.button) { padding-inline: 20px; } .partners ul { font-size: 20px; line-height: 30px; gap: 16px 48px; } }
+  @media (min-width: 1100px) { h1 { font-size: 72px; line-height: 83px; } .hero-photos :global(picture), .hero-photos :global(picture.installer-photo) { height: 480px; } .hero-actions :global(.button--primary) { width: 192px; } .hero-actions :global(.button--ghost) { width: 148px; } }
+</style>

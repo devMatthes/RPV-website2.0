@@ -1,9 +1,4 @@
-@import '@fontsource-variable/roboto/latin.css';
-@import '@fontsource-variable/roboto/latin-ext.css';
-@import '@fontsource-variable/inter/latin.css';
-@import '@fontsource-variable/inter/latin-ext.css';
-@import '@fontsource-variable/plus-jakarta-sans/latin.css';
-@import '@fontsource-variable/plus-jakarta-sans/latin-ext.css';
+@import './fonts.css';
 
 :root {
   color-scheme: dark;
