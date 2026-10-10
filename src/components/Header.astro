@@ -2,7 +2,7 @@
 import Brand from './Brand.astro';
 import Button from './Button.astro';
 const home = import.meta.env.BASE_URL;
-const links = [{ label: 'O nas', href: `${home}o-nas/` }, { label: 'Usługi', href: `${home}#uslugi` }, { label: 'Realizacje', href: `${home}realizacje/` }, { label: 'Kontakt', href: '#kontakt' }];
+const links = [{ label: 'O nas', href: `${home}o-nas/` }, { label: 'Usługi', href: `${home}#uslugi` }, { label: 'Realizacje', href: `${home}realizacje/` }, { label: 'Kontakt', href: `${home}kontakt/` }];
 ---
 <header class="header">
   <a class="home" href={import.meta.env.BASE_URL} aria-label="RPV — strona główna"><Brand /></a>
@@ -10,7 +10,7 @@ const links = [{ label: 'O nas', href: `${home}o-nas/` }, { label: 'Usługi', hr
     {links.map(link => <a href={link.href}>{link.label}</a>)}
   </nav>
   <div class="header-actions">
-    <Button href="#kontakt" variant="outline" class="service-action">Zgłoś serwis</Button>
+    <Button href={`${import.meta.env.BASE_URL}serwis/`} variant="outline" class="service-action">Zgłoś serwis</Button>
     <button class="menu-button button button--ghost" aria-haspopup="dialog" data-menu-open>Menu</button>
   </div>
 </header>
@@ -18,7 +18,7 @@ const links = [{ label: 'O nas', href: `${home}o-nas/` }, { label: 'Usługi', hr
   <div class="menu-heading"><a href={import.meta.env.BASE_URL} aria-label="RPV — strona główna"><Brand /></a><button class="button button--ghost" data-menu-close autofocus>Zamknij</button></div>
   <h2 id="menu-title" class="sr-only">Menu strony</h2>
   <nav aria-label="Nawigacja mobilna">{links.map(link => <a href={link.href}>{link.label}</a>)}</nav>
-  <div class="menu-actions"><Button href="#kontakt">Darmowa wycena</Button><Button href="#kontakt" variant="outline">Zgłoś serwis</Button></div>
+  <div class="menu-actions"><Button href={`${import.meta.env.BASE_URL}kontakt/`}>Darmowa wycena</Button><Button href={`${import.meta.env.BASE_URL}serwis/`} variant="outline">Zgłoś serwis</Button></div>
 </dialog>
 <script>
   const menu = document.querySelector<HTMLDialogElement>('.mobile-menu');

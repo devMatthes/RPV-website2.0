@@ -9,7 +9,7 @@ const home = import.meta.env.BASE_URL;
   <div class="hero-intro">
     <h1 id="hero-title">Instalacje dopasowane<br /> do Twoich potrzeb.</h1>
     <p>Fotowoltaika, magazyny energii, pompy ciepła i instalacje elektryczne dla domów, firm i większych inwestycji. Od doboru technologii po montaż i uruchomienie.</p>
-    <div class="hero-actions"><Button href="#kontakt">Darmowa wycena</Button><Button href={`${home}realizacje/`} variant="ghost">Nasze realizacje</Button></div>
+    <div class="hero-actions"><Button href={`${import.meta.env.BASE_URL}kontakt/`}>Darmowa wycena</Button><Button href={`${home}realizacje/`} variant="ghost">Nasze realizacje</Button></div>
   </div>
   <div class="hero-photos">
     <Picture src={house} alt="Dach domu z instalacją fotowoltaiczną" formats={['avif','webp']} fallbackFormat="webp" widths={[342, 684, 800, 1200, 1562]} sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) 50vw, 781px" quality={80} loading="eager" decoding="sync" fetchpriority="high" pictureAttributes={{ class: 'house-photo' }} />

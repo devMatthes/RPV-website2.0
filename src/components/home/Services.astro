@@ -16,7 +16,7 @@ import moduleMobile from '../../assets/figma/mobile-imgSolarModuleLineDrawing.sv
     {service.slug === 'fotowoltaika' && <>
       <ul class="benefits">{['Dobór instalacji','Montaż i uruchomienie','Wsparcie po montażu'].map(benefit => <li>{benefit}<span aria-hidden="true">✓</span></li>)}</ul>
       <div class="module"><picture><source media="(max-width: 699px)" srcset={moduleMobile} width="161.2" height="71.92" /><img src={module} width="260" height="116" alt="" loading="lazy" /></picture></div>
-      <a class="quote" href="#kontakt">Darmowa wycena<img src={darkArrow} width="20" height="20" alt="" loading="lazy" /></a>
+      <a class="quote" href={`${import.meta.env.BASE_URL}kontakt/`}>Darmowa wycena<img src={darkArrow} width="20" height="20" alt="" loading="lazy" /></a>
     </>}
     <div class="offer-link" aria-hidden="true">{service.slug === 'dofinansowania-oze' ? 'Sprawdź dofinansowania' : 'Zobacz ofertę'}<img src={service.slug === 'fotowoltaika' ? lightArrow : arrow} width="20" height="20" alt="" loading="lazy" /></div>
   </article>)}</div>
