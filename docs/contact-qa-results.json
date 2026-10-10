@@ -1,0 +1,52 @@
+{
+  "contact-mobile": {
+    "scores": {
+      "performance": 99,
+      "accessibility": 100,
+      "best-practices": 100
+    },
+    "lcp_ms": 1804.2515,
+    "cls": 0.007226271290312561,
+    "tbt_ms": 0
+  },
+  "service-mobile": {
+    "scores": {
+      "performance": 99,
+      "accessibility": 100,
+      "best-practices": 100
+    },
+    "lcp_ms": 1803.252,
+    "cls": 0.0001444805877059616,
+    "tbt_ms": 0
+  },
+  "contact-desktop": {
+    "scores": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 100
+    },
+    "lcp_ms": 424.8027,
+    "cls": 0.0006628024399498001,
+    "tbt_ms": 0
+  },
+  "not-found-mobile": {
+    "scores": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 100
+    },
+    "lcp_ms": 1654.2641,
+    "cls": 0.0005883591353591671,
+    "tbt_ms": 0
+  },
+  "home-stage9-mobile": {
+    "scores": {
+      "performance": 97,
+      "accessibility": 100,
+      "best-practices": 100
+    },
+    "lcp_ms": 2404.7585000000004,
+    "cls": 0.001317323005554356,
+    "tbt_ms": 0
+  }
+}

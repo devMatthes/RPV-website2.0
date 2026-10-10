@@ -10,7 +10,7 @@ Każde ukończone zadanie kończy się osobnym commitem. Backend pozostaje poza 
 - [x] 06. Podstrony oferty: trzy segmenty klientów i sześć usług. Osobne commity za podstrony, nawigację i QA; pomiary 99–100 Performance, szczegóły w `offers.md`.
 - [x] 07. Realizacje i galeria. Lista z filtrami, szablon szczegółów i powiększanie zdjęcia; nawigacja podłączona. Performance 99 mobile / 100 desktop; szczegóły w `projects.md`. Dane realizacji pozostają do uzupełnienia zgodnie z Figmą.
 - [x] 08. O nas, poradnik, artykuł, FAQ. Cztery podstrony, nawigacja i natywne interakcje; Performance 99–100 mobile / 100 desktop. Szczegóły i treści do potwierdzenia w `content.md`.
-- [ ] 09. Kontakt, serwis, stany formularzy, cookies, 404.
+- [x] 09. Kontakt, serwis, stany formularzy, cookies, 404. Frontend, walidacja i wybór załączników; wysyłka pozostaje do podłączenia w etapie backendu. Pięć osobnych commitów; Performance 99–100 dla kontaktu/serwisu/404, szczegóły w `contact.md`.
 
 ## Pierwszy odbiór
 
