@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import CookiePreferences from '../components/CookiePreferences.astro';
 import favicon from '../assets/figma/desktop-imgSymbol.svg?url';
 import robotoLatin from '@fontsource-variable/roboto/files/roboto-latin-wght-normal.woff2?url';
 import robotoExtended from '../assets/fonts/roboto-polish-wght-normal.woff2?url';
@@ -22,5 +23,6 @@ const { title = 'RPV — Twoja energia ze słońca', description = 'Instalacje f
   <body>
     <a class="skip-link" href="#main">Przejdź do treści</a>
     <slot />
+    <CookiePreferences />
   </body>
 </html>

@@ -1,0 +1,73 @@
+<dialog class="cookie-dialog" aria-labelledby="cookie-title" data-cookie-dialog>
+  <div class="cookie-choice" data-cookie-choice>
+    <h2 id="cookie-title">Twój wybór cookies.</h2>
+    <p>Niezbędne cookies pomagają działać stronie. Dodatkowe kategorie włączymy tylko po Twoim wyborze. Możesz go później zmienić.</p>
+    <div class="cookie-actions"><button type="button" class="cookie-button" data-cookie-necessary autofocus>Tylko niezbędne</button><button type="button" class="cookie-button" data-cookie-all>Akceptuj wszystkie</button><button type="button" class="cookie-button ghost" data-cookie-customize>Dostosuj ustawienia</button></div>
+  </div>
+  <div class="cookie-settings" data-cookie-settings hidden>
+    <h2 id="cookie-settings-title">Ustawienia cookies.</h2>
+    <p>Niezbędne cookies pozostają aktywne. Dodatkowe kategorie możesz włączyć lub wyłączyć.</p>
+    <div class="cookie-category"><h3>Niezbędne</h3><p>Obsługa podstawowych funkcji strony.</p><p>Zawsze aktywne</p></div>
+    <div class="cookie-category"><h3 id="analytics-label">Analityczne</h3><p>Pomiar sposobu korzystania ze strony.</p><button type="button" role="switch" aria-checked="false" aria-labelledby="analytics-label" class="cookie-switch" data-cookie-analytics>Wyłączone</button></div>
+    <div class="cookie-category"><h3 id="marketing-label">Marketingowe</h3><p>Dopasowanie komunikacji marketingowej.</p><button type="button" role="switch" aria-checked="false" aria-labelledby="marketing-label" class="cookie-switch" data-cookie-marketing>Wyłączone</button></div>
+    <div class="cookie-actions"><button type="button" class="cookie-button primary" data-cookie-save>Zapisz wybór</button><button type="button" class="cookie-button ghost" data-cookie-cancel>Anuluj</button></div>
+  </div>
+</dialog>
+<p class="cookie-storage-status sr-only" role="status" data-cookie-storage-status></p>
+<script>
+  import {parseConsent, type Consent} from '../lib/consent';
+  const dialog=document.querySelector<HTMLDialogElement>('[data-cookie-dialog]');
+  if(dialog){
+    const key=`rpv:consent:${import.meta.env.BASE_URL}:v1`;
+    let saved:Consent|null=null;
+    try{saved=parseConsent(localStorage.getItem(key));}catch{}
+    const choice=dialog.querySelector<HTMLElement>('[data-cookie-choice]')!;
+    const settings=dialog.querySelector<HTMLElement>('[data-cookie-settings]')!;
+    const analytics=dialog.querySelector<HTMLButtonElement>('[data-cookie-analytics]')!;
+    const marketing=dialog.querySelector<HTMLButtonElement>('[data-cookie-marketing]')!;
+    let opener:HTMLElement|null=null;
+    let previousOverflow='';
+    const setSwitch=(button:HTMLButtonElement,value:boolean)=>{button.setAttribute('aria-checked',String(value));button.textContent=value?'Włączone':'Wyłączone';};
+    const showSettings=()=>{
+      choice.hidden=true;settings.hidden=false;dialog.setAttribute('aria-labelledby','cookie-settings-title');
+      setSwitch(analytics,saved?.analytics??false);setSwitch(marketing,saved?.marketing??false);
+      analytics.focus();
+    };
+    const showChoice=()=>{choice.hidden=false;settings.hidden=true;dialog.setAttribute('aria-labelledby','cookie-title');dialog.querySelector<HTMLButtonElement>('[data-cookie-necessary]')?.focus();};
+    const open=(customize:boolean,trigger:HTMLElement|null)=>{
+      if(dialog.open)return;
+      opener=trigger;previousOverflow=document.body.style.overflow;
+      dialog.showModal();document.body.style.overflow='hidden';
+      if(customize)showSettings();else showChoice();
+    };
+    const announce=()=>{document.dispatchEvent(new CustomEvent('rpv:consent-change',{detail:{analytics:saved?.analytics??false,marketing:saved?.marketing??false}}));};
+    const save=(allowAnalytics:boolean,allowMarketing:boolean)=>{
+      saved={version:1,analytics:allowAnalytics,marketing:allowMarketing,updatedAt:Date.now()};
+      try{localStorage.setItem(key,JSON.stringify(saved));}catch{
+        const notice=document.querySelector<HTMLElement>('[data-cookie-storage-status]');
+        if(notice)notice.textContent='Wybór obowiązuje w tej stronie. Przeglądarka nie pozwoliła zapisać go na kolejne wizyty.';
+      }
+      announce();dialog.close();
+    };
+    dialog.querySelector('[data-cookie-necessary]')?.addEventListener('click',()=>save(false,false));
+    dialog.querySelector('[data-cookie-all]')?.addEventListener('click',()=>save(true,true));
+    dialog.querySelector('[data-cookie-customize]')?.addEventListener('click',showSettings);
+    [analytics,marketing].forEach(button=>button.addEventListener('click',()=>setSwitch(button,button.getAttribute('aria-checked')!=='true')));
+    dialog.querySelector('[data-cookie-save]')?.addEventListener('click',()=>save(analytics.getAttribute('aria-checked')==='true',marketing.getAttribute('aria-checked')==='true'));
+    dialog.querySelector('[data-cookie-cancel]')?.addEventListener('click',()=>saved?dialog.close():showChoice());
+    dialog.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;opener?.focus();});
+    document.addEventListener('click',event=>{
+      const trigger=event.target instanceof Element?event.target.closest<HTMLElement>('[data-cookie-open]'):null;
+      if(trigger)open(true,trigger);
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-cookie-open]').forEach(button=>button.disabled=false);
+    announce();
+    if(!saved)open(false,null);
+  }
+</script>
+<style>
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.cookie-dialog{position:fixed;inset:0;margin:auto;width:min(640px,calc(100vw - 48px));max-width:none;max-height:calc(100dvh - 48px);padding:0;border:0;border-radius:16px;background:var(--color-card);color:var(--color-text);overscroll-behavior:contain}.cookie-dialog::backdrop{background:#0009}
+.cookie-choice,.cookie-settings{padding:24px;display:flex;flex-direction:column;gap:24px}.cookie-settings{gap:16px}h2{font:400 32px/37px var(--font-heading);letter-spacing:-.7px}p{font:400 16px/24px var(--font-body);color:var(--color-muted)}h3{font:600 16px/24px var(--font-body)}.cookie-actions{display:flex;flex-direction:column;gap:12px;width:100%}.cookie-button,.cookie-switch{display:flex;align-items:center;justify-content:center;height:48px;padding:12px 20px;border:1px solid var(--color-border);border-radius:8px;background:transparent;color:var(--color-text);font:600 14px/21px var(--font-ui)}.cookie-button.ghost{border-color:transparent}.cookie-button.primary{border-color:transparent;border-radius:999px;background:var(--color-accent)}.cookie-category{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--color-border);padding-top:8px}.cookie-category p{font-size:14px;line-height:21px}.cookie-switch{height:40px;width:152px;margin-bottom:0;padding:8px}.cookie-switch[aria-checked="true"]{border-color:var(--color-accent);background:#198ce81a}
+@media(min-width:700px){.cookie-choice{padding:32px}h2{font-size:36px;line-height:41px}}
+</style>
