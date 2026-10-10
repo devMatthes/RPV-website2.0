@@ -15,7 +15,7 @@ import dot from '../../assets/figma/desktop-imgEllipse2.svg?url';
   <div class="map-and-info">
     <div class="map" aria-label="Mapa przykładowych realizacji z projektu">
       <picture><source media="(max-width: 699px)" srcset={mapMobile} width="342.756" height="323.109" /><img src={map} alt="Kontur Polski z lokalizacjami instalacji" width="1042.3" height="982.553" loading="lazy" /></picture>
-      {[1,2,3].map(n => <a class:list={['pin', `pin--${n}`]} href="#kontakt" aria-label={`Realizacja ${n}: Warszawa, moc 3,320 kW`}><img class="pin-dot" src={dot} width="16" height="16" alt="" loading="lazy" /><span class="pin-label"><strong>Warszawa</strong><span class="power-label">MOC</span><span>3,320 kW</span></span></a>)}
+      {[1,2,3].map(n => <span class:list={['pin', `pin--${n}`]}><img class="pin-dot" src={dot} width="16" height="16" alt="" loading="lazy" /><span class="pin-label"><strong>Warszawa</strong><span class="power-label">MOC</span><span>3,320 kW</span></span></span>)}
     </div>
     <div class="supporting-info">
       <div class="leadership"><p>Numer 1 w regionie</p><p class="muted">Lider montażu fotowoltaiki</p></div>

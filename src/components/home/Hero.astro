@@ -11,7 +11,7 @@ import installer from '../../assets/figma/desktop-imgPhotoSolarPanelInstallation
     <div class="hero-actions"><Button href="#kontakt">Darmowa wycena</Button><Button href="#realizacje" variant="ghost">Nasze realizacje</Button></div>
   </div>
   <div class="hero-photos">
-    <Picture src={house} alt="Dach domu z instalacją fotowoltaiczną" formats={['avif','webp']} fallbackFormat="webp" widths={[342, 684, 800, 1200, 1562]} sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) 50vw, 781px" quality={80} loading="eager" fetchpriority="high" pictureAttributes={{ class: 'house-photo' }} />
+    <Picture src={house} alt="Dach domu z instalacją fotowoltaiczną" formats={['avif','webp']} fallbackFormat="webp" widths={[342, 684, 800, 1200, 1562]} sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) 50vw, 781px" quality={80} loading="eager" decoding="sync" fetchpriority="high" pictureAttributes={{ class: 'house-photo' }} />
     <Picture src={installer} alt="Monter pracujący przy panelach fotowoltaicznych" formats={['avif','webp']} fallbackFormat="webp" widths={[342, 563, 684, 1126]} sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) 35vw, 563px" quality={80} loading="lazy" pictureAttributes={{ class: 'installer-photo' }} />
   </div>
   <div class="partners"><p>Partnerzy technologiczni</p><ul>{['HUAWEI','LONGI','SolarEdge','FRONIUS','Jinko'].map(partner => <li>{partner}</li>)}</ul></div>

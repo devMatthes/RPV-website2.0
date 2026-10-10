@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css';
+import favicon from '../assets/figma/desktop-imgSymbol.svg?url';
 import robotoLatin from '@fontsource-variable/roboto/files/roboto-latin-wght-normal.woff2?url';
-import robotoExtended from '@fontsource-variable/roboto/files/roboto-latin-ext-wght-normal.woff2?url';
+import robotoExtended from '../assets/fonts/roboto-polish-wght-normal.woff2?url';
 interface Props { title?: string; description?: string; }
 const { title = 'RPV — Twoja energia ze słońca', description = 'Instalacje fotowoltaiczne i systemy energetyczne dla domów, firm i inwestycji. Poznaj ofertę RPV.' } = Astro.props;
 ---
@@ -15,6 +16,7 @@ const { title = 'RPV — Twoja energia ze słońca', description = 'Instalacje f
     <meta name="robots" content="noindex, nofollow" />
     <link rel="preload" href={robotoLatin} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={robotoExtended} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" type="image/svg+xml" href={favicon} />
     <title>{title}</title>
   </head>
   <body>
