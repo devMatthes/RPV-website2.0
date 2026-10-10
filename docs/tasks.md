@@ -7,7 +7,7 @@ Każde ukończone zadanie kończy się osobnym commitem. Backend pozostaje poza 
 - [x] 03. Responsywny nagłówek, menu, hero i partnerzy. Typy i build poprawne; responsywne AVIF/WebP, menu modalne z Escape i przywracaniem fokusu. Kontrola wizualna w zadaniu 05.
 - [x] 04. Sekcje strony głównej: segmenty, bannery, usługi, opinie, mapa, statystyki, stopka.
 - [x] 05. Kontrola wizualna, dostępność, pomiary i poprawki wydajności. Lighthouse mobile 98 / desktop 100; LCP 2,3 / 0,5 s; szczegóły i ograniczenia w `qa.md`.
-- [ ] 06. Podstrony oferty: segmenty klientów i sześć usług.
+- [x] 06. Podstrony oferty: trzy segmenty klientów i sześć usług. Osobne commity za podstrony, nawigację i QA; pomiary 99–100 Performance, szczegóły w `offers.md`.
 - [ ] 07. Realizacje i galeria.
 - [ ] 08. O nas, poradnik, artykuł, FAQ.
 - [ ] 09. Kontakt, serwis, stany formularzy, cookies, 404.
