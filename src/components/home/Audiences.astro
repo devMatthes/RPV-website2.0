@@ -1,11 +1,12 @@
 ---
 import { audiences } from '../../data/home';
+const home = import.meta.env.BASE_URL;
 ---
 <section class="audiences container" aria-labelledby="audiences-title">
   <h2 class="section-title" id="audiences-title">Energia, która pracuje na Twój zysk.</h2>
   <div class="audience-grid">{audiences.map(audience => <article id={audience.slug}>
     <h3>{audience.title}</h3><p>{audience.description}</p>
-    <a href="#uslugi" aria-label={`Dowiedz się więcej — ${audience.title.toLowerCase()}`}>Dowiedz się więcej</a>
+    <a href={`${home}${audience.slug}/`} aria-label={`Dowiedz się więcej — ${audience.title.toLowerCase()}`}>Dowiedz się więcej</a>
   </article>)}</div>
 </section>
 <style>

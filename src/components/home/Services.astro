@@ -1,5 +1,6 @@
 ---
 import { services } from '../../data/home';
+const home = import.meta.env.BASE_URL;
 import arrow from '../../assets/figma/desktop-imgArrowDiagonal.svg?url';
 import darkArrow from '../../assets/figma/desktop-imgArrowDiagonal1.svg?url';
 import lightArrow from '../../assets/figma/desktop-imgArrowDiagonal2.svg?url';
@@ -10,7 +11,7 @@ import moduleMobile from '../../assets/figma/mobile-imgSolarModuleLineDrawing.sv
   <div class="intro"><p class="eyebrow">Nasze Usługi</p><h2 id="services-title">Kompleksowe rozwiązania energetyczne dla domu i firmy</h2><p class="subtitle">Innowacyjne technologie i profesjonalne doradztwo w jednym miejscu.</p></div>
   <div class="service-grid">{services.map(service => <article class:list={['service-card', `service-card--${service.slug}`]}>
     <div class="category"><span>{service.category}</span><span>{service.number}</span></div>
-    <h3><a class="card-link" role="link" aria-disabled="true">{service.title}</a></h3>
+    <h3><a class="card-link" href={`${home}uslugi/${service.slug}/`}>{service.title}</a></h3>
     <p class="description">{service.description}</p>
     {service.slug === 'fotowoltaika' && <>
       <ul class="benefits">{['Dobór instalacji','Montaż i uruchomienie','Wsparcie po montażu'].map(benefit => <li>{benefit}<span aria-hidden="true">✓</span></li>)}</ul>
