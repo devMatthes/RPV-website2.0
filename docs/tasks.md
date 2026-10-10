@@ -1,6 +1,6 @@
 # Zadania wdrożenia
 
-Każde ukończone zadanie kończy się osobnym commitem. Nie publikujemy witryny ani nie podłączamy backendu w tym etapie.
+Każde ukończone zadanie kończy się osobnym commitem. Backend pozostaje poza tym etapem. Na dodatkowe zlecenie właściciela skonfigurowano publiczne repo i podgląd GitHub Pages, automatycznie wdrażany z `main`.
 
 - [x] 01. Repozytorium, Astro, strict TypeScript, podstawowy build. `astro check`: 0 błędów; statyczny build poprawny.
 - [x] 02. Lokalne zasoby Figma, trzy rodziny fontów, tokeny i layout. Oryginalne rastry i SVG pobrane; fonty latin/latin-ext; wspólne BaseLayout, Brand, Button.
