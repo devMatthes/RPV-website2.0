@@ -8,7 +8,7 @@ Mail jest osobnym, przyszłym etapem. GitHub Pages pozostaje hostingiem statyczn
 - [x] 2. Google Places New: debounce, sesje, ograniczenia i PRG/TERYT; ręczny adres bez Google.
 - [x] 3. Załączniki: kompresja, HEIC, miniatury, limity i przetwarzanie serwerowe.
 - [x] 4. Lokalne API: trwały zapis, prywatne pliki, logowanie, ograniczenia i ponawianie.
-- [ ] 5. Panel: rzeczywiste zgłoszenia, adres, pliki, statusy, notatki; brak publicznych linków.
+- [x] 5. Panel: rzeczywiste zgłoszenia, adres, pliki, statusy, notatki; brak publicznych linków.
 - [ ] 6. Testy całej ścieżki, urządzeń i instrukcja wdrożenia.
 - [ ] Później: wysyłka maili (oddzielny task).
 
@@ -29,3 +29,5 @@ python3 -c 'import getpass; print(getpass.getpass("Hasło administratora: "))' |
 Wynik wklej do `ADMIN_PASSWORD_HASH` w `.env.backend`. `npm run build`, następnie `npm run api:dev`. Formularz: `http://127.0.0.1:8787/serwis/`; prywatny panel: `http://127.0.0.1:8787/panel/`. W drugim terminalu można uruchomić `npm run dev` (API dopuszcza port 4321). Inny port wymaga zmiany `PUBLIC_ORIGINS`.
 
 Zgłoszenia są w SQLite, pliki poza `dist/`. Idempotency-Key chroni przed duplikatem po zerwanym połączeniu. Serwer sprawdza ponownie adres, telefon, typ pliku, rozmiar, dekodowanie i rozdzielczość. Hasło scrypt; losowe sesje w HttpOnly cookie, 8 godzin, SameSite Strict, Secure na produkcji. Logout unieważnia sesję. Zmiana hasha hasła unieważnia wcześniejsze sesje. Rate limits: wysyłka 6/h/IP, logowanie 5/15 min/IP, sugestie 30/min/IP. Dane nie trafiają do logów żądań ani do statycznego HTML.
+
+Panel rzeczywistych danych: `/panel/live/` w statycznym buildzie, `/panel/` na serwerze API. Publiczna strona nie ma linków do niego. Logowanie i pliki są na origin API, żeby uniknąć zawodnych third-party cookies z GitHub Pages. Dotychczasowe `/panel/serwis/` i `/panel/kontakt/` pozostają wyraźnie opisanym demo z fikcyjnymi danymi. W prywatnym panelu Kontakt jest pusty — jego formularz nie był częścią tego etapu; Przetargi pozostają placeholderem.

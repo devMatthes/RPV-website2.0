@@ -1,4 +1,5 @@
-import { uploadLimits, validateServiceFiles } from '../lib/service-schema';
+import { uploadLimits } from '../lib/service-types';
+import { validateServiceFiles } from '../lib/service-files';
 export interface SelectedFile { file: File; preview?: string; originalBytes: number; }
 export function attachFiles(form: HTMLFormElement) {
   const picker=form.querySelector<HTMLInputElement>('#service-files')!;
@@ -23,7 +24,7 @@ export function attachFiles(form: HTMLFormElement) {
             if(/\.hei[cf]$/i.test(file.name)){const {default:convert}=await import('heic2any');const output=await convert({blob:file,toType:'image/jpeg',quality:.9});if(signal.aborted)break;file=new File([Array.isArray(output)?output[0]:output],file.name.replace(/\.hei[cf]$/i,'.jpg'),{type:'image/jpeg'});}
             const {default:compress}=await import('browser-image-compression');
             const {default:workerURL}=await import('browser-image-compression/dist/browser-image-compression.js?url');
-            file=await compress(file,{fileType:"image/jpeg",maxSizeMB:1.5,maxWidthOrHeight:uploadLimits.imageEdge,initialQuality:.9,useWebWorker:true,libURL:workerURL,signal,maxIteration:5});
+            file=await compress(file,{fileType:"image/jpeg",maxSizeMB:1.5,maxWidthOrHeight:uploadLimits.imageEdge,initialQuality:.9,useWebWorker:true,libURL:new URL(workerURL,location.href).href,signal,maxIteration:5});
             file=new File([file],file.name.replace(/\.[^.]+$/,'.jpg'),{type:'image/jpeg'});
           } catch(problem) { if(signal.aborted)break; /* Backend will decode unsupported images and enforce dimensions. */ file=original; }
         }

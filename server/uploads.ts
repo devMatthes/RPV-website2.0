@@ -1,6 +1,6 @@
 import { Worker } from 'node:worker_threads';
 import { readFile, copyFile, chmod } from 'node:fs/promises';
-import { uploadLimits } from '../src/lib/service-schema.ts';
+import { uploadLimits } from '../src/lib/service-types.ts';
 export interface Upload { id:string; name:string; mime:string; size:number; file:string; thumbnail?:string; }
 let running=0;
 export async function processUpload(input:string, output:string, thumbnail:string, name:string): Promise<Pick<Upload,'name'|'mime'|'size'|'thumbnail'>> {

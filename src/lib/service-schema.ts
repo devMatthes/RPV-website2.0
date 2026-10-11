@@ -1,10 +1,7 @@
 import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 
-export const installations = ['Fotowoltaika', 'Magazyn energii', 'Pompa ciepła', 'Klimatyzacja', 'Instalacja elektryczna', 'Inna instalacja'] as const;
-export const provinces = ['dolnośląskie','kujawsko-pomorskie','lubelskie','lubuskie','łódzkie','małopolskie','mazowieckie','opolskie','podkarpackie','podlaskie','pomorskie','śląskie','świętokrzyskie','warmińsko-mazurskie','wielkopolskie','zachodniopomorskie'];
-export const uploadLimits = { count: 5, inputBytes: 20 * 1024 * 1024, totalBytes: 40 * 1024 * 1024, pixels: 40_000_000, imageEdge: 2560 };
-export interface ServiceAddress { street: string; building: string; apartment: string; postcode: string; city: string; commune: string; county: string; province: string; country: 'PL'; placeId?: string; teryt?: string; proof?: string; source: 'manual' | 'google'; }
-export interface ServiceSubmission { name: string; email: string; phone: string; address: ServiceAddress; installation: string; inverter: string; battery: string; message: string; privacy: boolean; website: string; }
+import { installations, provinces, uploadLimits, type ServiceSubmission } from './service-types.ts';
+export * from './service-types.ts';
 export type FieldErrors = Record<string, string>;
 const clean = (value: unknown, max: number) => typeof value === 'string' ? value.normalize('NFC').trim().slice(0, max) : '';
 export function validateService(input: unknown): { data: ServiceSubmission; errors: FieldErrors } {
@@ -35,12 +32,4 @@ export function validateService(input: unknown): { data: ServiceSubmission; erro
   // TERYT is populated by the backend from an authoritative dataset, never trusted from the browser.
   return { data, errors };
 }
-export function validateServiceFiles(files: { name: string; size: number; type: string }[]): string {
-  if (files.length > uploadLimits.count) return 'Możesz dodać maksymalnie 5 plików.';
-  if (files.reduce((sum, file) => sum + file.size, 0) > uploadLimits.totalBytes) return 'Załączniki mogą zajmować łącznie do 40 MB.';
-  for (const file of files) {
-    if (!/\.(jpe?g|png|webp|heic|heif|pdf)$/i.test(file.name) || (file.type && !['image/jpeg','image/png','image/webp','image/heic','image/heif','application/pdf'].includes(file.type))) return 'Dodaj JPG, PNG, WebP, HEIC, HEIF lub PDF.';
-    if (file.size <= 0 || file.size > uploadLimits.inputBytes) return 'Jeden plik może zajmować od 1 bajta do 20 MB.';
-  }
-  return '';
-}
+export { validateServiceFiles } from './service-files.ts';

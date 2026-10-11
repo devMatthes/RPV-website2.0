@@ -1,7 +1,7 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import sharp from 'sharp';
 import convert from 'heic-convert';
-import { uploadLimits } from '../src/lib/service-schema.ts';
+import { uploadLimits } from '../src/lib/service-types.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 function assertHeicDimensions(bytes: Buffer) {
   // HEIF image spatial extents ('ispe'): reject oversized images before allocating decoder memory.

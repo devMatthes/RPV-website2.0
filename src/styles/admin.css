@@ -115,3 +115,4 @@
 .admin-table td:first-child { white-space: nowrap; padding-right: 8px; }
 .admin .admin-back { border-radius: 8px; min-height: 44px; padding: 10px 20px; }
 @media (max-width: 899px) { .admin-case-card { gap: 8px; } .admin-case-card h2 { font-size: 14px; line-height: 21px; } }
+.live-image-dialog{background:#111;color:#fff;border:1px solid #444;border-radius:12px;padding:20px;max-width:95vw;max-height:95vh}.live-image-dialog img{display:block;max-width:85vw;max-height:75vh;object-fit:contain;margin-top:16px}.live-image-dialog::backdrop{background:#000b}

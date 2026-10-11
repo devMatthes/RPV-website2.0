@@ -1,0 +1,5 @@
+export const installations = ['Fotowoltaika', 'Magazyn energii', 'Pompa ciepła', 'Klimatyzacja', 'Instalacja elektryczna', 'Inna instalacja'] as const;
+export const provinces = ['dolnośląskie','kujawsko-pomorskie','lubelskie','lubuskie','łódzkie','małopolskie','mazowieckie','opolskie','podkarpackie','podlaskie','pomorskie','śląskie','świętokrzyskie','warmińsko-mazurskie','wielkopolskie','zachodniopomorskie'];
+export const uploadLimits = { count: 5, inputBytes: 20 * 1024 * 1024, totalBytes: 40 * 1024 * 1024, pixels: 40_000_000, imageEdge: 2560 };
+export interface ServiceAddress { street: string; building: string; apartment: string; postcode: string; city: string; commune: string; county: string; province: string; country: 'PL'; placeId?: string; teryt?: string; proof?: string; source: 'manual' | 'google'; }
+export interface ServiceSubmission { name: string; email: string; phone: string; address: ServiceAddress; installation: string; inverter: string; battery: string; message: string; privacy: boolean; website: string; }
