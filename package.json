@@ -8,7 +8,10 @@
     "check": "astro check",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "api:dev": "node --env-file-if-exists=.env.backend --experimental-strip-types server/index.ts",
+    "api:password": "node --experimental-strip-types server/hash-password.ts",
+    "api:check": "tsc -p server/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
