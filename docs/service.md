@@ -6,7 +6,7 @@ Mail jest osobnym, przyszłym etapem. GitHub Pages pozostaje hostingiem statyczn
 
 - [x] 1. Osobny formularz serwisowy, model adresu, natywne autofill, klawiatura telefonu, wspólna walidacja klienta i serwera. Testy walidacji i Astro check.
 - [x] 2. Google Places New: debounce, sesje, ograniczenia i PRG/TERYT; ręczny adres bez Google.
-- [ ] 3. Załączniki: kompresja, HEIC, miniatury, limity i przetwarzanie serwerowe.
+- [x] 3. Załączniki: kompresja, HEIC, miniatury, limity i przetwarzanie serwerowe.
 - [ ] 4. Lokalne API: trwały zapis, prywatne pliki, logowanie, ograniczenia i ponawianie.
 - [ ] 5. Panel: rzeczywiste zgłoszenia, adres, pliki, statusy, notatki; brak publicznych linków.
 - [ ] 6. Testy całej ścieżki, urządzeń i instrukcja wdrożenia.
