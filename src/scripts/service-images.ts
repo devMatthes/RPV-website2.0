@@ -1,3 +1,4 @@
+import { imageDimensions } from '../lib/image-dimensions';
 import { uploadLimits } from '../lib/service-types';
 import { validateServiceFiles } from '../lib/service-files';
 export interface SelectedFile { file: File; preview?: string; originalBytes: number; }
@@ -20,6 +21,8 @@ export function attachFiles(form: HTMLFormElement) {
       for(const original of files){
         if(signal.aborted)break;let file=original;
         if(!/\.pdf$/i.test(file.name)) {
+          const dimensions=imageDimensions(new Uint8Array(await file.arrayBuffer()));
+          if(dimensions && (!dimensions.width||!dimensions.height||dimensions.width*dimensions.height>uploadLimits.pixels)) throw new Error('Zdjęcie przekracza 40 megapikseli. Wybierz mniejszy plik.');
           try {
             if(/\.hei[cf]$/i.test(file.name)){const {default:convert}=await import('heic2any');const output=await convert({blob:file,toType:'image/jpeg',quality:.9});if(signal.aborted)break;file=new File([Array.isArray(output)?output[0]:output],file.name.replace(/\.hei[cf]$/i,'.jpg'),{type:'image/jpeg'});}
             const {default:compress}=await import('browser-image-compression');

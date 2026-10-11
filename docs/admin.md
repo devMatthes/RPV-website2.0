@@ -32,3 +32,7 @@ Przed integracją prawdziwych danych: osobny host np. `panel.twojadomena.pl`, lo
 - Skrypt panelu: około 10 kB, 4 kB gzip. Nie ładuje się na stronie publicznej.
 - Lighthouse mobile lista serwisu: Performance 98, Accessibility 100; LCP 1,8 s, CLS 0, TBT 0 ms. Lighthouse desktop: Performance 100, Accessibility 100; LCP 0,4 s, CLS 0, TBT 0 ms. Pomiar laboratoryjny na lokalnym produkcyjnym buildzie, nie jest pomiarem INP ani gwarancją dla wszystkich urządzeń.
 - Zrzuty i wyniki lokalne: `outputs/qa/admin-*` (artefakty QA są ignorowane przez Git).
+
+## Rzeczywiste zgłoszenia serwisowe
+
+Dodano osobny `/panel/live/`, serwowany jako `/panel/` przez backend API. To powłoka bez danych klientów w HTML; dane i zdjęcia pobiera dopiero po logowaniu. Przetargi pozostają placeholderem. Dotychczasowe trasy demo są zachowane do porównań projektu. Instrukcja logowania, konfiguracji i wdrożenia: [service.md](service.md).

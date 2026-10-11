@@ -25,14 +25,17 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Test form and consent validation
+      - name: Test validation, uploads and service API
         run: npm test
       - name: Check Astro and TypeScript
         run: npm run check
+      - name: Check backend TypeScript
+        run: npm run api:check
       - name: Build for GitHub Pages
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
+          PUBLIC_SERVICE_API_URL: ${{ vars.SERVICE_API_URL }}
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
@@ -41,7 +44,7 @@ jobs:
   deploy:
     # Enable only after Pages is available for this repository's visibility/plan.
     if: vars.PAGES_ENABLED == 'true'
-    needs: build
+    needs: [build, service-e2e, backend-container]
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -53,3 +56,30 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v5
+
+  service-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+        env:
+          PUBLIC_SERVICE_API_URL: http://127.0.0.1:8790
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: service-e2e-failures
+          path: test-results
+
+  backend-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate backend deployment image
+        run: docker build -t rpv-api-test .

@@ -37,4 +37,7 @@ Konfiguracja i optymalizacja konsultowane przez astro-docs MCP: strict TypeScrip
 - [x] 10a. Osobny layout i adres `/panel/`, listy serwisu/kontaktu, responsywne menu, filtry i paginacja. Bez linków ze strony publicznej; Przetargi tylko jako placeholder.
 - [x] 10b. Szczegóły spraw, zarządzanie statusem/opiekunem, przykładowe załączniki, lokalne notatki i historia w trybie demo.
 - [x] 10c. Kontrola wizualna i interakcji na 320–1440 px, testy logiki, build GitHub Pages i pomiar wydajności. Szczegóły oraz ograniczenia dostępu w `admin.md`.
-- [ ] 11. Backend panelu: logowanie i autoryzacja, integracja formularzy, trwały zapis, uprawnienia do plików. Wymaga osobnego etapu; ukryty URL obecnego demo nie zabezpiecza danych.
+- [x] 11a. Backend serwisu, logowanie, prywatne załączniki i rzeczywisty panel. Autofill, pełny adres, integracja Google/PRG, HEIC i ponawianie. Sześć osobnych tasków opisano w `service.md`.
+- [ ] 11b. Uruchomienie API na serwerze i klucza Google — czeka na infrastrukturę.
+- [ ] 11c. Podłączenie zwykłego formularza kontaktowego do backendu (poza etapem serwisu).
+- [ ] 12. Powiadomienia e-mail — osobny, przyszły task.

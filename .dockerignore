@@ -1,0 +1,11 @@
+.git
+node_modules*
+dist
+.astro
+.env
+.env.*
+.service-data
+outputs
+work
+test-results
+playwright-report

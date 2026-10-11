@@ -1,0 +1,45 @@
+services:
+  api:
+    build:
+      context: ..
+      args:
+        PUBLIC_SERVICE_API_URL: ${API_ORIGIN:?Set API_ORIGIN to https://your-api-domain}
+    env_file: ../.env.backend
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      DATA_DIR: /data
+      STATIC_DIR: /app/dist
+      STATIC_BASE: /
+      TRUST_PROXY: 172.28.0.2
+    restart: unless-stopped
+    volumes:
+      - rpv-data:/data
+    networks:
+      backend:
+        ipv4_address: 172.28.0.3
+    # No publicly exposed API port: only the HTTPS proxy can reach this service.
+  proxy:
+    image: caddy:2
+    environment:
+      API_HOST: ${API_HOST:?Set API_HOST to your-api-domain}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    networks:
+      backend:
+        ipv4_address: 172.28.0.2
+networks:
+  backend:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+volumes:
+  rpv-data:
+  caddy-data:
+  caddy-config:

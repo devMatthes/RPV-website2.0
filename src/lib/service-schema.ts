@@ -1,6 +1,6 @@
 import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 
-import { installations, provinces, uploadLimits, type ServiceSubmission } from './service-types.ts';
+import { installations, provinces, type ServiceSubmission } from './service-types.ts';
 export * from './service-types.ts';
 export type FieldErrors = Record<string, string>;
 const clean = (value: unknown, max: number) => typeof value === 'string' ? value.normalize('NFC').trim().slice(0, max) : '';

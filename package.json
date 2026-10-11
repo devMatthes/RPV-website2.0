@@ -11,7 +11,8 @@
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "api:dev": "node --env-file-if-exists=.env.backend --experimental-strip-types server/index.ts",
     "api:password": "node --experimental-strip-types server/hash-password.ts",
-    "api:check": "tsc -p server/tsconfig.json --noEmit"
+    "api:check": "tsc -p server/tsconfig.json --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
@@ -33,7 +34,11 @@
     "typescript": "^6.0.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@types/node": "^26.6.5",
     "lighthouse": "^13.5.0"
+  },
+  "engines": {
+    "node": ">=24.14.0"
   }
 }

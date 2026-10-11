@@ -9,7 +9,7 @@ test('persistent submission, idempotency, authenticated admin, private uploads, 
  try {
   const image=await sharp({create:{width:64,height:64,channels:3,background:'#ffaa22'}}).png().toBuffer();const files=[{name:'example.png',type:'image/png',bytes:image}];const key=randomUUID();
   let res=await app.inject({method:'POST',url:'/api/service',...multipart(example,files),headers:{...multipart(example).headers,'idempotency-key':key}}); // boundary must match body
-  assert.equal(res.statusCode,500);
+  assert.equal(res.statusCode,400);
   const body=multipart(example,files);res=await app.inject({method:'POST',url:'/api/service',...body,headers:{...body.headers,'idempotency-key':key}});assert.equal(res.statusCode,201,res.body);const receipt=res.json().reference;
   const retry=multipart(example,files);res=await app.inject({method:'POST',url:'/api/service',...retry,headers:{...retry.headers,'idempotency-key':key}});assert.equal(res.statusCode,200);assert.equal(res.json().reference,receipt);assert.equal(store.list().length,1);
   const changed=multipart({...example,message:'Different'},files);res=await app.inject({method:'POST',url:'/api/service',...changed,headers:{...changed.headers,'idempotency-key':key}});assert.equal(res.statusCode,409);

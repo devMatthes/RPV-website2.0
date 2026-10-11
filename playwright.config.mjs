@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'tests/browser',testMatch:'**/*.spec.mjs',workers:1,retries:0,timeout:60_000,use:{baseURL:'http://127.0.0.1:8790',headless:true,launchOptions:process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}},webServer:{command:`${process.execPath} --experimental-strip-types tests/browser/serve.mjs`,url:'http://127.0.0.1:8790/api/health',reuseExistingServer:false,timeout:30_000}});

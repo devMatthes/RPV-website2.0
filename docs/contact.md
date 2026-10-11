@@ -49,3 +49,7 @@ Lighthouse 13.5, produkcyjny lokalny podgląd, headless Chrome, pusty cache i do
 | Strona główna | mobile | 97 | 100 | 100 | 2.4 s | 0.001 | 0 ms |
 
 Pomiary obejmują pierwszą wizytę z otwartym panelem cookies. Wynik Accessibility odnosi się do tego stanu; formularze po zamknięciu panelu sprawdzono ręcznie, więc 100 nie stanowi deklaracji pełnej zgodności całej strony z WCAG. Wyniki laboratoryjne nie potwierdzają rzeczywistego INP. Pojedynczy pomiar 404 podczas przebudowy ścieżek odrzucono i powtórzono po przywróceniu lokalnego buildu.
+
+## Rozwinięcie formularza serwisowego
+
+Serwis otrzymał osobny formularz i backend (bez wysyłania maili): [service.md](service.md). Opis powyżej dotyczy pierwotnego podglądu. Zwykły formularz kontaktowy nadal pozostaje podglądem.

@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-11",
+  "environment": "Local production build, Chrome, Lighthouse default simulated mobile and desktop presets",
+  "viewportWidths": [
+    320,
+    390,
+    834,
+    1440
+  ],
+  "unitAndApiTests": 23,
+  "browserTests": 3,
+  "realGoogle": "Pending key; mocked UI and API contract tested",
+  "realHEIC": "libheif official example converted server-side and browser-side",
+  "reports": {
+    "mobile": {
+      "performance": 97.0,
+      "accessibility": 100,
+      "LCP_ms": 2256.3182,
+      "CLS": 0.0001444805877059616,
+      "TBT_ms": 0
+    },
+    "desktop": {
+      "performance": 100,
+      "accessibility": 100,
+      "LCP_ms": 488.14339999999993,
+      "CLS": 7.900977366255145e-05,
+      "TBT_ms": 0
+    }
+  }
+}
