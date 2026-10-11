@@ -1,0 +1,21 @@
+---
+import { owners, statuses, shortDate, panelHref, type AdminCase } from '../../data/admin';
+import StatusBadge from './StatusBadge.astro';
+import AdminSelect from './AdminSelect.astro';
+import Button from '../Button.astro';
+interface Props { item: AdminCase; }
+const { item } = Astro.props;
+---
+<Button href={panelHref(`${item.module}/`)} variant="outline" class="admin-back">Powrót do listy</Button>
+<header class="admin-title"><h1>{item.id}</h1><p>{item.client} · {shortDate(item.date).replace(' · ', '.2026, ')}</p></header>
+<section class="admin-detail" data-case-detail={item.id} aria-label="Szczegóły zgłoszenia">
+<div class="admin-case-body">
+<section class="admin-card"><h2>{item.module === 'serwis' ? 'Opis problemu' : item.subject}</h2><p class="admin-message">{item.message}</p></section>
+{item.installation && <section class="admin-card"><h2>Dane instalacji</h2><div class="admin-data"><dl><div><dt>Rodzaj instalacji</dt><dd>{item.subject}</dd></div><div><dt>Adres instalacji</dt><dd>{item.installation.address}</dd></div></dl><dl><div><dt>Nr seryjny falownika</dt><dd>{item.installation.serial}</dd></div><div><dt>Nr seryjny magazynu energii</dt><dd>{item.installation.battery}</dd></div></dl></div></section>}
+{item.attachments.length > 0 && <section class="admin-card"><h2>Załączniki · {item.attachments.length}</h2><div class="admin-file-list">{item.attachments.map(file=><div class="admin-file"><span>JPG</span><div><strong>{file.name}</strong><small>Zdjęcie · {file.size}</small></div></div>)}</div><p class="admin-caption">Przykładowe załączniki — pliki nie są dostępne w wersji demo.</p></section>}
+<form class="admin-card admin-note" data-note-form><label class="admin-field"><span>Notatka wewnętrzna</span><textarea name="note" placeholder="Wpisz ustalenia dla zespołu..." required maxlength="2000" rows="5"></textarea></label><p class="admin-caption">W demo notatki są zapisywane tylko w tej karcie przeglądarki.</p><button class="button button--primary" type="submit">Dodaj notatkę</button><p class="admin-feedback" role="status" data-note-feedback></p><div class="admin-saved-notes" data-notes></div></form>
+</div>
+<div class="admin-case-side"><form class="admin-card admin-manage" data-manage-form><h2>Obsługa sprawy</h2><StatusBadge status={item.status} /><AdminSelect label="Status" name="status" value={item.status} options={Object.entries(statuses).filter(([key])=>item.module === 'serwis' || key !== 'waiting').map(([value,label])=>({value,label}))} /><AdminSelect label="Opiekun" name="owner" value={item.owner} options={owners.map(value=>({value,label:value}))} /><button class="button button--primary" type="submit">Zapisz zmiany</button><p class="admin-feedback" role="status" data-manage-feedback></p></form>
+<section class="admin-card admin-customer"><h2>Kontakt z klientem</h2><dl><div><dt>Imię i nazwisko</dt><dd>{item.client}</dd></div><div><dt>Adres e-mail</dt><dd><a href={`mailto:${item.email}`}>{item.email}</a></dd></div><div><dt>Telefon</dt><dd>{item.phone}</dd></div></dl><Button href={`mailto:${item.email}?subject=${encodeURIComponent(`RPV — ${item.id}`)}`}>Odpowiedz e-mailem</Button></section>
+<section class="admin-card admin-history"><h2>Historia sprawy</h2><ol class="admin-timeline" data-history><li><time class="admin-caption" datetime={item.date}>{shortDate(item.date).replace(' · ', '.2026 · ')}</time><p>Wpłynęło {item.module === 'serwis' ? 'zgłoszenie z formularza serwisowego.' : 'zapytanie z formularza kontaktowego.'}</p></li></ol></section></div>
+</section>

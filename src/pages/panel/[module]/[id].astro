@@ -1,0 +1,10 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import CaseDetail from '../../../components/admin/CaseDetail.astro';
+import { adminCases } from '../../../data/admin';
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+export const getStaticPaths = (() => adminCases.map(item => ({params:{module:item.module,id:item.id.toLowerCase()},props:{item}}))) satisfies GetStaticPaths;
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { item } = Astro.props;
+---
+<AdminLayout title={item.id} module={item.module}><CaseDetail item={item} /></AdminLayout>
