@@ -47,10 +47,10 @@ Każde zadanie implementacyjne sprawdzamy i kończymy osobnym commitem. CMS i mi
 - [x] Aktualny Wrangler, konfiguracja lokalna/staging/production i generowane typy.
 - [x] Dwie rzeczywiste bazy D1 w UE.
 - [x] Lokalne D1/R2, endpoint health, smoke i dry runs, kontrole CI.
-- [ ] Aktywacja R2 przez właściciela i utworzenie prywatnych bucketów.
-- [ ] Wdrożenie i sprawdzenie zdalnych Workers po aktywacji R2.
+- [x] Aktywacja R2 przez właściciela i utworzenie prywatnych bucketów.
+- [x] Wdrożenie i sprawdzenie zdalnych Workers po aktywacji R2.
 
-Task 1 pozostaje częściowo ukończony do wykonania dwóch powyższych kroków. Nie rozpoczynamy migracji danych zgłoszeń w tym commicie.
+Task 1 ukończony. Migracja danych zgłoszeń pozostaje taskiem 2.
 
 Konfiguracja: `cloudflare/wrangler.jsonc`. Domyślne środowisko jest lokalne (port 8788, bez połączeń do danych produkcyjnych). Środowiska `staging` i `production` mają osobne zasoby. Flaga `remote: false` dotyczy lokalnego developmentu; po wdrożeniu bindings wskazują rzeczywiste zasoby danego środowiska.
 
@@ -63,7 +63,7 @@ Utworzono dwie bazy D1 w jurysdykcji UE, bez replik odczytu:
 
 Bindings: `DB` (D1), `FILES` (R2), `ENVIRONMENT`. Identyfikatory zasobów nie są sekretami. Dane klientów i pliki nie trafiają do Git. Katalog `.wrangler/` i pliki `.dev.vars*` są ignorowane; wyjątkiem jest pusty szablon `.dev.vars.example`.
 
-R2 wymaga aktywacji przez właściciela w panelu Cloudflare (API zwróciło kod 10042: Please enable R2 through the Cloudflare Dashboard). Docelowe prywatne buckety: `rpv-files-staging` i `rpv-files-production`. Nie włączać publicznego adresu r2.dev ani publicznej domeny dla załączników. Konfiguracja lokalna R2 działa niezależnie od aktywacji usługi.
+Właściciel aktywował R2. Utworzono prywatne buckety `rpv-files-staging` i `rpv-files-production` w klasie Standard, z lokalizacją WEUR (wskazówka lokalizacji, jurysdykcja default; nie jest to twarde ograniczenie do UE). Potwierdzono `enabled: false` dla publicznego r2.dev i brak domen publicznych. Nie włączać publicznego adresu r2.dev ani publicznej domeny dla załączników. Konfiguracja lokalna R2 działa niezależnie od aktywacji usługi.
 
 Worker ma wyłącznie endpoint infrastrukturalny `/api/health`; brak API formularzy, CMS i panelu w tej fazie. Odpowiedź health nie potwierdza jeszcze gotowości aplikacji ani dostępności bazy/plików. Logi mają wyłączone automatyczne logowanie wywołań i śledzenie, a query string jest redagowany, aby przyszłe dane formularzy nie trafiały do logów.
 
@@ -90,7 +90,7 @@ npm run cf:dry-run:production
 
 Te polecenia tylko kompilują i sprawdzają konfigurację; nie wdrażają ani nie tworzą usług. Wdrożenie CLI wymaga osobnego `npx wrangler login` — autoryzacja pluginu w Codex nie loguje automatycznie terminalowego Wranglera. Nie wyciągać tokenów z pluginu ani nie wpisywać sekretów w argumentach poleceń.
 
-Po aktywacji R2 i utworzeniu prywatnych bucketów można wdrożyć przez autoryzowany plugin albo zalogowany Wrangler:
+Worker wdrożono przez autoryzowany plugin Cloudflare: dokładny moduł wygenerowany podczas dry run Wrangler, z metadanymi zgodnymi z konfiguracją. Kolejne wdrożenia można wykonać przez zalogowany Wrangler:
 
 ```sh
 npm run cf:deploy:staging
@@ -108,4 +108,16 @@ GitHub Actions sprawdza binding types, TypeScript, lokalne D1/R2 i oba dry runs.
 - Dry run staging oraz production: poprawne; moduł 1,08 KiB (0,57 KiB gzip).
 - Rzeczywisty lokalny runtime Wrangler: `/api/health` zwraca 200 i `phase: infrastructure`.
 - Dotychczasowe 24 testy backendu: poprawne. `api:check` oraz Astro check: brak błędów.
-- Zdalne R2 i pełne wdrożenie nie są potwierdzone; wymagają aktywacji usługi. D1 nie zawiera jeszcze tabel aplikacji ani danych klientów.
+- CI commita `f5ae48b`: wszystkie zadania poprawne, w tym smoke Cloudflare, oba dry runs, testy przeglądarkowe i build obrazu dotychczasowego API.
+- Zdalne Workers staging i production: `/api/health` zwraca HTTPS 200 i właściwe środowisko. Odczyt settings potwierdza osobne DB/FILES oraz ustawienia logów zgodne z repo. Zdalne D1: `SELECT 1` poprawne w obu środowiskach. D1 nie zawiera jeszcze tabel aplikacji ani danych klientów.
+- Prywatność R2: r2.dev wyłączone, brak custom domains. Testy zapisu i odczytu plików wykonano lokalnie; zdalny przepływ załączników będzie testowany w tasku 4.
+
+## Kontrola kosztów — propozycja do taska 4
+
+Cloudflare budget alerts są informacyjne: nie zatrzymują ani nie ograniczają użycia. Nie ustawiono alertu na koncie ani limitów aplikacyjnych w tasku 1.
+
+Propozycja: limit miejsca na dane RPV łącznie 8 GB (staging i production), limity operacji/okres rozliczeniowy oraz dotychczasowe limity na plik i zgłoszenie. Wymaga liczników, rezerwacji miejsca odpornej na równoległe uploady, odrzucania nowych operacji po wyczerpaniu budżetu i zachowania możliwości usuwania danych. Wliczać zdjęcia CMS, pliki tymczasowe i uwzględnić kopie zapasowe. Alert kosztowy np. 1 USD w Billing > Billable Usage jest dodatkowym ostrzeżeniem, a nie gwarancją rachunku 0 USD.
+
+Darmowy limit R2 Standard dotyczy całego konta: 10 GB-month, 1 mln operacji Class A i 10 mln Class B na okres rozliczeniowy. Nie jest oddzielny dla każdego bucketu. Inne projekty, działania z panelu/API i opóźnione metryki mogą ograniczyć skuteczność własnej kontroli kosztów. Przyszłe limity aplikacji nie gwarantują zerowych kosztów całego konta.
+
+Źródła: [R2 pricing](https://developers.cloudflare.com/r2/pricing/), [Budget alerts](https://developers.cloudflare.com/billing/manage/budget-alerts/).
