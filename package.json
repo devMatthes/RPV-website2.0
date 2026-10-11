@@ -12,7 +12,15 @@
     "api:dev": "node --env-file-if-exists=.env.backend --experimental-strip-types server/index.ts",
     "api:password": "node --experimental-strip-types server/hash-password.ts",
     "api:check": "tsc -p server/tsconfig.json --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "cf:dev": "wrangler dev --config cloudflare/wrangler.jsonc --local",
+    "cf:types": "wrangler types cloudflare/worker-configuration.d.ts --config cloudflare/wrangler.jsonc --include-runtime false",
+    "cf:check": "tsc -p cloudflare/tsconfig.json --noEmit",
+    "cf:smoke": "node --experimental-strip-types scripts/cloudflare-smoke.mjs",
+    "cf:dry-run:staging": "wrangler deploy --config cloudflare/wrangler.jsonc --env staging --dry-run",
+    "cf:dry-run:production": "wrangler deploy --config cloudflare/wrangler.jsonc --env production --dry-run",
+    "cf:deploy:staging": "wrangler deploy --config cloudflare/wrangler.jsonc --env staging",
+    "cf:deploy:production": "wrangler deploy --config cloudflare/wrangler.jsonc --env production"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
@@ -34,9 +42,11 @@
     "typescript": "^6.0.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261011.1",
     "@playwright/test": "^1.64.0",
     "@types/node": "^26.6.5",
-    "lighthouse": "^13.5.0"
+    "lighthouse": "^13.5.0",
+    "wrangler": "^4.149.0"
   },
   "engines": {
     "node": ">=24.14.0"

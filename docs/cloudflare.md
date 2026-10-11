@@ -40,4 +40,72 @@ Obecne rekordy strony i poczty zachowano. Nie zmieniono serwerów nazw u rejestr
 11. Publikacja zatwierdzonej wersji przez GitHub Actions i Astro; wynik publikacji widoczny w panelu.
 12. Automatyczne usuwanie po 24 h, kopie zapasowe z polityką wygasania, test odtwarzania i końcowe QA.
 
-Każde zadanie implementacyjne sprawdzamy i kończymy osobnym commitem. Workers, D1, R2 oraz CMS nie zostały jeszcze wdrożone.
+Każde zadanie implementacyjne sprawdzamy i kończymy osobnym commitem. CMS i migracja zgłoszeń nie zostały jeszcze wdrożone.
+
+## Task 1 — środowiska Cloudflare
+
+- [x] Aktualny Wrangler, konfiguracja lokalna/staging/production i generowane typy.
+- [x] Dwie rzeczywiste bazy D1 w UE.
+- [x] Lokalne D1/R2, endpoint health, smoke i dry runs, kontrole CI.
+- [ ] Aktywacja R2 przez właściciela i utworzenie prywatnych bucketów.
+- [ ] Wdrożenie i sprawdzenie zdalnych Workers po aktywacji R2.
+
+Task 1 pozostaje częściowo ukończony do wykonania dwóch powyższych kroków. Nie rozpoczynamy migracji danych zgłoszeń w tym commicie.
+
+Konfiguracja: `cloudflare/wrangler.jsonc`. Domyślne środowisko jest lokalne (port 8788, bez połączeń do danych produkcyjnych). Środowiska `staging` i `production` mają osobne zasoby. Flaga `remote: false` dotyczy lokalnego developmentu; po wdrożeniu bindings wskazują rzeczywiste zasoby danego środowiska.
+
+Utworzono dwie bazy D1 w jurysdykcji UE, bez replik odczytu:
+
+| Środowisko | Baza D1 | Identyfikator |
+| --- | --- | --- |
+| staging | rpv-db-staging | 068eda7a-02a0-48cf-8df9-a5dfb41c19bc |
+| production | rpv-db-production | b25888e0-07df-4f6d-babc-3c8c2579ae60 |
+
+Bindings: `DB` (D1), `FILES` (R2), `ENVIRONMENT`. Identyfikatory zasobów nie są sekretami. Dane klientów i pliki nie trafiają do Git. Katalog `.wrangler/` i pliki `.dev.vars*` są ignorowane; wyjątkiem jest pusty szablon `.dev.vars.example`.
+
+R2 wymaga aktywacji przez właściciela w panelu Cloudflare (API zwróciło kod 10042: Please enable R2 through the Cloudflare Dashboard). Docelowe prywatne buckety: `rpv-files-staging` i `rpv-files-production`. Nie włączać publicznego adresu r2.dev ani publicznej domeny dla załączników. Konfiguracja lokalna R2 działa niezależnie od aktywacji usługi.
+
+Worker ma wyłącznie endpoint infrastrukturalny `/api/health`; brak API formularzy, CMS i panelu w tej fazie. Odpowiedź health nie potwierdza jeszcze gotowości aplikacji ani dostępności bazy/plików. Logi mają wyłączone automatyczne logowanie wywołań i śledzenie, a query string jest redagowany, aby przyszłe dane formularzy nie trafiały do logów.
+
+### Lokalne polecenia
+
+```sh
+npm ci
+npm run cf:types
+npm run cf:check
+npm run cf:smoke
+npm run cf:dev
+```
+
+Health: `http://127.0.0.1:8788/api/health`. Ten port nie koliduje z poprzednim API Node na 8787. Smoke używa lokalnych bindings dla wszystkich trzech konfiguracji, `persist: false` i `remoteBindings: false`: sprawdza zapis/odczyt D1, zapis/odczyt/usunięcie R2 oraz odpowiedzi 200/HEAD/405/404. Nie wykonuje zapytań do prawdziwego Google ani operacji na zdalnych danych.
+
+Typy `cloudflare/worker-configuration.d.ts` generuje Wrangler; runtime types pochodzą z aktualnego `@cloudflare/workers-types`. Po zmianie bindings ponownie uruchomić `cf:types`. Kontrola zgodności w CI: `npm run cf:types -- --check`.
+
+### Wdrożenie
+
+```sh
+npm run cf:dry-run:staging
+npm run cf:dry-run:production
+```
+
+Te polecenia tylko kompilują i sprawdzają konfigurację; nie wdrażają ani nie tworzą usług. Wdrożenie CLI wymaga osobnego `npx wrangler login` — autoryzacja pluginu w Codex nie loguje automatycznie terminalowego Wranglera. Nie wyciągać tokenów z pluginu ani nie wpisywać sekretów w argumentach poleceń.
+
+Po aktywacji R2 i utworzeniu prywatnych bucketów można wdrożyć przez autoryzowany plugin albo zalogowany Wrangler:
+
+```sh
+npm run cf:deploy:staging
+npm run cf:deploy:production
+```
+
+Docelowe tymczasowe adresy: `https://rpv-api-staging.jaciubekmateusz.workers.dev` i `https://rpv-api-production.jaciubekmateusz.workers.dev`. `panel.rpv.pl` podłączymy po aktywacji DNS i przygotowaniu panelu. Nie ustawiamy jeszcze `SERVICE_API_URL` w GitHub: infrastrukturalny Worker nie przyjmuje zgłoszeń.
+
+GitHub Actions sprawdza binding types, TypeScript, lokalne D1/R2 i oba dry runs. Dotychczasowe API Node pozostaje dostępne lokalnie do porównania podczas migracji.
+
+### Wyniki sprawdzenia przygotowania
+
+- `cf:types -- --check` oraz `cf:check`: poprawne.
+- `cf:smoke`: trzy konfiguracje, lokalny zapis/odczyt D1 i zapis/odczyt/usunięcie R2; health GET/HEAD, odrzucenie POST i nieistniejącego API zgłoszeń.
+- Dry run staging oraz production: poprawne; moduł 1,08 KiB (0,57 KiB gzip).
+- Rzeczywisty lokalny runtime Wrangler: `/api/health` zwraca 200 i `phase: infrastructure`.
+- Dotychczasowe 24 testy backendu: poprawne. `api:check` oraz Astro check: brak błędów.
+- Zdalne R2 i pełne wdrożenie nie są potwierdzone; wymagają aktywacji usługi. D1 nie zawiera jeszcze tabel aplikacji ani danych klientów.

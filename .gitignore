@@ -15,3 +15,7 @@ playwright-report/
 node_modules.stalled/
 
 .service-data/
+
+.wrangler/
+.dev.vars*
+!.dev.vars.example

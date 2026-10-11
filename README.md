@@ -1,6 +1,6 @@
 # RPV website
 
-Frontend strony RPV: Astro, TypeScript i CSS. Frontend bez CMS i wysyłki formularzy. Repozytorium zawiera konfigurację GitHub Pages.
+Strona RPV: Astro, TypeScript i CSS, z publikacją na GitHub Pages. Repo zawiera lokalny backend formularza serwisowego oraz przygotowywaną migrację do Cloudflare Workers/D1/R2. CMS jest kolejnym etapem.
 
 ## Uruchomienie
 
@@ -36,4 +36,6 @@ GITHUB_PAGES=true npm run build
 
 Lokalne `npm run dev` i `npm run build` używają `/`; workflow używa `/RPV-website2.0/`. Obrazy, fonty, favicon i linki strony głównej respektują base. Podgląd nadal ma noindex/nofollow. Nie skonfigurowano domeny własnej.
 
-Kontakt, serwis, cookies i stany formularzy: [docs/contact.md](docs/contact.md). Formularze są podglądem bez transportu; wpisane dane i pliki pozostają w bieżącej stronie.
+Kontakt, serwis, cookies i stany formularzy: [docs/contact.md](docs/contact.md).
+
+Lokalny backend serwisu: [docs/service.md](docs/service.md). Migracja i środowiska Cloudflare: [docs/cloudflare.md](docs/cloudflare.md). Publiczna wysyłka wymaga wdrożenia API i podłączenia jego adresu do buildu strony; formularz kontaktowy nadal czeka na integrację.

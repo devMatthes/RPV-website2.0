@@ -1,0 +1,68 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "rpv-api-local",
+  "account_id": "cffac3effff96317be94f02e252a3ca6",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-11",
+  "compatibility_flags": ["nodejs_compat"],
+  // Default environment is local only. Always deploy an explicit named environment.
+  "workers_dev": false,
+  "preview_urls": false,
+  "dev": { "ip": "127.0.0.1", "port": 8788 },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "enabled": true, "invocation_logs": false },
+    "traces": { "enabled": false },
+    "redact_query_string": true
+  },
+  "vars": { "ENVIRONMENT": "local" },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "rpv-db-local",
+    "database_id": "00000000-0000-0000-0000-000000000001",
+    "migrations_dir": "migrations",
+    "remote": false
+  }],
+  "r2_buckets": [{
+    "binding": "FILES",
+    "bucket_name": "rpv-files-local",
+    "remote": false
+  }],
+  "env": {
+    "staging": {
+      "name": "rpv-api-staging",
+      "workers_dev": true,
+      "vars": { "ENVIRONMENT": "staging" },
+      "d1_databases": [{
+        "binding": "DB",
+        "database_name": "rpv-db-staging",
+        "database_id": "068eda7a-02a0-48cf-8df9-a5dfb41c19bc",
+        "migrations_dir": "migrations",
+        "remote": false
+      }],
+      "r2_buckets": [{
+        "binding": "FILES",
+        "bucket_name": "rpv-files-staging",
+        "remote": false
+      }]
+    },
+    "production": {
+      "name": "rpv-api-production",
+      "workers_dev": true,
+      "vars": { "ENVIRONMENT": "production" },
+      "d1_databases": [{
+        "binding": "DB",
+        "database_name": "rpv-db-production",
+        "database_id": "b25888e0-07df-4f6d-babc-3c8c2579ae60",
+        "migrations_dir": "migrations",
+        "remote": false
+      }],
+      "r2_buckets": [{
+        "binding": "FILES",
+        "bucket_name": "rpv-files-production",
+        "remote": false
+      }]
+    }
+  }
+}

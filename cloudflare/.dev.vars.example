@@ -1,0 +1,5 @@
+# Task 1 does not require application secrets.
+# Copy to .dev.vars for local development when later tasks introduce secrets.
+# Never copy production secrets into local fixtures or commit .dev.vars.
+# Staging/production secrets are configured separately using wrangler secret put
+# with an explicit --env staging or --env production.

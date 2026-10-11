@@ -41,3 +41,20 @@ Konfiguracja i optymalizacja konsultowane przez astro-docs MCP: strict TypeScrip
 - [ ] 11b. Uruchomienie API na serwerze i klucza Google — czeka na infrastrukturę.
 - [ ] 11c. Podłączenie zwykłego formularza kontaktowego do backendu (poza etapem serwisu).
 - [ ] 12. Powiadomienia e-mail — osobny, przyszły task.
+
+## Migracja do Cloudflare i CMS
+
+Aktualny plan, zasoby i polecenia: [cloudflare.md](cloudflare.md).
+
+- [ ] CF1. Workers/D1/R2 i środowiska. Konfiguracja, lokalny smoke, CI i dwie bazy D1 gotowe; aktywacja R2 i zdalne wdrożenie oczekują na właściciela.
+- [ ] CF2. Migracja danych do D1.
+- [ ] CF3. API formularza i integracje adresowe na Workers.
+- [ ] CF4. Prywatne załączniki R2.
+- [ ] CF5. Kompresja wyłącznie w przeglądarce i końcowe limity.
+- [ ] CF6. Logowanie i rzeczywisty panel na Workers.
+- [ ] CF7. Formularz zwykłego kontaktu.
+- [ ] CF8. Testy i produkcyjne wdrożenie formularzy.
+- [ ] CF9. CMS realizacji.
+- [ ] CF10. CMS tekstów.
+- [ ] CF11. Publikacja wersji treści i zdjęć przez Astro/GitHub Actions.
+- [ ] CF12. Usuwanie zamkniętych spraw po 24 h, kopie zapasowe i końcowe QA.

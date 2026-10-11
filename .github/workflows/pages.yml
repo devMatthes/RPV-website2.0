@@ -31,6 +31,16 @@ jobs:
         run: npm run check
       - name: Check backend TypeScript
         run: npm run api:check
+      - name: Check Cloudflare binding types
+        run: npm run cf:types -- --check
+      - name: Check Cloudflare TypeScript
+        run: npm run cf:check
+      - name: Test local Cloudflare bindings
+        run: npm run cf:smoke
+      - name: Validate Cloudflare deployments without uploading
+        run: |
+          npm run cf:dry-run:staging
+          npm run cf:dry-run:production
       - name: Build for GitHub Pages
         run: npm run build
         env:
