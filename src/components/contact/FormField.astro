@@ -2,14 +2,14 @@
 interface Props {
   name: string; label: string; placeholder: string; required?: boolean;
   type?: 'text' | 'email' | 'tel'; kind?: 'input' | 'textarea' | 'select';
-  autocomplete?: string; options?: string[]; maxlength?: number;
+  autocomplete?: string; options?: string[]; maxlength?: number; inputmode?: "numeric" | "tel" | "email" | "text";
 }
-const {name,label,placeholder,required=false,type='text',kind='input',autocomplete,options=[],maxlength=200}=Astro.props;
+const {name,label,placeholder,required=false,type='text',kind='input',autocomplete,options=[],maxlength=200,inputmode}=Astro.props;
 const id=`field-${name}`;
 ---
 <div class="field">
   <label for={id}>{label}</label>
-  {kind==='textarea' ? <textarea id={id} name={name} placeholder={placeholder} required={required} maxlength={maxlength} aria-describedby={`${id}-error`}></textarea> : kind==='select' ? <select id={id} name={name} required={required} aria-describedby={`${id}-error`}><option value="">{placeholder}</option>{options.map(value=><option value={value}>{value}</option>)}</select> : <input id={id} name={name} type={type} placeholder={placeholder} required={required} autocomplete={autocomplete} maxlength={maxlength} aria-describedby={`${id}-error`} />}
+  {kind==='textarea' ? <textarea id={id} name={name} placeholder={placeholder} required={required} maxlength={maxlength} aria-describedby={`${id}-error`}></textarea> : kind==='select' ? <select id={id} name={name} required={required} aria-describedby={`${id}-error`}><option value="">{placeholder}</option>{options.map(value=><option value={value}>{value}</option>)}</select> : <input id={id} name={name} type={type} inputmode={inputmode} placeholder={placeholder} required={required} autocomplete={autocomplete} maxlength={maxlength} aria-describedby={`${id}-error`} />}
   <p id={`${id}-error`} class="field-error" hidden></p>
 </div>
 <style>

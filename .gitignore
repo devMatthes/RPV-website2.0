@@ -10,3 +10,5 @@ work/
 assets/mockup/
 test-results/
 playwright-report/
+
+node_modules.stalled/

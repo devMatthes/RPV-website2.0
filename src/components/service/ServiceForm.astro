@@ -1,0 +1,49 @@
+---
+import FormField from '../contact/FormField.astro';
+import { installations, provinces } from '../../lib/service-schema';
+const home = import.meta.env.BASE_URL;
+const api = import.meta.env.PUBLIC_SERVICE_API_URL ?? '';
+---
+<div class="service-panel" id="formularz">
+  <nav class="topic-switch" aria-label="Rodzaj kontaktu"><a href={`${home}kontakt/`}>Kontakt</a><a href={`${home}serwis/`} aria-current="page">Zgłoś serwis</a></nav>
+  <div><h2>Zgłoszenie serwisowe</h2><p>Podaj dane instalacji i opisz problem. Pola oznaczone * są wymagane.</p></div>
+  <form data-service-form data-api={api} novalidate autocomplete="on" method="post">
+    <fieldset><legend>Dane kontaktowe</legend>
+      <FormField name="name" label="Imię i nazwisko *" placeholder="Imię i nazwisko" required autocomplete="section-service name" maxlength={120} />
+      <div class="field-row"><FormField name="phone" label="Telefon *" placeholder="515 114 676" type="tel" inputmode="tel" autocomplete="section-service tel" required maxlength={30} /><FormField name="email" label="Adres e-mail *" placeholder="twoj@email.pl" type="email" inputmode="email" autocomplete="section-service email" required maxlength={254} /></div>
+      <p class="hint">Numer zagraniczny podaj z prefiksem, np. +49. Możesz wkleić numer ze spacjami.</p>
+    </fieldset>
+    <fieldset><legend>Adres instalacji</legend>
+      <div class="address-search" hidden><label for="address-search">Znajdź adres</label><input id="address-search" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="address-suggestions" placeholder="Wpisz co najmniej 3 znaki" /><ul id="address-suggestions" role="listbox" hidden></ul><p class="google-attribution" translate="no" hidden>Google Maps</p><p id="address-status" role="status"></p></div>
+      <p class="hint">Sprawdź i uzupełnij adres. Jeśli miejscowość nie ma ulic, zostaw ulicę pustą.</p>
+      <FormField name="street" label="Ulica (opcjonalnie)" placeholder="Ulica" autocomplete="section-installation address-line1" maxlength={160} />
+      <div class="field-row"><FormField name="building" label="Numer budynku *" placeholder="12A" required autocomplete="off" maxlength={30} /><FormField name="apartment" label="Numer lokalu (opcjonalnie)" placeholder="Numer lokalu" autocomplete="section-installation address-line2" maxlength={30} /></div>
+      <div class="field-row"><FormField name="postcode" label="Kod pocztowy *" placeholder="00-000" required autocomplete="section-installation postal-code" maxlength={6} /><FormField name="city" label="Miejscowość *" placeholder="Miejscowość" required autocomplete="section-installation address-level2" maxlength={120} /></div>
+      <div class="field-row"><FormField name="commune" label="Gmina *" placeholder="Gmina" required maxlength={120} /><FormField name="county" label="Powiat *" placeholder="Powiat lub miasto na prawach powiatu" required maxlength={120} /></div>
+      <FormField name="province" label="Województwo *" placeholder="Wybierz województwo" kind="select" required autocomplete="section-installation address-level1" options={provinces} />
+      <input name="country" type="hidden" value="PL" />
+    </fieldset>
+    <fieldset><legend>Instalacja i problem</legend>
+      <FormField name="installation" label="Rodzaj instalacji *" placeholder="Wybierz rodzaj instalacji" kind="select" required options={[...installations]} />
+      <FormField name="inverter" label="Numer seryjny falownika (opcjonalnie)" placeholder="Numer z tabliczki znamionowej" maxlength={100} />
+      <FormField name="battery" label="Numer seryjny magazynu (opcjonalnie)" placeholder="Numer z tabliczki znamionowej" maxlength={100} />
+      <FormField name="message" label="Opis problemu *" placeholder="Co się dzieje? Od kiedy? Czy wyświetla się komunikat błędu?" kind="textarea" required maxlength={5000} />
+    </fieldset>
+    <fieldset class="attachments"><legend>Zdjęcia i dokumenty (opcjonalnie)</legend>
+      <input id="service-files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.pdf" aria-describedby="file-help file-error" />
+      <label class="attachment-button" for="service-files">+ Dodaj załączniki</label>
+      <p id="file-help" class="hint">Do 5 plików, 20 MB na plik, 40 MB łącznie. JPG, PNG, WebP, HEIC lub PDF. Zdjęcia zoptymalizujemy przed zapisem.</p>
+      <p id="file-error" class="error" role="status" hidden></p><ul class="file-list" aria-label="Wybrane załączniki"></ul>
+    </fieldset>
+    <label class="privacy"><input name="privacy" type="checkbox" required aria-describedby="field-privacy-error" /><span>Rozumiem, że moje dane i załączniki zostaną wykorzystane do obsługi zgłoszenia przez RPV. Nie podawaj danych innych osób ani informacji, które nie dotyczą serwisu. *</span></label>
+    <p id="field-privacy-error" class="error" hidden></p>
+    <div class="honeypot" aria-hidden="true"><label for="service-website">Strona internetowa</label><input id="service-website" name="website" tabindex="-1" autocomplete="off" /></div>
+    <p class="api-notice hint" hidden></p><div class="form-feedback" role="status" aria-live="polite" tabindex="-1" hidden></div>
+    <button class="button" type="submit" disabled>Wyślij zgłoszenie</button>
+    <noscript><p>Włącz JavaScript lub zadzwoń: <a href="tel:+48515114676">515 114 676</a>.</p></noscript>
+  </form>
+</div>
+<script>import '../../scripts/service-form';</script>
+<style>
+.service-panel{min-width:0;border:1px solid var(--color-border);border-radius:16px;background:var(--color-card);padding:24px;display:flex;flex-direction:column;gap:24px}h2{font:600 24px/34px var(--font-ui)}.service-panel>div>p,.hint{font:400 13px/20px var(--font-ui);color:var(--color-muted)}.topic-switch{display:flex;gap:8px;padding:4px;border-radius:999px;background:var(--color-page)}.topic-switch a{flex:1;text-align:center;padding:12px;min-height:44px;font:600 14px/21px var(--font-ui);border-radius:999px}.topic-switch [aria-current]{background:var(--color-accent)}form{display:flex;flex-direction:column;gap:24px}fieldset{min-width:0;border:0;padding:0;display:flex;flex-direction:column;gap:16px}legend{font:600 18px/26px var(--font-ui);margin-bottom:16px}.field-row{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}.privacy{display:flex;gap:12px;align-items:start;font:400 13px/20px var(--font-ui)}.privacy input{width:22px;height:22px;flex-shrink:0;accent-color:var(--color-accent)}.honeypot{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.error{color:#ff9d9d;font:400 13px/20px var(--font-ui)}.form-feedback{padding:16px;border:1px solid var(--color-border);border-radius:8px;overflow-wrap:anywhere}button:disabled{opacity:.6;cursor:wait}.button{align-self:start;min-height:52px}.attachment-button{align-self:start;border:1px solid var(--color-border);border-radius:8px;padding:12px 16px;cursor:pointer;min-height:48px}#service-files{position:absolute;width:1px;height:1px;clip-path:inset(50%)}#service-files:focus-visible+label{outline:2px solid #8dccff;outline-offset:4px}.file-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px}.file-list :global(li){display:flex;gap:12px;align-items:center;min-width:0}.file-list :global(span){flex:1;overflow-wrap:anywhere}.file-list :global(img){width:64px;height:64px;object-fit:cover;border-radius:6px}.file-list :global(button){min-height:44px;padding:8px;border:1px solid var(--color-border);border-radius:8px;background:none}.address-search label{display:block;font:600 14px/21px var(--font-ui);margin-bottom:8px}.address-search input{width:100%;height:52px;padding:16px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-page);color:var(--color-text)}.address-search ul{list-style:none;padding:0;border:1px solid var(--color-border);border-radius:8px}.address-search :global(li){padding:12px;cursor:pointer}.address-search :global([aria-selected=true]){background:var(--color-accent)}.google-attribution{font:400 14px/22px Roboto,Arial,sans-serif;text-align:right;padding:8px}.address-search [role=status]{font:400 13px/20px var(--font-ui)}@media(min-width:700px){.service-panel{padding:32px}.field-row{grid-template-columns:repeat(2,minmax(0,1fr))}}[hidden]{display:none!important}
+</style>
