@@ -47,7 +47,7 @@ Konfiguracja i optymalizacja konsultowane przez astro-docs MCP: strict TypeScrip
 Aktualny plan, zasoby i polecenia: [cloudflare.md](cloudflare.md).
 
 - [x] CF1. Workers/D1/R2 i środowiska. Lokalne bindings, CI, dwie bazy D1, dwa prywatne buckety Standard i zdalne Workers staging/production. Oba endpointy health odpowiadają 200; aplikacja zgłoszeń pozostaje do migracji.
-- [ ] CF2. Migracja danych do D1.
+- [x] CF2. Schemat D1 i migracje: zgłoszenia, kontakty, pliki, sesje, CMS i liczniki zużycia. Wdrożono w staging/production; testy retencji, relacji, transakcji i równoległych rezerwacji. Przepięcie API do D1 w CF3.
 - [ ] CF3. API formularza i integracje adresowe na Workers.
 - [ ] CF4. Prywatne załączniki R2.
 - [ ] CF5. Kompresja wyłącznie w przeglądarce i końcowe limity.

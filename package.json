@@ -20,7 +20,11 @@
     "cf:dry-run:staging": "wrangler deploy --config cloudflare/wrangler.jsonc --env staging --dry-run",
     "cf:dry-run:production": "wrangler deploy --config cloudflare/wrangler.jsonc --env production --dry-run",
     "cf:deploy:staging": "wrangler deploy --config cloudflare/wrangler.jsonc --env staging",
-    "cf:deploy:production": "wrangler deploy --config cloudflare/wrangler.jsonc --env production"
+    "cf:deploy:production": "wrangler deploy --config cloudflare/wrangler.jsonc --env production",
+    "cf:db:test": "node scripts/cloudflare-db-test.mjs",
+    "cf:db:migrate:local": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --local",
+    "cf:db:migrate:staging": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --env staging --remote",
+    "cf:db:migrate:production": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --env production --remote"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

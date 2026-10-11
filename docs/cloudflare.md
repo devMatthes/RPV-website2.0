@@ -40,7 +40,7 @@ Obecne rekordy strony i poczty zachowano. Nie zmieniono serwerów nazw u rejestr
 11. Publikacja zatwierdzonej wersji przez GitHub Actions i Astro; wynik publikacji widoczny w panelu.
 12. Automatyczne usuwanie po 24 h, kopie zapasowe z polityką wygasania, test odtwarzania i końcowe QA.
 
-Każde zadanie implementacyjne sprawdzamy i kończymy osobnym commitem. CMS i migracja zgłoszeń nie zostały jeszcze wdrożone.
+Każde zadanie implementacyjne sprawdzamy i kończymy osobnym commitem. Schemat D1 jest wdrożony; API i obsługa CMS pozostają kolejnymi taskami.
 
 ## Task 1 — środowiska Cloudflare
 
@@ -50,7 +50,7 @@ Każde zadanie implementacyjne sprawdzamy i kończymy osobnym commitem. CMS i mi
 - [x] Aktywacja R2 przez właściciela i utworzenie prywatnych bucketów.
 - [x] Wdrożenie i sprawdzenie zdalnych Workers po aktywacji R2.
 
-Task 1 ukończony. Migracja danych zgłoszeń pozostaje taskiem 2.
+Task 1 ukończony. Schemat aplikacji D1 wdrożono w tasku 2.
 
 Konfiguracja: `cloudflare/wrangler.jsonc`. Domyślne środowisko jest lokalne (port 8788, bez połączeń do danych produkcyjnych). Środowiska `staging` i `production` mają osobne zasoby. Flaga `remote: false` dotyczy lokalnego developmentu; po wdrożeniu bindings wskazują rzeczywiste zasoby danego środowiska.
 
@@ -109,15 +109,50 @@ GitHub Actions sprawdza binding types, TypeScript, lokalne D1/R2 i oba dry runs.
 - Rzeczywisty lokalny runtime Wrangler: `/api/health` zwraca 200 i `phase: infrastructure`.
 - Dotychczasowe 24 testy backendu: poprawne. `api:check` oraz Astro check: brak błędów.
 - CI commita `f5ae48b`: wszystkie zadania poprawne, w tym smoke Cloudflare, oba dry runs, testy przeglądarkowe i build obrazu dotychczasowego API.
-- Zdalne Workers staging i production: `/api/health` zwraca HTTPS 200 i właściwe środowisko. Odczyt settings potwierdza osobne DB/FILES oraz ustawienia logów zgodne z repo. Zdalne D1: `SELECT 1` poprawne w obu środowiskach. D1 nie zawiera jeszcze tabel aplikacji ani danych klientów.
+- Zdalne Workers staging i production: `/api/health` zwraca HTTPS 200 i właściwe środowisko. Odczyt settings potwierdza osobne DB/FILES oraz ustawienia logów zgodne z repo. Zdalne D1: `SELECT 1` poprawne w obu środowiskach. Ten odczyt wykonano przed taskiem 2. Obecnie D1 zawiera schemat aplikacji; brak danych klientów.
 - Prywatność R2: r2.dev wyłączone, brak custom domains. Testy zapisu i odczytu plików wykonano lokalnie; zdalny przepływ załączników będzie testowany w tasku 4.
 
 ## Kontrola kosztów — propozycja do taska 4
 
 Cloudflare budget alerts są informacyjne: nie zatrzymują ani nie ograniczają użycia. Nie ustawiono alertu na koncie ani limitów aplikacyjnych w tasku 1.
 
-Propozycja: limit miejsca na dane RPV łącznie 8 GB (staging i production), limity operacji/okres rozliczeniowy oraz dotychczasowe limity na plik i zgłoszenie. Wymaga liczników, rezerwacji miejsca odpornej na równoległe uploady, odrzucania nowych operacji po wyczerpaniu budżetu i zachowania możliwości usuwania danych. Wliczać zdjęcia CMS, pliki tymczasowe i uwzględnić kopie zapasowe. Alert kosztowy np. 1 USD w Billing > Billable Usage jest dodatkowym ostrzeżeniem, a nie gwarancją rachunku 0 USD.
+Propozycja: limit miejsca na dane RPV łącznie 8 GB (staging i production), limity operacji/okres rozliczeniowy oraz dotychczasowe limity na plik i zgłoszenie. Wymaga liczników, rezerwacji miejsca odpornej na równoległe uploady, odrzucania nowych operacji po wyczerpaniu budżetu i zachowania możliwości usuwania danych. Wliczać zdjęcia CMS, pliki tymczasowe i uwzględnić kopie zapasowe. Alert kosztowy np. 5 USD w Billing > Billable Usage jest dodatkowym ostrzeżeniem, a nie gwarancją rachunku 0 USD.
 
 Darmowy limit R2 Standard dotyczy całego konta: 10 GB-month, 1 mln operacji Class A i 10 mln Class B na okres rozliczeniowy. Nie jest oddzielny dla każdego bucketu. Inne projekty, działania z panelu/API i opóźnione metryki mogą ograniczyć skuteczność własnej kontroli kosztów. Przyszłe limity aplikacji nie gwarantują zerowych kosztów całego konta.
 
 Źródła: [R2 pricing](https://developers.cloudflare.com/r2/pricing/), [Budget alerts](https://developers.cloudflare.com/billing/manage/budget-alerts/).
+
+
+## Task 2 — schemat i migracje D1
+
+Wdrożono `0001_application.sql` w staging i production. Obie bazy przed migracją były puste; nie importowano lokalnych testowych zgłoszeń, sesji ani plików. W tabeli `d1_migrations` zapisano nazwę migracji, zgodnie z formatem Wranglera. Kolejne migracje dopisywać jako nowe pliki SQL; nie zmieniać plików zastosowanych zdalnie.
+
+- `cases`: serwis i kontakt, dane nadawcy, adres/instalacja w JSON, zgoda, status, opiekun, revision, hash klucza idempotencji i fingerprint. API w CF3 musi niezależnie walidować cały adres (ulica, numery, kod, miejscowość, gmina, powiat, województwo, kraj, TERYT/source). Nie zapisywać tymczasowego podpisu adresowego ani pełnych odpowiedzi Google.
+- `case_events`: historia i notatki z relacją do sprawy. Usunięcie sprawy usuwa historię, notatki i powiązania załączników.
+- `file_assets`, `case_attachments`: metadane plików z kluczami R2 bez danych osobowych. Baza ogranicza rozmiar do 5 MiB/plik, 5 plików i 20 MiB/sprawę oraz oddziela pliki prywatne od CMS. Backend nadal musi sprawdzać rzeczywistą zawartość i rozmiar. Limit DB nie zastępuje limitów streamu/uploadu.
+- `file_deletion_jobs`: trwała kolejka usuwania obiektów R2; skasowanie załącznika usuwa jego metadane i kolejkuje klucz. Nie usuwać wpisu kolejki ani zwalniać zajętego miejsca przed potwierdzonym usunięciem obiektu. Wykonanie/retry w CF4/CF12; sama baza nie usuwa R2.
+- `administrators`, `admin_sessions`: baza dopuszcza jedno konto, sesje przechowują hash tokenu i wersję autoryzacji. Konto nie zostało utworzone; hasło pozostaje sekretem Worker. Wygasanie i unieważnianie sesji będzie wymuszało API w CF6.
+- `cms_entries`, `cms_versions`, `cms_version_assets`: edytowalny szkic, niezmienne zatwierdzone wersje i przypisane zdjęcia. `publication_jobs` oraz `publication_versions` wiążą build z zatwierdzonymi wersjami. Edycja szkicu nie zmienia poprzedniej wersji. W CF9–CF11 API ograniczy edytowalne pola i utworzy bezpieczny publiczny snapshot; sama poprawność JSON nie gwarantuje braku danych prywatnych.
+- `counters`: numery referencyjne. `usage_budgets`, `usage_reservations`: okresy, pułapy, zużycie i zarezerwowane zasoby. `rate_limit_windows` używa hasha zakresu zamiast surowego IP; hashowanie z sekretnym kluczem, okna i wygasanie implementuje API.
+
+Wszystkie daty aplikacji: UTC Unix milliseconds. Zmiana statusu na `closed` ustawia `closed_at` oraz `delete_after = closed_at + 24h`; kolejna edycja zamkniętej sprawy nie przesuwa terminu. Ponowne otwarcie zeruje obie daty; ponowne zamknięcie rozpoczyna nowe 24h. Usuwanie odbywać się będzie w CF12, po zdefiniowaniu retencji kopii zapasowych. Pełnotekstowe wyszukiwanie, dodatkowe pola CMS i obsługa przetargów nie są częścią tego taska.
+
+Indeksy obejmują listy według modułu/statusu, retencję, historię sprawy, sesje, kolejkę usuwania i wygasające rezerwacje. Zapis kilku związanych rekordów wykonywać w `DB.batch()` — transakcje D1 rollbackują całą partię po błędzie. Przy zmianach panelu stosować `WHERE id = ? AND revision = ?` oraz kontrolować `meta.changes`. Przy rezerwacji używać warunkowego atomowego UPDATE: `consumed + reserved + amount <= ceiling`; nie wykonywać osobnego odczytu i bezwarunkowego zapisu. Rezerwację i wpis jej identyfikatora zapisywać w jednej transakcji. Dopiero CF3/CF4 podłączy te mechanizmy do rzeczywistych żądań.
+
+**Limity kosztów nie są jeszcze aktywne.** Task 2 przygotowuje strukturę i testuje atomowe operacje; nie ustawiono pułapów ani alertu. W CF4 budżet staging + production musi mieścić się w łącznej puli (np. podział limitów na środowiska), uwzględniać CMS, pliki tymczasowe i operacje sprzątania. Osobne lokalne liczniki w dwóch D1 nie są wspólnym licznikiem konta Cloudflare.
+
+### Polecenia i testy
+
+```sh
+npm run cf:db:migrate:local
+npm run cf:db:test
+# Zalogowany Wrangler; jawnie wybierz środowisko:
+npm run cf:db:migrate:staging
+npm run cf:db:migrate:production
+```
+
+`cf:db:test` używa tymczasowego lokalnego D1 w workerd i rzeczywistych migracji Wrangler, bez dostępu do produkcji. Testuje ponowne zastosowanie bez utraty danych, rollback batcha, jedno konto, hash/termin sesji, wymagany adres, statusy, blokowanie starej revision, retencję 24h/reopen, kaskadowe usuwanie i kolejkę R2, limity załączników, oddzielenie CMS/private, niezmienność zatwierdzonej wersji oraz 20 równoległych prób rezerwacji przy limicie 10. Plany zapytań potwierdzają wykorzystanie indeksów. Test jest częścią CI.
+
+Migrację zdalną wykonano przez autoryzowany plugin Cloudflare, ponieważ CLI nie ma osobnego logowania. Zastosowano dokładny SQL z repo wraz z wpisem ledger jako batch; w obu bazach sprawdzono ledger, schemat, `PRAGMA foreign_key_check` i brak danych klientów. Publiczne formularze pozostają na dotychczasowym etapie; Worker nadal oferuje wyłącznie health.
+
+Źródła: [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/), [D1 batch transactions](https://developers.cloudflare.com/d1/worker-api/d1-database/#batch).
