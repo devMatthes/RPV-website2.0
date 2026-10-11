@@ -31,3 +31,10 @@ Astro + TypeScript + CSS; lokalne Roboto, Inter i Plus Jakarta Sans; obrazy opty
 ## Dokumentacja
 
 Konfiguracja i optymalizacja konsultowane przez astro-docs MCP: strict TypeScript, statyczny output, astro:assets i Picture z responsywnymi wariantami.
+
+## Panel administracyjny
+
+- [x] 10a. Osobny layout i adres `/panel/`, listy serwisu/kontaktu, responsywne menu, filtry i paginacja. Bez linków ze strony publicznej; Przetargi tylko jako placeholder.
+- [x] 10b. Szczegóły spraw, zarządzanie statusem/opiekunem, przykładowe załączniki, lokalne notatki i historia w trybie demo.
+- [x] 10c. Kontrola wizualna i interakcji na 320–1440 px, testy logiki, build GitHub Pages i pomiar wydajności. Szczegóły oraz ograniczenia dostępu w `admin.md`.
+- [ ] 11. Backend panelu: logowanie i autoryzacja, integracja formularzy, trwały zapis, uprawnienia do plików. Wymaga osobnego etapu; ukryty URL obecnego demo nie zabezpiecza danych.
