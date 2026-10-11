@@ -63,7 +63,7 @@ Kod i lokalne API są sprawdzone; Docker/HTTPS na docelowym serwerze oraz prawdz
 
 ## Testy i wydajność
 
-`npm test`: 23 testy logiki, walidacji, API, prywatnych plików, konfliktów zmian i przetwarzania zdjęć. `npm run check` oraz `npm run api:check`: kontrola TypeScript. Powtarzalne testy całej ścieżki:
+`npm test`: 24 testy logiki, walidacji, API, prywatnych plików, konfliktów zmian i przetwarzania zdjęć. `npm run check` oraz `npm run api:check`: kontrola TypeScript. Powtarzalne testy całej ścieżki:
 
 ```sh
 npx playwright install chromium

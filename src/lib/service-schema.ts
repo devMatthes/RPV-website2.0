@@ -23,7 +23,9 @@ export function validateService(input: unknown): { data: ServiceSubmission; erro
     address: { street: field('street', addr.street, 160, false), building: field('building', addr.building, 30), apartment: field('apartment', addr.apartment, 30, false), postcode: field('postcode', addr.postcode, 6), city: field('city', addr.city, 120), commune: field('commune', addr.commune, 120), county: field('county', addr.county, 120), province: field('province', addr.province, 40), country: 'PL', source: addr.source === 'google' ? 'google' : 'manual' },
     installation: field('installation', raw.installation, 60), inverter: field('inverter', raw.inverter, 100, false), battery: field('battery', raw.battery, 100, false), message: field('message', raw.message, 5000), privacy: raw.privacy === true, website: clean(raw.website, 200),
   };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = 'Podaj poprawny adres e-mail.';
+  const emailPattern = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
+  const localPart = data.email.split('@')[0];
+  if (!emailPattern.test(data.email) || localPart.length > 64 || localPart.startsWith('.') || localPart.endsWith('.') || localPart.includes('..')) errors.email = 'Podaj poprawny adres e-mail.';
   if (!/^\d{2}-\d{3}$/.test(data.address.postcode)) errors.postcode = 'Podaj kod w formacie 00-000.';
   if (!provinces.includes(data.address.province)) errors.province = 'Wybierz województwo.';
   if (!installations.includes(data.installation as typeof installations[number])) errors.installation = 'Wybierz rodzaj instalacji.';

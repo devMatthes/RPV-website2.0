@@ -7,7 +7,7 @@
     834,
     1440
   ],
-  "unitAndApiTests": 23,
+  "unitAndApiTests": 24,
   "browserTests": 3,
   "realGoogle": "Pending key; mocked UI and API contract tested",
   "realHEIC": "libheif official example converted server-side and browser-side",
