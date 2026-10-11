@@ -3,6 +3,7 @@ import Brand from './Brand.astro';
 import Button from './Button.astro';
 const home = import.meta.env.BASE_URL;
 const links = [{ label: 'O nas', href: `${home}o-nas/` }, { label: 'Usługi', href: `${home}#uslugi` }, { label: 'Realizacje', href: `${home}realizacje/` }, { label: 'Kontakt', href: `${home}kontakt/` }];
+const menuLinks = [{ label: 'Strona główna', href: home }, ...links];
 ---
 <header class="header">
   <a class="home" href={import.meta.env.BASE_URL} aria-label="RPV — strona główna"><Brand /></a>
@@ -17,7 +18,7 @@ const links = [{ label: 'O nas', href: `${home}o-nas/` }, { label: 'Usługi', hr
 <dialog class="mobile-menu" aria-labelledby="menu-title">
   <div class="menu-heading"><a href={import.meta.env.BASE_URL} aria-label="RPV — strona główna"><Brand /></a><button class="button button--ghost" data-menu-close autofocus>Zamknij</button></div>
   <h2 id="menu-title" class="sr-only">Menu strony</h2>
-  <nav aria-label="Nawigacja mobilna">{links.map(link => <a href={link.href}>{link.label}</a>)}</nav>
+  <nav aria-label="Nawigacja mobilna">{menuLinks.map(link => <a href={link.href}>{link.label}</a>)}</nav>
   <div class="menu-actions"><Button href={`${import.meta.env.BASE_URL}kontakt/`}>Darmowa wycena</Button><Button href={`${import.meta.env.BASE_URL}serwis/`} variant="outline">Zgłoś serwis</Button></div>
 </dialog>
 <script>
