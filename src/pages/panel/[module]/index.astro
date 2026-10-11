@@ -1,0 +1,9 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import CaseList from '../../../components/admin/CaseList.astro';
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+export const getStaticPaths = (() => (['serwis', 'kontakt'] as const).map(module => ({params:{module},props:{module}}))) satisfies GetStaticPaths;
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { module } = Astro.props;
+---
+<AdminLayout title={module === 'serwis' ? 'Zgłoszenia serwisowe' : 'Wiadomości kontaktowe'} module={module}><CaseList module={module} /></AdminLayout>

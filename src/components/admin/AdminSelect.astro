@@ -1,0 +1,6 @@
+---
+import arrow from '../../assets/admin/expand-more.svg?url';
+interface Props { label: string; name: string; value?: string; options: { value: string; label: string }[]; }
+const { label, name, value, options } = Astro.props;
+---
+<label class="admin-field"><span>{label}</span><span class="select-wrap"><select name={name}>{options.map(option => <option value={option.value} selected={option.value === value}>{option.label}</option>)}</select><img src={arrow} width="20" height="20" alt="" /></span></label>

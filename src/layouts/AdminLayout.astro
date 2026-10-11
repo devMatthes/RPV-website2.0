@@ -1,0 +1,27 @@
+---
+import '../styles/global.css';
+import '../styles/admin.css';
+import symbol from '../assets/admin/symbol.svg?url';
+import Button from '../components/Button.astro';
+import { panelHref, adminCases, type AdminModule } from '../data/admin';
+interface Props { title: string; module: AdminModule; }
+const { title, module } = Astro.props;
+const nav = ['serwis', 'kontakt'] as const;
+---
+<!doctype html>
+<html lang="pl">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex, nofollow, noarchive" /><meta name="referrer" content="same-origin" /><meta name="theme-color" content="#000000" /><link rel="icon" href={symbol} type="image/svg+xml" /><title>{title} — Panel RPV (demo)</title></head>
+<body class="admin"><a class="skip-link" href="#main">Przejdź do treści</a>
+<header class="admin-mobile-header"><a class="admin-brand" href={panelHref()} aria-label="RPV — panel"><img src={symbol} width="41.686" height="36.351" alt="" /><span>RPV</span></a><button class="admin-control" data-menu-open aria-haspopup="dialog" aria-controls="panel-menu">Menu</button></header>
+<div class="admin-shell">
+<aside class="admin-sidebar">
+<a class="admin-brand" href={panelHref()} aria-label="RPV — panel"><img src={symbol} width="41.686" height="36.351" alt="" /><span>RPV</span></a>
+<p class="admin-caption">PANEL ADMINA</p>
+<nav aria-label="Moduły panelu">{nav.map(item => <a class:list={['admin-nav-item', { 'is-current': item === module }]} href={panelHref(`${item}/`)} aria-current={item === module ? 'page' : undefined}><span>{item === 'serwis' ? 'Serwis' : 'Kontakt'}</span><span class="admin-caption" data-nav-count={item}>{adminCases.filter(c => c.module === item && c.status === 'new').length}</span></a>)}<span class="admin-nav-item admin-nav-disabled" aria-disabled="true"><span>Przetargi</span><span class="admin-caption">Wkrótce</span></span></nav>
+<div class="admin-account"><a href={import.meta.env.BASE_URL}>Otwórz stronę RPV ↗</a><strong>Administrator</strong><small>Panel wewnętrzny</small></div>
+</aside>
+<div class="admin-main"><div class="admin-context"><span>Panel admina / {module === 'serwis' ? 'Serwis' : 'Kontakt'}</span><span>Dane przykładowe · 11 października 2026</span></div><main id="main" class="admin-content"><slot /></main></div>
+</div>
+<dialog id="panel-menu" class="admin-menu" aria-labelledby="menu-title"><div class="admin-menu-heading"><h2 id="menu-title">Panel admina</h2><button class="admin-control" data-menu-close>Zamknij</button></div><nav aria-label="Moduły panelu mobilnego">{nav.map(item => <a class:list={['admin-nav-item', { 'is-current': item === module }]} href={panelHref(`${item}/`)} aria-current={item === module ? 'page' : undefined}><span>{item === 'serwis' ? 'Serwis' : 'Kontakt'}</span><span class="admin-caption" data-nav-count={item}>{adminCases.filter(c => c.module === item && c.status === 'new').length}</span></a>)}<span class="admin-nav-item admin-nav-disabled" aria-disabled="true"><span>Przetargi</span><span class="admin-caption">Wkrótce</span></span></nav><p class="admin-caption">Dane przykładowe. Podgląd panelu RPV.</p><Button href={import.meta.env.BASE_URL} variant="outline">Otwórz stronę RPV ↗</Button></dialog>
+<script>import '../scripts/admin';</script>
+</body></html>

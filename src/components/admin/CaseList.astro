@@ -1,0 +1,28 @@
+---
+import { adminCases, statuses, caseHref, shortDate, type AdminModule } from '../../data/admin';
+import StatusBadge from './StatusBadge.astro';
+import AdminSelect from './AdminSelect.astro';
+interface Props { module: AdminModule; }
+const { module } = Astro.props;
+const items = adminCases.filter(c => c.module === module);
+const statusOptions = [{ value: '', label: 'Wszystkie' }, ...Object.entries(statuses).filter(([key]) => module === 'serwis' || key !== 'waiting').map(([value,label]) => ({ value,label }))];
+const types = [{ value: '', label: 'Wszystkie' }, ...[...new Set(items.map(c => c.subject))].map(value => ({ value,label:value }))];
+---
+<section class="admin-list" data-case-list data-module={module}>
+<div class="admin-title"><h1>{module === 'serwis' ? 'Zgłoszenia serwisowe' : 'Wiadomości kontaktowe'}</h1><p>{module === 'serwis' ? 'Zgłoszenia z formularza serwisowego.' : 'Zapytania o ofertę, instalacje i współpracę.'}</p></div>
+<div class="admin-stats">{[['open','Otwarte sprawy',items.filter(c=>c.status !== 'closed').length],['new','Nowe zgłoszenia',items.filter(c=>c.status === 'new').length],['unassigned','Nieprzypisane',items.filter(c=>c.owner === 'Nieprzypisane').length]].map(([key,label,value]) => <div class="admin-stat"><span class="admin-caption">{label}</span><strong data-stat={key}>{value}</strong></div>)}</div>
+<div class="admin-tabs" aria-label="Filtr statusu">{[{value:'',label:'Wszystkie'},...statusOptions.slice(1)].map(({value,label})=><button class="admin-control" data-status-tab={value} aria-pressed={value === ''}>{label} <span data-status-count={value}>{value === '' ? items.length : items.filter(c=>c.status === value).length}</span></button>)}</div>
+<form class="admin-filters" role="search" aria-label="Filtry zgłoszeń">
+<label class="admin-field admin-search"><span>Szukaj</span><input type="search" name="query" placeholder={module === 'serwis' ? 'Klient, ID, miejscowość lub temat' : 'Klient, ID, temat lub wiadomość'} autocomplete="off" /></label>
+<div class="mobile-status-filter"><AdminSelect label="Status" name="status" options={statusOptions} /></div>
+<AdminSelect label={module === 'serwis' ? 'Instalacja' : 'Temat'} name="subject" options={types} />
+<div class="admin-date-filter"><AdminSelect label="Data wpływu" name="period" value="30" options={[{value:'30',label:'Ostatnie 30 dni'},{value:'7',label:'Ostatnie 7 dni'},{value:'1',label:'Dzisiaj'},{value:'',label:'Cały okres'}]} /></div>
+<button class="admin-control admin-clear" type="reset">Wyczyść</button>
+</form>
+<p class="admin-mobile-counts admin-caption">Wszystkie: {items.length} · Nowe: <span data-status-count="new">{items.filter(c=>c.status === 'new').length}</span></p>
+<div class="admin-table-wrap"><table class="admin-table"><caption class="visually-hidden">{module === 'serwis' ? 'Zgłoszenia serwisowe' : 'Wiadomości kontaktowe'}</caption><thead><tr><th scope="col">ID / Data</th><th scope="col">Klient</th><th scope="col">{module === 'serwis' ? 'Instalacja / Problem' : 'Temat / Wiadomość'}</th><th scope="col">Status</th><th scope="col">Opiekun</th><th scope="col"><span class="visually-hidden">Szczegóły</span></th></tr></thead><tbody>{items.map((item,i)=><tr data-case-id={item.id} hidden={i >= 6}><td>{item.id}<small>{shortDate(item.date)}</small></td><td><strong>{item.client}</strong><small>{item.location}</small></td><td>{item.subject}<small>{item.summary}</small></td><td><StatusBadge status={item.status} /></td><td data-owner>{item.owner}</td><td><a class="admin-open" href={caseHref(item)} aria-label={`Otwórz ${item.id}`}>Otwórz</a></td></tr>)}</tbody></table></div>
+<div class="admin-case-cards">{items.map((item,i)=><article class="admin-case-card" data-case-id={item.id} hidden={i >= 3}><div class="admin-case-card-heading"><span>{item.id}</span><StatusBadge status={item.status} /></div><h2>{item.client} · {item.location}</h2><p>{item.subject} · {item.summary}</p><p class="admin-caption">{shortDate(item.date)} · <span data-owner>{item.owner}</span></p><a class="admin-open" href={caseHref(item)} aria-label={`${module === 'serwis' ? 'Otwórz zgłoszenie' : 'Otwórz wiadomość'} ${item.id}`}>{module === 'serwis' ? 'Otwórz zgłoszenie' : 'Otwórz wiadomość'}</a></article>)}</div>
+<div class="admin-empty" hidden data-empty><h2>Brak wyników</h2><p class="muted">Zmień filtry lub wpisz inne słowo.</p><button class="admin-control" data-clear-filters>Wyczyść filtry</button></div>
+<div class="admin-pagination"><p class="admin-caption" data-page-summary aria-live="polite">1–6 z {items.length} · Najnowsze najpierw</p><div class="admin-pagination-actions"><button class="admin-control" data-page-prev disabled>Poprzednia</button><button class="admin-control" data-page-next>Następna</button></div></div>
+</section>
+<style>.admin-list { display: grid; gap: 24px; } .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }</style>

@@ -1,0 +1,6 @@
+---
+import { statuses, type CaseStatus } from '../../data/admin';
+interface Props { status: CaseStatus; }
+const { status } = Astro.props;
+---
+<span class={`case-status case-status--${status}`} data-badge>{statuses[status]}</span>
