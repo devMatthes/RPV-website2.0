@@ -1,4 +1,5 @@
 import type { ServiceSubmission } from '../../src/lib/service-types.ts';
+import type { ContactSubmission } from '../../src/lib/contact-types.ts';
 import type { StoredUpload } from './storage.ts';
 import { HttpError } from './http.ts';
 export async function consumeWindow(db: D1Database, owner: string, action: string, max: number, duration: number, now: number) {
@@ -26,6 +27,27 @@ export async function consumeGoogle(db: D1Database, daily: number, monthly: numb
 }
 export async function existing(db: D1Database, keyHash: string) {
   return db.prepare('SELECT reference,fingerprint FROM cases WHERE idempotency_key_hash = ?').bind(keyHash).first<{ reference: string; fingerprint: string }>();
+}
+export async function insertContact(db:D1Database,data:ContactSubmission,keyHash:string,fingerprint:string,now:number) {
+  const id=crypto.randomUUID(),year=new Date(now).getUTCFullYear(),counter=`contact:${year}`;
+  try {
+    await db.batch([
+      db.prepare('INSERT INTO counters VALUES (?,1) ON CONFLICT(key) DO UPDATE SET value=value+1').bind(counter),
+      db.prepare(`INSERT INTO cases(id,reference,module,submitted_at,updated_at,name,email,phone,subject,message,privacy_accepted_at,idempotency_key_hash,fingerprint)
+        SELECT ?,'KON-'||?||'-'||printf('%06d',value),'kontakt',?,?,?,?,?,?,?,?,?,? FROM counters WHERE key=?`)
+        .bind(id,String(year),now,now,data.name,data.email,data.phone,data.topic,data.message,now,keyHash,fingerprint,counter),
+      db.prepare("INSERT INTO case_events(case_id,at,actor,kind,message) VALUES (?,?,'System','created','Wiadomość zapisana.')").bind(id,now),
+    ]);
+    const row=await existing(db,keyHash);if(!row)throw new Error('Receipt missing');
+    return {reference:row.reference,created:true};
+  } catch(error) {
+    const retry=await existing(db,keyHash);
+    if(retry) {
+      if(retry.fingerprint!==fingerprint)throw new HttpError(409,'Dane zmieniły się od poprzedniej wysyłki. Rozpocznij nową wysyłkę.');
+      return {reference:retry.reference,created:false};
+    }
+    throw error;
+  }
 }
 export async function insertService(db: D1Database, data: ServiceSubmission, keyHash: string, fingerprint: string, now: number, files: StoredUpload[] = []) {
   const id = crypto.randomUUID(); const year = new Date(now).getUTCFullYear(); const counter = `service:${year}`;

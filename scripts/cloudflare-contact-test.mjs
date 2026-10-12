@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {mkdtemp,rm} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';import {execFileSync} from 'node:child_process';import {getPlatformProxy} from 'wrangler';
+import {createHandler} from '../cloudflare/src/app.ts';import {digest} from '../cloudflare/src/security.ts';
+const state=await mkdtemp(join(tmpdir(),'rpv-contact-'));let proxy;
+try {
+ execFileSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','migrations','apply','DB','--config','cloudflare/wrangler.jsonc','--local','--persist-to',state],{env:{...process.env,CI:'true'}});
+ proxy=await getPlatformProxy({configPath:'cloudflare/wrangler.jsonc',persist:{path:join(state,'v3')},remoteBindings:false});
+ const env={...proxy.env,APP_SECRET:'synthetic-contact-api-secret-for-local-tests-only',SUBMISSIONS_ENABLED:'true'};const worker=createHandler(),db=env.DB,origin='http://127.0.0.1:4321';
+ const data={name:'  Jan Testowy  ',email:'jan@example.test',phone:'',topic:'Wycena instalacji',message:'Proszę o kontakt w sprawie instalacji.',privacy:true,website:''};
+ const send=(body=data,key=crypto.randomUUID(),ip=crypto.randomUUID(),environment=env,headers={})=>worker.fetch(new Request('https://api.example.test/api/contact',{method:'POST',headers:{origin,'Content-Type':'application/json','Idempotency-Key':key,'CF-Connecting-IP':ip,...headers},body:JSON.stringify(body)}),environment);
+ const key=crypto.randomUUID(),first=await send(data,key);assert.equal(first.status,201,await first.clone().text());const receipt=await first.json();assert.match(receipt.reference,/^KON-\d{4}-000001$/);
+ assert.equal((await send(data,key)).status,200);assert.equal((await send({...data,message:'Changed'},key)).status,409);
+ const row=await db.prepare("SELECT * FROM cases WHERE module='kontakt'").first();assert.equal(row.name,'Jan Testowy');assert.equal(row.phone,'');assert.equal(row.address_json,null);assert.equal(row.installation_json,null);assert.equal(row.subject,'Wycena instalacji');assert.equal(row.status,'new');
+ for(const bad of [{...data,email:'bad'},{...data,phone:'abcdef'},{...data,topic:'forged'},{...data,privacy:'true'},{...data,website:'spam'},{...data,message:' '.repeat(10)},{...data,message:'x'.repeat(5001)},{...data,module:'serwis'},[]])assert.equal((await send(bad)).status,Array.isArray(bad)?400:422);
+ assert.equal((await send(data,undefined,undefined,env,{origin:'https://evil.example'})).status,403);
+ assert.equal((await send(data,undefined,undefined,{...env,SUBMISSIONS_ENABLED:'false'})).status,503);
+ assert.equal((await send(data,undefined,undefined,env,{'Idempotency-Key':'invalid'})).status,400);
+ assert.equal((await send(data,undefined,undefined,env,{'Content-Type':'text/plain'})).status,415);
+ assert.equal((await send({...data,message:'x'.repeat(40000)})).status,413);
+ const race=crypto.randomUUID(),parallel=await Promise.all([send(data,race),send(data,race)]);assert.deepEqual(parallel.map(r=>r.status).sort(),[200,201]);assert.equal((await db.prepare("SELECT count(*) n FROM cases WHERE module='kontakt'").first()).n,2);
+ const before=(await db.prepare("SELECT value FROM counters WHERE key LIKE 'contact:%'").first()).value;assert.equal(before,2);
+ for(let i=0;i<6;i++)assert.equal((await send({...data,phone:'515 114 676'},crypto.randomUUID(),'192.0.2.50')).status,201);
+ assert.equal((await send(data,crypto.randomUUID(),'192.0.2.50')).status,429);assert.equal((await send(data,key,'192.0.2.50')).status,200);
+ await db.prepare("INSERT INTO administrators VALUES (1,'admin',1,?)").bind(Date.now()).run();const token='c'.repeat(64);await db.prepare('INSERT INTO admin_sessions VALUES (?,1,1,?,?)').bind(await digest(token),Date.now(),Date.now()+60000).run();
+ const admin=(path,method='GET',body)=>worker.fetch(new Request('https://api.example.test/api/admin'+path,{method,headers:{cookie:`rpv_session=${token}`,...(body?{origin:'https://api.example.test','Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})}),env);
+ const list=await(await admin('/cases?module=kontakt')).json();assert.equal(list.total,8);assert.equal(list.counts.kontakt,8);assert.ok(list.cases.every(c=>c.module==='kontakt'&&c.data.subject&&!c.data.email));
+ assert.equal((await(await admin('/cases?module=serwis')).json()).total,0);
+ const detail=await(await admin('/cases/'+row.id)).json();assert.equal(detail.module,'kontakt');assert.equal(detail.data.subject,'Wycena instalacji');assert.equal(detail.data.address,null);assert.equal(detail.events.length,1);
+ assert.equal((await admin('/cases/'+row.id,'PATCH',{revision:1,status:'waiting',owner:'',note:''})).status,422);
+ assert.equal((await admin('/cases/'+row.id,'PATCH',{revision:1,status:'closed',owner:'admin',note:'Kontakt zakończony'})).status,200);
+ assert.equal((await(await admin('/cases/'+row.id)).json()).events.length,2);
+ const closed=await db.prepare('SELECT closed_at,delete_after FROM cases WHERE id=?').bind(row.id).first();assert.equal(closed.delete_after-closed.closed_at,86400000);
+ console.log('Contact D1: validation, JSON/body limits, origins, disabled gate, optional phone, durable receipt, concurrent retry, quotas, module isolation, private details/status/note and 24h retention passed.');
+}finally{await proxy?.dispose();await rm(state,{recursive:true,force:true});}

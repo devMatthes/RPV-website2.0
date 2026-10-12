@@ -91,3 +91,47 @@ test('Access auto-login, expired session recovery and provider logout',async({pa
  await expect(page).toHaveURL(/\/cdn-cgi\/access\/logout$/);
  await expect(page.getByText('Wylogowano z Access')).toBeVisible();
 });
+
+test('contact form validates, keeps data after lost response, retries one receipt and resets on success',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ let attempts=0,storedKey='',storedBody='';
+ await page.route('**/api/contact',async route=>{
+  attempts++;const key=route.request().headers()['idempotency-key'],body=route.request().postData();
+  if(attempts===1){storedKey=key;storedBody=body;return route.abort('failed');}
+  expect(key).toBe(storedKey);expect(body).toBe(storedBody);
+  return route.fulfill({json:{reference:'KON-2026-000001'}});
+ });
+ await page.goto('/kontakt/');await consent(page);
+ await page.getByRole('button',{name:'Wyślij wiadomość',exact:true}).click();
+ await expect(page.locator('[name=name]')).toBeFocused();expect(attempts).toBe(0);
+ await page.locator('[name=name]').fill('Klient Kontakt QA');await page.locator('[name=email]').fill('kontakt@example.test');
+ await page.locator('[name=topic]').selectOption('Wycena instalacji');await page.locator('[name=message]').fill('Proszę o wycenę.');await page.locator('[name=privacy]').check();
+ await page.getByRole('button',{name:'Wyślij wiadomość',exact:true}).click();
+ await expect(page.locator('.form-feedback')).toContainText('Dane pozostają w formularzu');await expect(page.locator('[name=message]')).toHaveValue('Proszę o wycenę.');
+ await page.getByRole('button',{name:'Wyślij wiadomość',exact:true}).click();
+ await expect(page.locator('.form-feedback')).toContainText('KON-2026-000001');await expect(page.locator('[name=name]')).toHaveValue('');expect(attempts).toBe(2);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('contact dashboard shows message-specific detail, status/note and preserves module navigation',async({page})=>{
+ const id='33333333-3333-4333-8333-333333333333';let revision=1,status='new',note='';
+ const record=()=>({id,module:'kontakt',reference:'KON-2026-000001',submittedAt:'2026-10-12T12:00:00Z',status,owner:'',revision,data:{name:'Kontakt QA',email:'kontakt@example.test',phone:'',subject:'Współpraca',message:'Wiadomość klienta',address:null},attachments:[],events:note?[{at:'2026-10-12T12:30:00Z',actor:'Administrator',message:note}]:[]});
+ await page.route('**/api/config',route=>route.fulfill({json:{admin:true,auth:'access'}}));
+ await page.route('**/api/admin/**',route=>{
+  const url=new URL(route.request().url());
+  if(url.pathname.endsWith('/me'))return route.fulfill({json:{username:'Administrator'}});
+  if(url.pathname.endsWith(id)){
+   if(route.request().method()==='PATCH'){const body=route.request().postDataJSON();expect(body.revision).toBe(revision);revision++;status=body.status;note=body.note;}
+   return route.fulfill({json:record()});
+  }
+  return route.fulfill({json:{cases:[record()],total:1,page:1,pageSize:12,counts:{serwis:0,kontakt:1}}});
+ });
+ await page.goto('/panel/?module=kontakt');
+ await expect(page.locator('[data-list-title]')).toHaveText('Wiadomości kontaktowe');
+ await expect(page.locator('[data-installation-filter]')).toBeHidden();
+ await page.locator('[data-live-cases] a').click();await expect(page.locator('[data-topic]')).toHaveText('Współpraca');
+ await expect(page.locator('[data-service-only]').first()).toBeHidden();await expect(page.locator('[data-client-contact]')).toContainText('kontakt@example.test');
+ await page.locator('[data-manage-form] [name=status]').selectOption('closed');await page.locator('[name=note]').fill('Odpowiedziano klientowi');await page.getByRole('button',{name:'Zapisz zmiany',exact:true}).click();
+ await expect(page.locator('[data-history]')).toContainText('Odpowiedziano klientowi');await page.locator('[data-back]').click();
+ await expect(page).toHaveURL(/module=kontakt/);await expect(page.locator('[data-list-title]')).toHaveText('Wiadomości kontaktowe');
+});

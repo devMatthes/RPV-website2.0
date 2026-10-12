@@ -49,12 +49,12 @@ export async function adminCases(request: Request, env: WorkerEnv, id?: string, 
       params.push(`%${search.replace(/[\\%_]/g, char => `\\${char}`)}%`);
     }
     const [rows, total, counts] = await env.DB.batch<Record<string, string | number>>([
-      env.DB.prepare(`SELECT c.id,c.reference,c.submitted_at,c.name,c.subject,c.status,json_extract(c.address_json,'$.city') AS city FROM cases c WHERE ${where} ORDER BY c.submitted_at DESC,c.id DESC LIMIT 12 OFFSET ?`).bind(...params,(page-1)*12),
+      env.DB.prepare(`SELECT c.id,c.reference,c.module,c.submitted_at,c.name,c.subject,c.status,json_extract(c.address_json,'$.city') AS city FROM cases c WHERE ${where} ORDER BY c.submitted_at DESC,c.id DESC LIMIT 12 OFFSET ?`).bind(...params,(page-1)*12),
       env.DB.prepare(`SELECT count(*) AS total FROM cases c WHERE ${where}`).bind(...params),
       env.DB.prepare(`SELECT c.module,count(*) AS total FROM cases c WHERE ${visible} AND c.status='new' GROUP BY c.module`).bind(now),
     ]);
-    return json({ cases: rows.results.map(row => ({ id:row.id, reference:row.reference, submittedAt:new Date(Number(row.submitted_at)).toISOString(), status:row.status,
-      data:{name:row.name,installation:row.subject,address:{city:row.city ?? ''},message:''} })),
+    return json({ cases: rows.results.map(row => ({ id:row.id, reference:row.reference, module:row.module, submittedAt:new Date(Number(row.submitted_at)).toISOString(), status:row.status,
+      data:{name:row.name,...(row.module==='kontakt'?{subject:row.subject}:{installation:row.subject}),address:{city:row.city ?? ''},message:''} })),
       total:total.results[0].total, page, pageSize:12, counts:Object.fromEntries(counts.results.map(row=>[row.module,row.total])) });
   }
   const row = await getCase(env, id);

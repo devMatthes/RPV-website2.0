@@ -4,6 +4,7 @@ import { consumeWindow } from './database.ts';
 import { HttpError, json, objectBody, readBody } from './http.ts';
 import { sign, uuid } from './security.ts';
 import { submitService } from './submission.ts';
+import { submitContact } from './contact.ts';
 import { attachmentResponse, fileLimits } from './attachments.ts';
 import { adminCases } from './admin-cases.ts';
 import { administrator } from './admin-session.ts';
@@ -12,6 +13,7 @@ import type { JWTVerifyGetKey } from 'jose';
 
 const routes = new Map([
   ['/api/health', 'GET, HEAD'], ['/api/config', 'GET'], ['/api/service', 'POST'],
+  ['/api/contact', 'POST'],
   ['/api/address/suggestions', 'POST'], ['/api/address/details', 'POST'],
   ['/api/admin/me', 'GET'], ['/api/admin/cases', 'GET'], ['/api/admin/logout', 'POST'],
 ]);
@@ -60,7 +62,7 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
         }
         if (path === '/api/config') return json({
           googlePlaces: enabled(env) && !!env.GOOGLE_PLACES_API_KEY,
-          submissions: enabled(env), attachments: enabled(env),
+          submissions: enabled(env), contact: enabled(env), attachments: enabled(env),
           admin: accessEnabled(env), auth: accessEnabled(env)?'access':null,
           limits: fileLimits,
         }, 200, cors);
@@ -69,10 +71,10 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
         const now = Date.now();
         const owner = await sign(`ip:${request.headers.get('CF-Connecting-IP') ?? 'unknown'}`, secret(env));
         await consumeWindow(env.DB, owner, 'api', 120, 60000, now);
-        if (path === '/api/service') {
+        if (path === '/api/service' || path==='/api/contact') {
           const key = request.headers.get('idempotency-key');
           if (!uuid(key)) throw new HttpError(400, 'Brak poprawnego identyfikatora wysyłki.');
-          const receipt = await submitService(request, env, key, owner, now);
+          const receipt = path==='/api/contact'?await submitContact(request,env,key,owner,now):await submitService(request, env, key, owner, now);
           return json({ reference: receipt.reference }, receipt.created ? 201 : 200, cors);
         }
         const details = path === '/api/address/details';
