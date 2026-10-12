@@ -65,3 +65,29 @@ test('cancel delayed compressor load releases the form without sending originals
  await expect(page.locator('iframe[title="Przygotowanie zdjęcia"]')).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Wyślij zgłoszenie',exact:true})).toBeEnabled();releaseHEIC();
 });
+
+test('Access auto-login, expired session recovery and provider logout',async({page})=>{
+ let expired=false;
+ await page.route('**/api/config',route=>route.fulfill({json:{admin:true,auth:'access',submissions:false}}));
+ await page.route('**/api/admin/**',route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(expired)return route.fulfill({status:401,body:'Session expired'});
+  if(path.endsWith('/me'))return route.fulfill({json:{username:'Administrator'}});
+  if(path.endsWith('/logout'))return route.fulfill({json:{ok:true,redirect:'/cdn-cgi/access/logout'}});
+  return route.fulfill({json:{cases:[],total:0,page:1,pageSize:12,counts:{serwis:0,kontakt:0}}});
+ });
+ await page.route('**/cdn-cgi/access/logout',route=>route.fulfill({contentType:'text/html',body:'<p>Wylogowano z Access</p>'}));
+ await page.goto('/panel/');
+ await expect(page.locator('[data-list-view]')).toBeVisible();
+ await expect(page.locator('[data-admin-name]')).toHaveText('Administrator');
+ await expect(page.locator('[data-login-form]')).toBeHidden();
+ expired=true;await page.locator('[data-refresh]').click();
+ await expect(page.locator('[data-login-view]')).toBeVisible();
+ await expect(page.getByRole('link',{name:'Zaloguj się kodem na e-mail'})).toBeVisible();
+ await expect(page.locator('[data-login-form]')).toBeHidden();
+ expired=false;await page.getByRole('link',{name:'Zaloguj się kodem na e-mail'}).click();
+ await expect(page.locator('[data-list-view]')).toBeVisible();
+ await page.locator('[data-logout]:visible').click();
+ await expect(page).toHaveURL(/\/cdn-cgi\/access\/logout$/);
+ await expect(page.getByText('Wylogowano z Access')).toBeVisible();
+});

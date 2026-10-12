@@ -8,7 +8,7 @@
   // Default environment is local only. Always deploy an explicit named environment.
   "workers_dev": false,
   "preview_urls": false,
-  "assets": { "directory": "../.panel-assets", "binding": "ASSETS", "run_worker_first": ["/api/*", "/"], "html_handling": "force-trailing-slash" },
+  "assets": { "directory": "../.panel-assets", "binding": "ASSETS", "run_worker_first": ["/api/*", "/", "/panel", "/panel/*"], "html_handling": "force-trailing-slash" },
   "dev": { "ip": "127.0.0.1", "port": 8788 },
   "observability": {
     "enabled": true,
@@ -17,7 +17,7 @@
     "traces": { "enabled": false },
     "redact_query_string": true
   },
-  "vars": { "ENVIRONMENT": "local", "PUBLIC_ORIGINS": "http://127.0.0.1:4321,http://localhost:4321,http://127.0.0.1:4322,http://localhost:4322,http://127.0.0.1:8788", "SUBMISSIONS_ENABLED": "true", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "7500000000", "R2_A_DAY_LIMIT": "1000", "R2_A_MONTH_LIMIT": "10000", "R2_B_DAY_LIMIT": "5000", "R2_B_MONTH_LIMIT": "100000" },
+  "vars": { "ENVIRONMENT": "local", "ACCESS_ENABLED": "false", "ACCESS_ISSUER": "", "ACCESS_AUD": "", "ADMIN_ORIGIN": "", "PUBLIC_ORIGINS": "http://127.0.0.1:4321,http://localhost:4321,http://127.0.0.1:4322,http://localhost:4322,http://127.0.0.1:8788", "SUBMISSIONS_ENABLED": "true", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "7500000000", "R2_A_DAY_LIMIT": "1000", "R2_A_MONTH_LIMIT": "10000", "R2_B_DAY_LIMIT": "5000", "R2_B_MONTH_LIMIT": "100000" },
   "d1_databases": [{
     "binding": "DB",
     "database_name": "rpv-db-local",
@@ -35,7 +35,7 @@
       "name": "rpv-api-staging",
       "workers_dev": true,
       "triggers": { "crons": ["17 * * * *"] },
-      "vars": { "ENVIRONMENT": "staging", "PUBLIC_ORIGINS": "https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "false", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "500000000", "R2_A_DAY_LIMIT": "100", "R2_A_MONTH_LIMIT": "1000", "R2_B_DAY_LIMIT": "500", "R2_B_MONTH_LIMIT": "10000" },
+      "vars": { "ENVIRONMENT": "staging", "ACCESS_ENABLED": "false", "ACCESS_ISSUER": "", "ACCESS_AUD": "", "ADMIN_ORIGIN": "", "PUBLIC_ORIGINS": "https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "false", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "500000000", "R2_A_DAY_LIMIT": "100", "R2_A_MONTH_LIMIT": "1000", "R2_B_DAY_LIMIT": "500", "R2_B_MONTH_LIMIT": "10000" },
       "d1_databases": [{
         "binding": "DB",
         "database_name": "rpv-db-staging",
@@ -54,7 +54,7 @@
       "routes": [{ "pattern": "panel.rpv.pl", "custom_domain": true }],
       "workers_dev": true,
       "triggers": { "crons": ["17 * * * *"] },
-      "vars": { "ENVIRONMENT": "production", "PUBLIC_ORIGINS": "https://rpv.pl,https://www.rpv.pl,https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "false", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "7500000000", "R2_A_DAY_LIMIT": "1000", "R2_A_MONTH_LIMIT": "10000", "R2_B_DAY_LIMIT": "5000", "R2_B_MONTH_LIMIT": "100000" },
+      "vars": { "ENVIRONMENT": "production", "ACCESS_ENABLED": "true", "ACCESS_ISSUER": "https://shrill-haze-2285.cloudflareaccess.com", "ACCESS_AUD": "8a3f7dda7cb534e8f13ab4489d480fd2940699da2b16129763383835e78860f7", "ADMIN_ORIGIN": "https://panel.rpv.pl", "PUBLIC_ORIGINS": "https://rpv.pl,https://www.rpv.pl,https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "false", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "7500000000", "R2_A_DAY_LIMIT": "1000", "R2_A_MONTH_LIMIT": "10000", "R2_B_DAY_LIMIT": "5000", "R2_B_MONTH_LIMIT": "100000" },
       "d1_databases": [{
         "binding": "DB",
         "database_name": "rpv-db-production",

@@ -3,6 +3,7 @@ import type { WorkerEnv } from './config.ts';
 import { budgetBatch, operationStatements, type StoredUpload } from './storage.ts';
 import { administrator } from './admin-session.ts';
 import { HttpError } from './http.ts';
+import type { JWTVerifyGetKey } from 'jose';
 export const fileLimits = { count: 5, inputBytes: 5242880, totalBytes: 20971520, pixels: 40000000, imageEdge: 2560 };
 export async function inspectFile(bytes: Uint8Array, filename: string, declared: string): Promise<StoredUpload> {
   const name = filename.split(/[\\/]/).pop()!.replace(/[\u0000-\u001f\u007f]/g, '').normalize('NFC').slice(0, 160);
@@ -31,8 +32,8 @@ export async function inspectFile(bytes: Uint8Array, filename: string, declared:
   const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(value => value.toString(16).padStart(2, '0')).join('');
   const id = crypto.randomUUID(); return { id, key: `private/${crypto.randomUUID()}`, name, mime, bytes: bytes.length, hash };
 }
-export async function attachmentResponse(request: Request, env: WorkerEnv, caseId: string, fileId: string): Promise<Response> {
-  await administrator(request, env);
+export async function attachmentResponse(request: Request, env: WorkerEnv, caseId: string, fileId: string, accessKeys?: JWTVerifyGetKey): Promise<Response> {
+  await administrator(request, env, accessKeys);
   const now = Date.now();
   const file = await env.DB.prepare(`SELECT a.object_key,a.original_name,a.content_type,a.bytes FROM file_assets a
     JOIN case_attachments ca ON ca.asset_id = a.id JOIN cases c ON c.id=ca.case_id

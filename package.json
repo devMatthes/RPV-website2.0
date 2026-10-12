@@ -31,7 +31,8 @@
     "cf:admin:test": "node --experimental-strip-types scripts/cloudflare-admin-test.mjs",
     "precf:dev": "npm run cf:panel:build",
     "precf:deploy:staging": "npm run cf:panel:build",
-    "precf:deploy:production": "npm run cf:panel:build"
+    "precf:deploy:production": "npm run cf:panel:build",
+    "cf:access:test": "node --experimental-strip-types scripts/cloudflare-access-test.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
@@ -49,6 +50,7 @@
     "fastify": "^5.12.5",
     "heic-convert": "^2.1.0",
     "heic2any": "^0.0.4",
+    "jose": "^6.2.12",
     "libphonenumber-js": "^1.13.15",
     "sharp": "^0.35.5",
     "typescript": "^6.0.3"

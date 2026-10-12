@@ -4,7 +4,7 @@ import LiveAdminLayout from '../../../layouts/LiveAdminLayout.astro';
 <LiveAdminLayout>
   <section class="live-login" data-login-view>
     <p class="admin-eyebrow">RPV · Panel wewnętrzny</p><h1 class="admin-title">Zaloguj się</h1><p class="admin-subtitle">Dostęp do zgłoszeń mają upoważnione osoby.</p>
-    <form data-login-form><label>Login<input name="username" autocomplete="username" required maxlength="100" /></label><label>Hasło<input name="password" type="password" autocomplete="current-password" required maxlength="200" /></label><button class="admin-primary" type="submit">Zaloguj się</button></form>
+    <form data-login-form hidden={import.meta.env.PANEL_BUILD==='true'}><label>Login<input name="username" autocomplete="username" required maxlength="100" /></label><label>Hasło<input name="password" type="password" autocomplete="current-password" required maxlength="200" /></label><button class="admin-primary" type="submit">Zaloguj się</button></form>
   </section>
   <p data-admin-feedback class="live-feedback" role="status" aria-live="polite" tabindex="-1" hidden></p>
   <section data-list-view hidden>

@@ -7,13 +7,15 @@ import { submitService } from './submission.ts';
 import { attachmentResponse, fileLimits } from './attachments.ts';
 import { adminCases } from './admin-cases.ts';
 import { administrator } from './admin-session.ts';
+import { accessEnabled } from './access.ts';
+import type { JWTVerifyGetKey } from 'jose';
 
 const routes = new Map([
   ['/api/health', 'GET, HEAD'], ['/api/config', 'GET'], ['/api/service', 'POST'],
   ['/api/address/suggestions', 'POST'], ['/api/address/details', 'POST'],
   ['/api/admin/me', 'GET'], ['/api/admin/cases', 'GET'], ['/api/admin/logout', 'POST'],
 ]);
-export function createHandler(fetcher?: typeof fetch) {
+export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetKey) {
   return {
     async fetch(request: Request, env: WorkerEnv): Promise<Response> {
       const path = new URL(request.url).pathname;
@@ -25,6 +27,12 @@ export function createHandler(fetcher?: typeof fetch) {
       if (allowed && !path.startsWith('/api/admin/')) cors['Access-Control-Allow-Origin'] = origin;
       try {
         if (path==='/' && request.method==='GET') return new Response(null,{status:302,headers:{Location:'/panel/','Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'}});
+        if (path==='/panel' || path.startsWith('/panel/')) {
+          if (env.ACCESS_ENABLED==='true') {
+            if (new URL(request.url).origin!==env.ADMIN_ORIGIN) return new Response(null,{status:302,headers:{Location:`${env.ADMIN_ORIGIN}/panel/`,'Cache-Control':'no-store'}});
+            await administrator(request,env,accessKeys);
+          }
+        }
         if (!path.startsWith('/api/') && env.ASSETS) return env.ASSETS.fetch(request);
         if (!methods) return json({ error: 'not_found' }, 404, cors);
         if (path.startsWith('/api/admin/') && origin!==null && origin!==new URL(request.url).origin) throw new HttpError(403,'Niedozwolone źródło żądania.');
@@ -37,14 +45,15 @@ export function createHandler(fetcher?: typeof fetch) {
         }
         if (!methods.split(', ').includes(request.method)) return json({ error: 'method_not_allowed' }, 405, { ...cors, Allow: methods });
         if (path.startsWith('/api/admin/') && ['POST','PATCH'].includes(request.method) && origin!==new URL(request.url).origin) throw new HttpError(403,'Niedozwolone źródło żądania.');
-        if (attachment) return await attachmentResponse(request, env, attachment[1], attachment[2]);
-        if (path==='/api/admin/me') { const account=await administrator(request,env); return json({username:account.username}); }
+        if (attachment) return await attachmentResponse(request, env, attachment[1], attachment[2],accessKeys);
+        if (path==='/api/admin/me') { const account=await administrator(request,env,accessKeys); return json({username:account.username}); }
         if (path==='/api/admin/logout') {
-          const account=await administrator(request,env);
+          const account=await administrator(request,env,accessKeys);
+          if (account.method==='access') return json({ok:true,redirect:'/cdn-cgi/access/logout'});
           await env.DB.prepare('DELETE FROM admin_sessions WHERE token_hash=?').bind(account.token_hash).run();
           return json({ok:true},200,{'Set-Cookie':`rpv_session=; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=0${new URL(request.url).protocol==='https:'?'; Secure':''}`});
         }
-        if (path==='/api/admin/cases' || caseRoute) return await adminCases(request,env,caseRoute?.[1]);
+        if (path==='/api/admin/cases' || caseRoute) return await adminCases(request,env,caseRoute?.[1],accessKeys);
         if (path === '/api/health') {
           const response = json({ status: 'ok', environment: env.ENVIRONMENT, phase: 'service-api' }, 200, cors);
           return request.method === 'HEAD' ? new Response(null, { headers: response.headers }) : response;
@@ -52,7 +61,7 @@ export function createHandler(fetcher?: typeof fetch) {
         if (path === '/api/config') return json({
           googlePlaces: enabled(env) && !!env.GOOGLE_PLACES_API_KEY,
           submissions: enabled(env), attachments: enabled(env),
-          admin: false,
+          admin: accessEnabled(env), auth: accessEnabled(env)?'access':null,
           limits: fileLimits,
         }, 200, cors);
         if (!allowed) throw new HttpError(403, 'Niedozwolone źródło żądania.');

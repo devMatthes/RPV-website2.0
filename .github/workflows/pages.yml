@@ -45,6 +45,8 @@ jobs:
         run: npm run cf:files:test
       - name: Test administrator API and concurrency
         run: npm run cf:admin:test
+      - name: Test Cloudflare Access token verification
+        run: npm run cf:access:test
       - name: Test local Cloudflare bindings
         run: npm run cf:smoke
       - name: Validate Cloudflare deployments without uploading

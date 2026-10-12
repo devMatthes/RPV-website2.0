@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import { generateKeyPair, exportJWK, createLocalJWKSet, SignJWT } from 'jose';
+import { verifyAccess } from '../cloudflare/src/access.ts';
+import { administrator } from '../cloudflare/src/admin-session.ts';
+import { createHandler } from '../cloudflare/src/app.ts';
+const {publicKey,privateKey}=await generateKeyPair('RS256');
+const jwk=await exportJWK(publicKey);jwk.kid='test-key';
+const keys=createLocalJWKSet({keys:[jwk]});
+const origin='https://panel.example.test';
+const env={ENVIRONMENT:'production',ACCESS_ENABLED:'true',ACCESS_ISSUER:'https://synthetic.cloudflareaccess.com',ACCESS_AUD:'a'.repeat(64),ADMIN_ORIGIN:origin,ADMIN_EMAIL:'admin@example.test',PUBLIC_ORIGINS:'',SUBMISSIONS_ENABLED:'false',DB:{prepare(){return {async first(){return {username:'Administrator'}}}}}};
+async function token(claims={},issuer=env.ACCESS_ISSUER,audience=env.ACCESS_AUD){return new SignJWT({type:'app',email:env.ADMIN_EMAIL,...claims}).setProtectedHeader({alg:'RS256',kid:'test-key'}).setIssuer(issuer).setAudience(audience).setSubject('synthetic-admin').setIssuedAt().setExpirationTime('7d').sign(privateKey)}
+const valid=await token();const request=(jwt=valid,url=origin+'/api/admin/me',headers={})=>new Request(url,{headers:{'Cf-Access-Jwt-Assertion':jwt,...headers}});
+assert.equal((await verifyAccess(request(),env,keys)).email,env.ADMIN_EMAIL);
+assert.equal((await administrator(request(),env,keys)).method,'access');
+for(const jwt of [await token({email:'someone@example.test'}),await token({type:'org'}),await token({},'https://other.cloudflareaccess.com'),await token({},undefined,'b'.repeat(64)),valid.slice(0,-5)+'AAAAA','invalid'])await assert.rejects(verifyAccess(request(jwt),env,keys),{status:401});
+const expired=await new SignJWT({type:'app',email:env.ADMIN_EMAIL}).setProtectedHeader({alg:'RS256',kid:'test-key'}).setIssuer(env.ACCESS_ISSUER).setAudience(env.ACCESS_AUD).setSubject('admin').setIssuedAt(Math.floor(Date.now()/1000)-100).setExpirationTime(Math.floor(Date.now()/1000)-1).sign(privateKey);
+await assert.rejects(verifyAccess(request(expired),env,keys),{status:401});
+await assert.rejects(verifyAccess(request(valid,'https://direct.workers.dev/api/admin/me'),env,keys),{status:401});
+await assert.rejects(administrator(new Request(origin+'/api/admin/me',{headers:{cookie:'rpv_session='+ 'a'.repeat(64)}}),env,keys),{status:401});
+await assert.rejects(administrator(request(),{...env,ACCESS_ENABLED:'false'},keys),{status:401});
+const worker=createHandler(undefined,keys);
+assert.equal((await worker.fetch(request(),env)).status,200);
+assert.equal((await worker.fetch(new Request(origin+'/api/admin/me'),env)).status,401);
+const logout=await worker.fetch(new Request(origin+'/api/admin/logout',{method:'POST',headers:{origin,'Content-Type':'application/json','Cf-Access-Jwt-Assertion':valid},body:'{}'}),env);
+assert.deepEqual(await logout.json(),{ok:true,redirect:'/cdn-cgi/access/logout'});
+assert.equal((await worker.fetch(new Request(origin+'/api/config'),env)).status,200);
+const cfg=await (await worker.fetch(new Request(origin+'/api/config'),env)).json();assert.equal(cfg.admin,true);assert.equal(cfg.submissions,false);assert.equal(cfg.auth,'access');
+console.log('Access: valid RS256 token, exact admin identity, issuer/audience/expiry/type, direct-host denial, no native production fallback, logout and independent activation passed.');

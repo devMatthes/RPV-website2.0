@@ -1,6 +1,7 @@
 import type { WorkerEnv } from './config.ts';
 import { HttpError, json, objectBody, readBody } from './http.ts';
 import { administrator } from './admin-session.ts';
+import type { JWTVerifyGetKey } from 'jose';
 
 interface CaseRow {
   id: string; reference: string; module: string; submitted_at: number; name: string; email: string; phone: string;
@@ -31,8 +32,8 @@ async function detail(env: WorkerEnv, row: CaseRow) {
   return { ...record(row), attachments: files.results.map(file => ({ ...file, thumbnail: false })),
     events: events.results.reverse().map(event => ({ ...event, at: new Date(event.at).toISOString() })) };
 }
-export async function adminCases(request: Request, env: WorkerEnv, id?: string): Promise<Response> {
-  const account = await administrator(request, env);
+export async function adminCases(request: Request, env: WorkerEnv, id?: string, accessKeys?: JWTVerifyGetKey): Promise<Response> {
+  const account = await administrator(request, env, accessKeys);
   if (!id) {
     // Bounded list; detailed messages, addresses and history are loaded on demand.
     const url = new URL(request.url); const module = url.searchParams.get('module') ?? 'serwis';
