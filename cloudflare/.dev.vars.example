@@ -1,5 +1,6 @@
-# Task 1 does not require application secrets.
-# Copy to .dev.vars for local development when later tasks introduce secrets.
-# Never copy production secrets into local fixtures or commit .dev.vars.
-# Staging/production secrets are configured separately using wrangler secret put
-# with an explicit --env staging or --env production.
+# Copy to .dev.vars (ignored by Git) for LOCAL development only.
+# Generate APP_SECRET with a password manager: random, at least 32 characters.
+# Never reuse local secrets in staging/production. Remote submissions stay disabled.
+APP_SECRET=
+# Optional. Without a key, users enter the complete address manually.
+GOOGLE_PLACES_API_KEY=

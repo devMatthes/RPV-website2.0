@@ -65,7 +65,7 @@ Bindings: `DB` (D1), `FILES` (R2), `ENVIRONMENT`. Identyfikatory zasobów nie s�
 
 Właściciel aktywował R2. Utworzono prywatne buckety `rpv-files-staging` i `rpv-files-production` w klasie Standard, z lokalizacją WEUR (wskazówka lokalizacji, jurysdykcja default; nie jest to twarde ograniczenie do UE). Potwierdzono `enabled: false` dla publicznego r2.dev i brak domen publicznych. Nie włączać publicznego adresu r2.dev ani publicznej domeny dla załączników. Konfiguracja lokalna R2 działa niezależnie od aktywacji usługi.
 
-Worker ma wyłącznie endpoint infrastrukturalny `/api/health`; brak API formularzy, CMS i panelu w tej fazie. Odpowiedź health nie potwierdza jeszcze gotowości aplikacji ani dostępności bazy/plików. Logi mają wyłączone automatyczne logowanie wywołań i śledzenie, a query string jest redagowany, aby przyszłe dane formularzy nie trafiały do logów.
+W tasku 1 Worker oferował wyłącznie endpoint infrastrukturalny `/api/health`. Aktualne API opisano w tasku 3; CMS i logowanie pozostają do implementacji. Odpowiedź health nie potwierdza jeszcze gotowości aplikacji ani dostępności bazy/plików. Logi mają wyłączone automatyczne logowanie wywołań i śledzenie, a query string jest redagowany, aby przyszłe dane formularzy nie trafiały do logów.
 
 ### Lokalne polecenia
 
@@ -97,7 +97,7 @@ npm run cf:deploy:staging
 npm run cf:deploy:production
 ```
 
-Docelowe tymczasowe adresy: `https://rpv-api-staging.jaciubekmateusz.workers.dev` i `https://rpv-api-production.jaciubekmateusz.workers.dev`. `panel.rpv.pl` podłączymy po aktywacji DNS i przygotowaniu panelu. Nie ustawiamy jeszcze `SERVICE_API_URL` w GitHub: infrastrukturalny Worker nie przyjmuje zgłoszeń.
+Docelowe tymczasowe adresy: `https://rpv-api-staging.jaciubekmateusz.workers.dev` i `https://rpv-api-production.jaciubekmateusz.workers.dev`. `panel.rpv.pl` podłączymy po aktywacji DNS i przygotowaniu panelu. Nie ustawiamy jeszcze `SERVICE_API_URL` w GitHub: wysyłka publiczna pozostaje wyłączona do taska 8.
 
 GitHub Actions sprawdza binding types, TypeScript, lokalne D1/R2 i oba dry runs. Dotychczasowe API Node pozostaje dostępne lokalnie do porównania podczas migracji.
 
@@ -153,6 +153,61 @@ npm run cf:db:migrate:production
 
 `cf:db:test` używa tymczasowego lokalnego D1 w workerd i rzeczywistych migracji Wrangler, bez dostępu do produkcji. Testuje ponowne zastosowanie bez utraty danych, rollback batcha, jedno konto, hash/termin sesji, wymagany adres, statusy, blokowanie starej revision, retencję 24h/reopen, kaskadowe usuwanie i kolejkę R2, limity załączników, oddzielenie CMS/private, niezmienność zatwierdzonej wersji oraz 20 równoległych prób rezerwacji przy limicie 10. Plany zapytań potwierdzają wykorzystanie indeksów. Test jest częścią CI.
 
-Migrację zdalną wykonano przez autoryzowany plugin Cloudflare, ponieważ CLI nie ma osobnego logowania. Zastosowano dokładny SQL z repo wraz z wpisem ledger jako batch; w obu bazach sprawdzono ledger, schemat, `PRAGMA foreign_key_check` i brak danych klientów. Publiczne formularze pozostają na dotychczasowym etapie; Worker nadal oferuje wyłącznie health.
+Migrację zdalną wykonano przez autoryzowany plugin Cloudflare, ponieważ CLI nie ma osobnego logowania. Zastosowano dokładny SQL z repo wraz z wpisem ledger jako batch; w obu bazach sprawdzono ledger, schemat, `PRAGMA foreign_key_check` i brak danych klientów. Po tasku 2 Worker oferował wyłącznie health. Aktualny zakres i stan wdrożenia opisano poniżej.
 
 Źródła: [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/), [D1 batch transactions](https://developers.cloudflare.com/d1/worker-api/d1-database/#batch).
+
+
+## Task 3 — API serwisu i adresów na Workers
+
+2026-10-12 wdrożono w obu środowiskach `0002_address_sessions.sql` i API Workers. Oba health zwracają `phase: service-api`; nie oznacza to uruchomienia publicznego przyjmowania zgłoszeń. `SUBMISSIONS_ENABLED=false` w staging/production, brak skonfigurowanych sekretów aplikacji/Google w tym tasku, brak przełączenia frontendu przez `SERVICE_API_URL` i brak podłączenia domeny `panel.rpv.pl`. Konto administratora/panel będzie uruchomione w CF6; DNS tej subdomeny podłączymy wraz z panelem. Mail nie jest częścią tej implementacji.
+
+### Endpointy
+
+| Endpoint | Działanie |
+| --- | --- |
+| GET/HEAD `/api/health` | Stan runtime i nazwa środowiska, bez sprawdzania dostępności integracji |
+| GET `/api/config` | Czy wysyłka i Google są aktywne; tymczasowo `attachments=false`, `limits.count=0` |
+| POST `/api/service` | Serwis: JSON albo multipart z jednym polem `payload`, bez plików w tym tasku |
+| POST `/api/address/suggestions` | Autocomplete (New): min. 3 znaki, Polska, max. 5 podpowiedzi |
+| POST `/api/address/details` | Jeden wybór z wcześniej zwróconych ID w tej samej sesji i dla tego samego właściciela |
+
+Serwis używa wspólnej walidacji `src/lib/service-schema.ts`: pełny adres administracyjny, numer telefonu do E.164, e-mail, rodzaj instalacji i zgoda; blokuje honeypot. Wymaga `Idempotency-Key` będącego UUID v4. Zapis sprawy, numeru referencyjnego i historii jest jedną transakcją D1. Przy równoległej wysyłce tego samego formularza powstaje jedna sprawa; identyczne ponowienie zwraca ten sam numer, zmiana danych z tym samym kluczem zwraca 409. Hash treści nie zależy od tymczasowego podpisu adresowego ani wzbogacenia TERYT. Nie utrwala się honeypota ani podpisu, nie zwraca danych klientów w potwierdzeniu.
+
+Czytanie JSON jest ograniczone do 32 KiB, multipart bez plików do 40 KiB, także przy braku/niepoprawnym Content-Length. Załączniki są odrzucane bez zapisu sprawy; obsługa strumieniowanego uploadu/R2 jest CF4. Nie podłączać jeszcze obecnego publicznego formularza do tego API, ponieważ dotychczasowy frontend pozwala wybierać pliki. Pełny przepływ i końcowe limity formularza zostaną połączone w CF4/CF5/CF8.
+
+Wszystkie operacje POST wymagają jawnego Origin z `PUBLIC_ORIGINS`; preflight dopuszcza wyłącznie metodę danego endpointu i nagłówki Content-Type/Idempotency-Key. CORS nie zastępuje ochrony przed botami: dowolny klient HTTP może ustawić Origin. Domyślne trwałe limity D1: 120 żądań API/min/IP, 6 nowych prób serwisu/h/IP, 30 podpowiedzi/min/IP i 10 szczegółów/min/IP. Okna są stałe; ponowienie zapisanej sprawy nie zużywa limitu nowych wysyłek, ale nadal podlega ogólnemu limitowi. W bazie przechowuje się HMAC IP z APP_SECRET, nie surowy IP. Workers ufa ustawianemu przez Cloudflare CF-Connecting-IP; lokalny runtime nie służy do oceny odporności na sfałszowane nagłówki. Odpowiedzi mają no-store, nosniff i noindex, błędy nie ujawniają SQL, sekretów ani odpowiedzi dostawców.
+
+### Google i GUGiK
+
+Sesje oraz ID podpowiedzi są w D1 (`address_sessions`, `address_predictions`), a nie w pamięci instancji. Sesja trwa 10 min, maksymalnie 20 prób autocomplete, jedno pobranie details; liczba aktywnych sesji maksymalnie 1000. Limit i przejęcie details są atomowe. Wygasłe sesje są sprzątane małymi partiami przy kolejnych wyszukiwaniach; cykliczne sprzątanie pozostałych okien to CF12. Nie przechowuje się tekstu podpowiedzi, pełnych odpowiedzi Google ani współrzędnych. Poprawnie dobrana para autocomplete/details używa tego samego tokenu; nie zakładamy, że wszystkie zapytania w sesji są bezpłatne.
+
+Minimalne maski: `suggestions.placePrediction.placeId,suggestions.placePrediction.text.text` oraz `addressComponents,location`. Parametry Google: languageCode=pl, includedRegionCodes=[pl]. Timeout Google 6 s, ograniczony rozmiar odpowiedzi 64 KiB; timeout GUGiK 4 s/4 KiB. Po wyborze adresu ULDK `GetCommuneByXY` uzupełnia gminę, powiat, województwo i TERYT na podstawie PRG. Gdy ULDK nie odpowie, użytkownik nadal może uzupełnić brakujące dane ręcznie.
+
+Limit Google: 100 prób dziennie i 1000 miesięcznie **na środowisko**, liczone w UTC kalendarzowym i transakcyjnie w D1, zanim nastąpi wywołanie dostawcy. Wliczamy autocomplete, details oraz próby zakończone błędem/timeoutem; nie zwracamy zużycia przy awarii. Dzienny i miesięczny licznik zapisują się razem albo rollbackują razem. Obniżenie pułapu blokuje kolejne wywołania, gdy dotychczasowe zużycie przekracza nową wartość. Wyczerpanie budżetu nie blokuje ręcznego adresu. To ograniczenie prób aplikacji, nie limit rachunku Cloudflare ani limit całego konta Google; przed aktywacją klucza ustawić również quota/budget w Google Cloud.
+
+TERYT z przeglądarki jest ignorowany. API details zwraca podpis HMAC wiążący TERYT z adresem i terminem ważności 1 h. Zmiana adresu lub wygasły/fałszywy podpis usuwa możliwość zapisu jako zweryfikowanego TERYT, lecz nie blokuje poprawnego adresu ręcznego. Weryfikacja używa Web Crypto verify zamiast porównywania podpisów zwykłym operatorem.
+
+### Sekrety i uruchomienie lokalne
+
+Utworzyć ignorowany `cloudflare/.dev.vars` na podstawie `.dev.vars.example`. APP_SECRET musi być losowy, co najmniej 32 znaki; wygenerować bez zapisywania w repo ani argumentach poleceń. Jest używany do HMAC i podpisów adresowych, nie jest hasłem administratora. GOOGLE_PLACES_API_KEY pozostaje opcjonalny. Samo ustawienie klucza Google nie aktywuje zdalnego przyjmowania zgłoszeń.
+
+```sh
+npm run cf:db:migrate:local
+npm run cf:dev
+npm run cf:api:test
+```
+
+Port lokalny 8788. Przy braku APP_SECRET `/api/config` bezpiecznie zwraca `submissions=false`, POST zwraca 503. Przy poprawnym lokalnym sekrecie można testować serwis bez Google (adres ręczny). Sekrety zdalne później ustawiać przez panel Cloudflare lub interaktywny Wrangler (`secret put` z jawnym `--env`), osobno dla staging/production; plugin nie loguje CLI. Nie wpisywać klucza do zmiennych PUBLIC_* ani do konfiguracji statycznego Astro.
+
+### Walidacja i wdrożenie
+
+- `cf:api:test`: walidacja, multipart, limity rzeczywistego strumienia, idempotencja po restarcie i przy równoległych żądaniach, konflikt treści, numer referencyjny, CORS, limity IP i brak dostępu do niezaimplementowanego admin API.
+- Integracje z atrapami Google/ULDK: maski, token, właściciel, jedno details, PRG, podpis/zmiana adresu/wygasanie, brak klucza, awaria Google, awaria PRG i atomowe limity dzienne/miesięczne. Testy nie wykonują płatnych zapytań.
+- Ten sam test kompiluje Worker i wykonuje prawdziwy handler HTTP w workerd/Miniflare z lokalnym D1 oraz syntetycznym APP_SECRET. Sprawdza zapis i idempotentne ponowienie. Miniflare jest przypięty do tej samej wersji, której używa obecny Wrangler; konfigurację adaptuje `convertV4MiniflareOptions`.
+- `cf:db:test`, `cf:smoke`, `cf:types -- --check`, `cf:check`: poprawne; dotychczasowe 24 testy backendu poprawne.
+- Dry run obu środowisk poprawny; moduł 280,84 KiB / 65,63 KiB gzip. To kod API na serwerze, nie dodatkowy JavaScript pobierany przez publiczną stronę.
+- Publiczny punkt Warszawa w rzeczywistym ULDK: poprawny format PRG. Google nie sprawdzono z rzeczywistym kluczem, ponieważ klucz dodamy później.
+- Zdalna migracja/ledger i FK check poprawne w obu D1, zero zgłoszeń. Moduły z obu dry runs mają identyczny SHA256; wdrożono dokładny moduł przez plugin z bindings zgodnymi z repo. Health HTTPS 200, config zwraca false dla publicznej wysyłki/Google/załączników. Staging POST potwierdza 503 bez tworzenia danych.
+
+Źródła: [Workers best practices](https://developers.cloudflare.com/workers/best-practices/workers-best-practices/), [Google session tokens](https://developers.google.com/maps/documentation/places/web-service/using-session-tokens), [Places billing/field masks](https://developers.google.com/maps/documentation/places/web-service/usage-and-billing), [Dokumentacja ULDK](https://uldk.gugik.gov.pl/opis.html).

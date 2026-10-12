@@ -16,7 +16,7 @@
     "traces": { "enabled": false },
     "redact_query_string": true
   },
-  "vars": { "ENVIRONMENT": "local" },
+  "vars": { "ENVIRONMENT": "local", "PUBLIC_ORIGINS": "http://127.0.0.1:4321,http://localhost:4321,http://127.0.0.1:4322,http://localhost:4322,http://127.0.0.1:8788", "SUBMISSIONS_ENABLED": "true", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000" },
   "d1_databases": [{
     "binding": "DB",
     "database_name": "rpv-db-local",
@@ -33,7 +33,7 @@
     "staging": {
       "name": "rpv-api-staging",
       "workers_dev": true,
-      "vars": { "ENVIRONMENT": "staging" },
+      "vars": { "ENVIRONMENT": "staging", "PUBLIC_ORIGINS": "https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "false", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000" },
       "d1_databases": [{
         "binding": "DB",
         "database_name": "rpv-db-staging",
@@ -50,7 +50,7 @@
     "production": {
       "name": "rpv-api-production",
       "workers_dev": true,
-      "vars": { "ENVIRONMENT": "production" },
+      "vars": { "ENVIRONMENT": "production", "PUBLIC_ORIGINS": "https://rpv.pl,https://www.rpv.pl,https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "false", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000" },
       "d1_databases": [{
         "binding": "DB",
         "database_name": "rpv-db-production",

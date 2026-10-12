@@ -30,7 +30,7 @@ for (const environment of [undefined, 'staging', 'production']) {
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('Cache-Control'), 'no-store');
     assert.deepEqual(await response.json(), {
-      status: 'ok', environment: expected, phase: 'infrastructure',
+      status: 'ok', environment: expected, phase: 'service-api',
     });
     const head = await worker.fetch(new Request('https://example.test/api/health', { method: 'HEAD' }), proxy.env);
     assert.equal(head.status, 200);
@@ -38,7 +38,7 @@ for (const environment of [undefined, 'staging', 'production']) {
     const post = await worker.fetch(new Request('https://example.test/api/health', { method: 'POST' }), proxy.env);
     assert.equal(post.status, 405);
     const missing = await worker.fetch(new Request('https://example.test/api/service'), proxy.env);
-    assert.equal(missing.status, 404);
+    assert.equal(missing.status, 405);
     console.log(`Cloudflare smoke: ${expected} — D1, R2 and health OK (local simulation)`);
   } finally {
     await proxy.dispose();

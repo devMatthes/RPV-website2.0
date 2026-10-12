@@ -37,6 +37,8 @@ jobs:
         run: npm run cf:check
       - name: Test D1 migrations and data constraints
         run: npm run cf:db:test
+      - name: Test Workers service API and address integration
+        run: npm run cf:api:test
       - name: Test local Cloudflare bindings
         run: npm run cf:smoke
       - name: Validate Cloudflare deployments without uploading
