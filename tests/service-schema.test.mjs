@@ -8,3 +8,14 @@ test('does not trust browser TERYT or non-Polish country', () => { const result=
 test('attachment input limits and extension/type agreement', () => { assert.equal(validateServiceFiles([{name:'photo.HEIC',type:'',size:100}]),''); assert.ok(validateServiceFiles([{name:'file.pdf',type:'text/html',size:100}])); assert.ok(validateServiceFiles(Array.from({length:6},()=>({name:'a.jpg',type:'image/jpeg',size:1})))); });
 
 test("rejects invalid email local parts and domain labels while accepting plus addressing",()=>{ for(const email of ["<script>@example.com","a..b@example.com",".a@example.com","a.@example.com","a@-example.com","a@ex_ample.com",`a@${"x".repeat(64)}.com`]) assert.ok(validateService({...example,email}).errors.email,email);assert.equal(validateService({...example,email:"name+service@example.com"}).errors.email,undefined); });
+
+test('separates original photo limits from final upload and PDF limits', () => {
+  const mib = 1024 * 1024;
+  assert.equal(validateServiceFiles([{name:'large.jpg',type:'image/jpeg',size:20*mib}], 'input'), '');
+  assert.ok(validateServiceFiles([{name:'large.jpg',type:'image/jpeg',size:5*mib+1}], 'final'));
+  assert.ok(validateServiceFiles([{name:'document.pdf',type:'application/pdf',size:5*mib+1}], 'input'));
+  assert.ok(validateServiceFiles([{name:'photo.heic',type:'image/heic',size:100}], 'final'));
+  assert.ok(validateServiceFiles([{name:'photo.jpg',type:'image/png',size:100}], 'input'));
+  assert.equal(validateServiceFiles(Array.from({length:4},()=>({name:'a.pdf',type:'application/pdf',size:5*mib})), 'final'), '');
+  assert.ok(validateServiceFiles(Array.from({length:5},()=>({name:'a.pdf',type:'application/pdf',size:5*mib})), 'final'));
+});

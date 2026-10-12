@@ -33,10 +33,12 @@ if (form) {
     event.preventDefault(); if (attachments.isBusy() || address.isBusy() || sending) return; sending = true; attempted = true;
     let result: Awaited<ReturnType<typeof validate>>;
     try { result = await validate(); } catch { sending=false; feedback.textContent='Nie udało się załadować walidacji. Sprawdź połączenie z internetem. Dane nie zostały wysłane i pozostają w formularzu.';feedback.hidden=false;feedback.focus();return; }
+    if (!attachments.validate()) { sending = false; form.querySelector<HTMLElement>('.attachments')?.scrollIntoView({block:'center'}); return; }
     if (Object.keys(result.errors).length) { sending = false; form.querySelector<HTMLElement>('[aria-invalid=true]')?.focus(); return; }
     if (!form.dataset.api) { sending = false; feedback.textContent = 'Wysyłka nie jest jeszcze dostępna. Dane pozostają w formularzu. Zadzwoń: 515 114 676.'; feedback.hidden = false; feedback.focus(); return; }
     const payload = { ...result.data, address: { ...result.data.address, ...address.getSelection() } };
-    const signature = JSON.stringify([payload, attachments.getFiles().map(file=>[file.name,file.size,file.lastModified])]);
+    const { proof: _proof, ...stableAddress } = payload.address;
+    const signature = JSON.stringify([{ ...payload, address: stableAddress }, attachments.getFiles().map(file=>[file.name,file.size,file.lastModified])]);
     if (previousPayload !== signature) { retryKey = crypto.randomUUID(); previousPayload = signature; }
     const body = new FormData(); body.append('payload', JSON.stringify(payload)); for (const file of attachments.getFiles()) body.append('attachments',file,file.name);
     button.disabled = true; button.textContent = 'Wysyłamy…'; attachments.lock(true);

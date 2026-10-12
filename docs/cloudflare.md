@@ -274,3 +274,27 @@ npm run cf:db:test
 ```
 
 Źródła: [R2 pricing i darmowe operacje delete](https://developers.cloudflare.com/r2/pricing/), [Workers R2 binding](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/), [multipart parser](https://github.com/mjackson/multipart-parser).
+
+
+## Task 5 — przygotowanie zdjęć w przeglądarce
+
+Formularz serwisu rozróżnia oryginały i gotowe pliki. Oryginalne zdjęcie może zajmować do 20 MiB, PDF do 5 MiB; wybór partii oryginałów ograniczono do 40 MiB. Po przygotowaniu: maksymalnie 5 plików, 5 MiB każdy i 20 MiB łącznie. Zwalidowane wcześniej załączniki pozostają przy błędzie nowej partii. Komunikaty formularza i walidacja przed wysyłką opisują limity końcowe zgodne z R2.
+
+Zdjęcia są przetwarzane pojedynczo: odczyt do 1 MiB nagłówka/wymiarów, odrzucenie nieczytelnego kontenera lub >40 mln pikseli, konwersja HEIC w razie potrzeby, JPEG do 2560 px i cel 1,5 MiB. Końcowy rozmiar/wymiary są sprawdzane niezależnie od deklarowanego wyniku biblioteki. Kompresja usuwa EXIF (`preserveExif=false`), zachowuje obsługę orientacji biblioteki. Nie ma fallbacku wysyłającego oryginalne HEIC lub za duży plik do serwera. PDF nie jest przetwarzany: kontrola nagłówka/EOF i rozmiaru, bez zmiany zawartości.
+
+Odczyt nagłówka nie buforuje całego 20 MiB pliku na głównym wątku. Konwersja HEIC i kompresja działają po stronie urządzenia; kompresor używa Web Worker, a biblioteka może korzystać z natywnego fallbacku, gdy worker nie jest obsługiwany. Do listy powstają osobne miniatury maks. 128 px, aby pięć podglądów nie wymagało wyświetlania obrazów 2560 px. Błąd miniatury nie unieważnia przygotowanego zdjęcia. Blob URLs są zwalniane przy usunięciu pliku, resecie, błędzie/anulowaniu partii i opuszczeniu strony.
+
+`service-prepare` i kompresor są ładowane po wyborze zdjęcia; HEIC tylko po wyborze HEIC/HEIF. Surowy konwerter heic2any i skrypt workera kompresji są zasobami tej samej witryny, bez CDN i wysyłania zdjęć do zewnętrznego konwertera. HEIC działa w krótkotrwałym ukrytym iframe o tym samym origin: izoluje globalny worker/canvas biblioteki. Worker jest kończony i iframe usuwany po wyniku, błędzie, anulowaniu lub timeout 30 s. Kolejne zdjęcie tworzy świeży konwerter. JPEG z zachowaną nazwą HEIC (np. po natywnej konwersji przez urządzenie) nie uruchamia konwertera ponownie. Nie gwarantujemy obsługi każdego wariantu/kodeka HEIC; nieobsługiwany plik ma komunikat o eksporcie JPG.
+
+Anulowanie odblokowuje formularz także podczas oczekiwania na dynamiczny import. Sam import może dokończyć pobieranie do cache, ale nie rozpocznie po anulowaniu obróbki ani nie doda pliku. Partia jest atomowa: dopiero po powodzeniu całości jej pliki trafiają na listę; przy błędzie/anulowaniu wcześniejsza lista pozostaje. Podczas obróbki i wysyłki nie można modyfikować listy załączników. POST zawiera wyłącznie gotowe pliki. Zmiana tymczasowego podpisu adresu nie zmienia klucza idempotencji przy ponowieniu identycznej treści.
+
+### QA
+
+- Astro check bez błędów/warning/hint; backend i Workers TypeScript poprawne.
+- 25 testów jednostkowych/backendu poprawnych, w tym rozdzielenie limitu oryginału, PDF i pliku końcowego oraz zgodność rozszerzenia/MIME.
+- Pięć scenariuszy przeglądarkowych poprawnych w zainstalowanym Chrome: rozmiary 320/390/834/1440, wysyłka i prywatny panel dotychczasowego backendu, retry po utraconym potwierdzeniu, awaria walidatora, lazy loading, HEIC, atomowa partia, za duży PDF, anulowanie kompresora i konwertera.
+- Rzeczywista konwersja syntetycznego HEIC 64×64, utworzonego narzędziem sips w macOS; fixture w `tests/fixtures/sample.heic`, bez danych/osób. Test obejmuje też JPEG nazwany HEIC.
+- Sieć przy wejściu na stronę nie pobiera heic2any ani browser-image-compression. Miniatura dużego zdjęcia ≤128 px. Kontrola overflow obejmuje mobilne i desktopowe szerokości. Nie jest to test na fizycznym iPhonie/Androidzie; sprawdzenie urządzeń pozostaje częścią odbioru CF8.
+- Build statyczny oraz GitHub Pages poprawny, bez aktywowania publicznego API. CI uruchamia nowe scenariusze w Playwright Chromium. Te testy nadal używają lokalnego backendu Node do sprawdzenia UI; pełny przepływ z logowaniem Workers/R2 będzie po CF6 w CF8.
+
+Źródła: [Astro script processing](https://docs.astro.build/en/guides/client-side-scripts/#script-processing), [browser-image-compression](https://github.com/Donaldcwl/browser-image-compression), [heic2any](https://github.com/alexcorvi/heic2any).
