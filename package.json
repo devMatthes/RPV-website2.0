@@ -26,7 +26,12 @@
     "cf:db:migrate:staging": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --env staging --remote",
     "cf:db:migrate:production": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --env production --remote",
     "cf:api:test": "node --experimental-strip-types scripts/cloudflare-api-test.mjs",
-    "cf:files:test": "node --experimental-strip-types scripts/cloudflare-files-test.mjs"
+    "cf:files:test": "node --experimental-strip-types scripts/cloudflare-files-test.mjs",
+    "cf:panel:build": "node scripts/cloudflare-panel-build.mjs",
+    "cf:admin:test": "node --experimental-strip-types scripts/cloudflare-admin-test.mjs",
+    "precf:dev": "npm run cf:panel:build",
+    "precf:deploy:staging": "npm run cf:panel:build",
+    "precf:deploy:production": "npm run cf:panel:build"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

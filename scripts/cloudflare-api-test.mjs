@@ -80,7 +80,7 @@ try {
   const config = await worker.fetch(new Request('https://api.example.test/api/config'), disabled);
   assert.equal((await config.json()).submissions, false);
   assert.equal((await request('/api/address/suggestions', { input: 'Test', token: crypto.randomUUID() })).status, 503);
-  assert.equal((await worker.fetch(new Request('https://api.example.test/api/admin/cases'), env)).status, 404);
+  assert.equal((await worker.fetch(new Request('https://api.example.test/api/admin/cases'), env)).status, 401);
   assert.equal((await worker.fetch(new Request('https://api.example.test/api/service'), env)).status, 405);
   const preflight = await worker.fetch(new Request('https://api.example.test/api/service', { method: 'OPTIONS', headers: { origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'Idempotency-Key,Content-Type' } }), env);
   assert.equal(preflight.status, 204);

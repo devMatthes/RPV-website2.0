@@ -8,6 +8,7 @@
   // Default environment is local only. Always deploy an explicit named environment.
   "workers_dev": false,
   "preview_urls": false,
+  "assets": { "directory": "../.panel-assets", "binding": "ASSETS", "run_worker_first": ["/api/*", "/"], "html_handling": "force-trailing-slash" },
   "dev": { "ip": "127.0.0.1", "port": 8788 },
   "observability": {
     "enabled": true,
@@ -50,6 +51,7 @@
     },
     "production": {
       "name": "rpv-api-production",
+      "routes": [{ "pattern": "panel.rpv.pl", "custom_domain": true }],
       "workers_dev": true,
       "triggers": { "crons": ["17 * * * *"] },
       "vars": { "ENVIRONMENT": "production", "PUBLIC_ORIGINS": "https://rpv.pl,https://www.rpv.pl,https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "false", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "7500000000", "R2_A_DAY_LIMIT": "1000", "R2_A_MONTH_LIMIT": "10000", "R2_B_DAY_LIMIT": "5000", "R2_B_MONTH_LIMIT": "100000" },

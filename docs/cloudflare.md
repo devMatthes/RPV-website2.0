@@ -13,6 +13,8 @@ Przeniesiono wszystkie 14 rekordów z pełnego zrzutu przekazanego przez właśc
 
 Obecne rekordy strony i poczty zachowano. Nie zmieniono serwerów nazw u rejestratora ani konfiguracji `rpv.net.pl`. Następny krok właściciela: zastąpić dotychczasowe serwery nazw w panelu domena.pl powyższą parą. Następnie sprawdzić aktywację, stronę oraz pocztę.
 
+Aktualizacja 2026-10-12: właściciel zmienił delegację; API potwierdza status `active`, publiczny DNS zwraca nową parę NS. Do Workera `rpv-api-production` przypisano Custom Domain `panel.rpv.pl` (identyfikator `587d57b26dbd6ef9c0070d9b825ca6c05e82e7e3`). Cloudflare utworzył własny rekord proxy AAAA; nie należy zastępować go ręcznym rekordem A. Publiczny resolver 1.1.1.1 i serwer autorytatywny zwracają adresy Cloudflare, HTTPS `/api/health` odpowiada 200. Lokalne resolvery mogą jeszcze przechowywać wcześniejszą odpowiedź NXDOMAIN. Strona główna i rekordy poczty pozostają na dotychczasowych usługach.
+
 ## Docelowy zakres
 
 - Publiczna witryna docelowo na `rpv.pl`; na razie nowe Astro pozostaje na GitHub Pages. Przełączenie witryny jest późniejszym krokiem.
@@ -71,6 +73,7 @@ W tasku 1 Worker oferował wyłącznie endpoint infrastrukturalny `/api/health`.
 
 ```sh
 npm ci
+npm run cf:panel:build
 npm run cf:types
 npm run cf:check
 npm run cf:smoke
@@ -298,3 +301,20 @@ Anulowanie odblokowuje formularz także podczas oczekiwania na dynamiczny import
 - Build statyczny oraz GitHub Pages poprawny, bez aktywowania publicznego API. CI uruchamia nowe scenariusze w Playwright Chromium. Te testy nadal używają lokalnego backendu Node do sprawdzenia UI; pełny przepływ z logowaniem Workers/R2 będzie po CF6 w CF8.
 
 Źródła: [Astro script processing](https://docs.astro.build/en/guides/client-side-scripts/#script-processing), [browser-image-compression](https://github.com/Donaldcwl/browser-image-compression), [heic2any](https://github.com/alexcorvi/heic2any).
+
+## Task 6A — obsługa spraw i przygotowanie hostingu panelu
+
+Task 6 jest w toku. Ukończona wspólna część, niezależna od wyboru sposobu logowania:
+
+- Endpointy `/api/admin/me`, `/api/admin/cases`, `/api/admin/cases/:id`, PATCH szczegółu i POST `/api/admin/logout`; wspólna weryfikacja sesji D1 również dla prywatnych załączników. W bazie pozostaje wyłącznie hash tokena. Wygaśnięcie lub zmiana `auth_version` blokuje dostęp.
+- Lista po 12 rekordów, filtrowanie po module/statusie/instalacji i wyszukiwanie; bez e-maila, telefonu, pełnego opisu, historii i całego adresu w odpowiedzi listy. Szczegół pobierany oddzielnie. Historia obejmuje ostatnie 100 zdarzeń.
+- Status, przypisanie jedynemu administratorowi i notatki zapisują się w jednej transakcji z kontrolą rewizji. Dwa równoczesne zapisy dają jeden sukces i jeden konflikt 409, bez dodatkowego wpisu historii dla przegranej próby.
+- Zamknięcie zachowuje termin 24 h, późniejsza notatka nie przedłuża retencji, ponowne otwarcie ją anuluje. Po terminie API blokuje odczyt sprawy i jej plików; fizyczne usuwanie pozostaje w tasku 12.
+- Admin API odrzuca obce Origin; operacje modyfikujące wymagają dokładnego Origin panelu. Odpowiedzi z danymi nie są cache'owane.
+- Frontend obsługuje stronicowanie serwera i zachowuje zgodność z lokalnym poprzednim backendem. Zdjęcia JPG/PNG/WebP otwierają się na żądanie; Worker nie generuje miniatur ani nie pobiera wszystkich oryginałów przy otwarciu szczegółu.
+- `cf:panel:build` generuje osobny katalog `.panel-assets`: wyłącznie szkielet panelu oraz jego JS/fonty. Nie zawiera publicznych podstron, przykładowych spraw, danych klientów ani plików R2. Build nie nadpisuje publicznego `dist`. Zasoby są serwowane przez Workers Static Assets, bez obciążania R2. Panel ma noindex, CSP, zakaz osadzania i no-store dla HTML.
+- Przed lokalnym Wranglerem lub wdrożeniem wykonać `npm run cf:panel:build`. W CI ten krok poprzedza sprawdzenie bindings i testy. Po zmianie konfiguracji uruchomić `cf:types`.
+
+Testy lokalne: `cf:admin:test` (serwowanie szkieletu i zależności, sesje, prywatność listy, filtry, transakcje, konflikt, retencja, CSRF, wylogowanie), `cf:files:test`, `cf:api:test`, `cf:smoke`, TypeScript i Astro, produkcyjny dry run oraz 5 testów przeglądarkowych dotychczasowego formularza/panelu.
+
+Pozostało przed ukończeniem tasku 6: wybór Cloudflare Access z jednym dozwolonym adresem e-mail albo własnego loginu/hasła, implementacja wejścia i sesji wybranego wariantu, testy tego logowania oraz zdalne wdrożenie panelu z zasobami. Cloudflare Access nie jest jeszcze włączony na koncie. Konfiguracja API zwraca `admin: false`; publiczne formularze nadal są wyłączone niezależnie od panelu. W tej części nie wdrożono nowego kodu Workera — zdalnie działa dotychczasowe API health; przypisanie domeny samo nie publikuje widoku panelu. Nie oznaczać tasku 6 jako zakończonego.

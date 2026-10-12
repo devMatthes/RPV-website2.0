@@ -31,6 +31,8 @@ jobs:
         run: npm run check
       - name: Check backend TypeScript
         run: npm run api:check
+      - name: Build isolated admin assets
+        run: npm run cf:panel:build
       - name: Check Cloudflare binding types
         run: npm run cf:types -- --check
       - name: Check Cloudflare TypeScript
@@ -41,6 +43,8 @@ jobs:
         run: npm run cf:api:test
       - name: Test private R2 uploads and cost safeguards
         run: npm run cf:files:test
+      - name: Test administrator API and concurrency
+        run: npm run cf:admin:test
       - name: Test local Cloudflare bindings
         run: npm run cf:smoke
       - name: Validate Cloudflare deployments without uploading

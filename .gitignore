@@ -17,5 +17,7 @@ node_modules.stalled/
 .service-data/
 
 .wrangler/
+.panel-build/
+.panel-assets/
 .dev.vars*
 !.dev.vars.example

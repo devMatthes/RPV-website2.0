@@ -5,22 +5,29 @@ import { HttpError, json, objectBody, readBody } from './http.ts';
 import { sign, uuid } from './security.ts';
 import { submitService } from './submission.ts';
 import { attachmentResponse, fileLimits } from './attachments.ts';
+import { adminCases } from './admin-cases.ts';
+import { administrator } from './admin-session.ts';
 
 const routes = new Map([
   ['/api/health', 'GET, HEAD'], ['/api/config', 'GET'], ['/api/service', 'POST'],
   ['/api/address/suggestions', 'POST'], ['/api/address/details', 'POST'],
+  ['/api/admin/me', 'GET'], ['/api/admin/cases', 'GET'], ['/api/admin/logout', 'POST'],
 ]);
 export function createHandler(fetcher?: typeof fetch) {
   return {
     async fetch(request: Request, env: WorkerEnv): Promise<Response> {
       const path = new URL(request.url).pathname;
       const attachment = /^\/api\/admin\/cases\/([a-f0-9-]{36})\/files\/([a-f0-9-]{36})$/.exec(path);
-      const methods = attachment ? 'GET' : routes.get(path);
+      const caseRoute = /^\/api\/admin\/cases\/([a-f0-9-]{36})$/.exec(path);
+      const methods = attachment ? 'GET' : caseRoute ? 'GET, PATCH' : routes.get(path);
       const origin = request.headers.get('origin'); const allowed = origin !== null && allowedOrigins(env).has(origin);
       const cors: Record<string, string> = { Vary: 'Origin' };
-      if (allowed) cors['Access-Control-Allow-Origin'] = origin;
+      if (allowed && !path.startsWith('/api/admin/')) cors['Access-Control-Allow-Origin'] = origin;
       try {
+        if (path==='/' && request.method==='GET') return new Response(null,{status:302,headers:{Location:'/panel/','Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'}});
+        if (!path.startsWith('/api/') && env.ASSETS) return env.ASSETS.fetch(request);
         if (!methods) return json({ error: 'not_found' }, 404, cors);
+        if (path.startsWith('/api/admin/') && origin!==null && origin!==new URL(request.url).origin) throw new HttpError(403,'Niedozwolone źródło żądania.');
         if (request.method === 'OPTIONS') {
           if (!allowed) throw new HttpError(403, 'Niedozwolone źródło żądania.');
           const method = request.headers.get('access-control-request-method');
@@ -29,7 +36,15 @@ export function createHandler(fetcher?: typeof fetch) {
           return new Response(null, { status: 204, headers: { ...cors, 'Access-Control-Allow-Methods': methods, 'Access-Control-Allow-Headers': 'Content-Type, Idempotency-Key', 'Access-Control-Max-Age': '600' } });
         }
         if (!methods.split(', ').includes(request.method)) return json({ error: 'method_not_allowed' }, 405, { ...cors, Allow: methods });
+        if (path.startsWith('/api/admin/') && ['POST','PATCH'].includes(request.method) && origin!==new URL(request.url).origin) throw new HttpError(403,'Niedozwolone źródło żądania.');
         if (attachment) return await attachmentResponse(request, env, attachment[1], attachment[2]);
+        if (path==='/api/admin/me') { const account=await administrator(request,env); return json({username:account.username}); }
+        if (path==='/api/admin/logout') {
+          const account=await administrator(request,env);
+          await env.DB.prepare('DELETE FROM admin_sessions WHERE token_hash=?').bind(account.token_hash).run();
+          return json({ok:true},200,{'Set-Cookie':`rpv_session=; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=0${new URL(request.url).protocol==='https:'?'; Secure':''}`});
+        }
+        if (path==='/api/admin/cases' || caseRoute) return await adminCases(request,env,caseRoute?.[1]);
         if (path === '/api/health') {
           const response = json({ status: 'ok', environment: env.ENVIRONMENT, phase: 'service-api' }, 200, cors);
           return request.method === 'HEAD' ? new Response(null, { headers: response.headers }) : response;
@@ -37,6 +52,7 @@ export function createHandler(fetcher?: typeof fetch) {
         if (path === '/api/config') return json({
           googlePlaces: enabled(env) && !!env.GOOGLE_PLACES_API_KEY,
           submissions: enabled(env), attachments: enabled(env),
+          admin: false,
           limits: fileLimits,
         }, 200, cors);
         if (!allowed) throw new HttpError(403, 'Niedozwolone źródło żądania.');

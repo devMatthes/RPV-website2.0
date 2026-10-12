@@ -1,7 +1,7 @@
 import { imageDimensions } from '../../src/lib/image-dimensions.ts';
 import type { WorkerEnv } from './config.ts';
 import { budgetBatch, operationStatements, type StoredUpload } from './storage.ts';
-import { digest } from './security.ts';
+import { administrator } from './admin-session.ts';
 import { HttpError } from './http.ts';
 export const fileLimits = { count: 5, inputBytes: 5242880, totalBytes: 20971520, pixels: 40000000, imageEdge: 2560 };
 export async function inspectFile(bytes: Uint8Array, filename: string, declared: string): Promise<StoredUpload> {
@@ -32,15 +32,12 @@ export async function inspectFile(bytes: Uint8Array, filename: string, declared:
   const id = crypto.randomUUID(); return { id, key: `private/${crypto.randomUUID()}`, name, mime, bytes: bytes.length, hash };
 }
 export async function attachmentResponse(request: Request, env: WorkerEnv, caseId: string, fileId: string): Promise<Response> {
-  const cookie = request.headers.get('cookie')?.split(';').map(value => value.trim()).find(value => value.startsWith('rpv_session='))?.slice(12);
-  if (!cookie || !/^[a-f0-9]{64}$/.test(cookie)) throw new HttpError(401, 'Zaloguj się do panelu.');
+  await administrator(request, env);
   const now = Date.now();
-  const session = await env.DB.prepare(`SELECT s.token_hash FROM admin_sessions s JOIN administrators a ON a.id = s.administrator_id
-    WHERE s.token_hash = ? AND s.expires_at > ? AND s.auth_version = a.auth_version`).bind(await digest(cookie), now).first();
-  if (!session) throw new HttpError(401, 'Zaloguj się do panelu.');
   const file = await env.DB.prepare(`SELECT a.object_key,a.original_name,a.content_type,a.bytes FROM file_assets a
-    JOIN case_attachments ca ON ca.asset_id = a.id WHERE ca.case_id = ? AND a.id = ? AND a.visibility = 'private' AND a.state = 'ready'`)
-    .bind(caseId, fileId).first<{ object_key: string; original_name: string; content_type: string; bytes: number }>();
+    JOIN case_attachments ca ON ca.asset_id = a.id JOIN cases c ON c.id=ca.case_id
+    WHERE ca.case_id = ? AND a.id = ? AND a.visibility = 'private' AND a.state = 'ready' AND (c.delete_after IS NULL OR c.delete_after>?)`)
+    .bind(caseId, fileId, now).first<{ object_key: string; original_name: string; content_type: string; bytes: number }>();
   if (!file) throw new HttpError(404, 'Nie znaleziono załącznika.');
   await budgetBatch(env, operationStatements(env, 'r2_class_b', now));
   const object = await env.FILES.get(file.object_key);
