@@ -1,4 +1,5 @@
 import type { ServiceSubmission } from '../../src/lib/service-types.ts';
+import type { StoredUpload } from './storage.ts';
 import { HttpError } from './http.ts';
 export async function consumeWindow(db: D1Database, owner: string, action: string, max: number, duration: number, now: number) {
   const start = Math.floor(now / duration) * duration;
@@ -26,7 +27,7 @@ export async function consumeGoogle(db: D1Database, daily: number, monthly: numb
 export async function existing(db: D1Database, keyHash: string) {
   return db.prepare('SELECT reference,fingerprint FROM cases WHERE idempotency_key_hash = ?').bind(keyHash).first<{ reference: string; fingerprint: string }>();
 }
-export async function insertService(db: D1Database, data: ServiceSubmission, keyHash: string, fingerprint: string, now: number) {
+export async function insertService(db: D1Database, data: ServiceSubmission, keyHash: string, fingerprint: string, now: number, files: StoredUpload[] = []) {
   const id = crypto.randomUUID(); const year = new Date(now).getUTCFullYear(); const counter = `service:${year}`;
   try {
     await db.batch([
@@ -36,6 +37,10 @@ export async function insertService(db: D1Database, data: ServiceSubmission, key
         SELECT ?, 'SRV-' || ? || '-' || printf('%06d',value), 'serwis',?,?,?,?,?,?,?,?,?,?,?,? FROM counters WHERE key = ?`)
         .bind(id, String(year), now, now, data.name, data.email, data.phone, data.installation, data.message,
           JSON.stringify(data.address), JSON.stringify({ installation: data.installation, inverter: data.inverter, battery: data.battery }), now, keyHash, fingerprint, counter),
+      ...files.flatMap((file, position) => [
+        db.prepare("UPDATE file_assets SET state = 'ready', expires_at = NULL WHERE id = ? AND state = 'pending'").bind(file.id),
+        db.prepare('INSERT INTO case_attachments VALUES (?,?,?)').bind(id, file.id, position),
+      ]),
       db.prepare("INSERT INTO case_events(case_id,at,actor,kind,message) VALUES (?,?,'System','created','Zgłoszenie zapisane.')").bind(id, now),
     ]);
     const row = await existing(db, keyHash); if (!row) throw new Error('Receipt missing');

@@ -112,11 +112,11 @@ GitHub Actions sprawdza binding types, TypeScript, lokalne D1/R2 i oba dry runs.
 - Zdalne Workers staging i production: `/api/health` zwraca HTTPS 200 i właściwe środowisko. Odczyt settings potwierdza osobne DB/FILES oraz ustawienia logów zgodne z repo. Zdalne D1: `SELECT 1` poprawne w obu środowiskach. Ten odczyt wykonano przed taskiem 2. Obecnie D1 zawiera schemat aplikacji; brak danych klientów.
 - Prywatność R2: r2.dev wyłączone, brak custom domains. Testy zapisu i odczytu plików wykonano lokalnie; zdalny przepływ załączników będzie testowany w tasku 4.
 
-## Kontrola kosztów — propozycja do taska 4
+## Kontrola kosztów — stan po tasku 4
 
-Cloudflare budget alerts są informacyjne: nie zatrzymują ani nie ograniczają użycia. Nie ustawiono alertu na koncie ani limitów aplikacyjnych w tasku 1.
+Cloudflare budget alerts są informacyjne: nie zatrzymują ani nie ograniczają użycia. Nie ustawiono alertu na koncie. Limity aplikacyjne są wdrożone w tasku 4, opisanym poniżej.
 
-Propozycja: limit miejsca na dane RPV łącznie 8 GB (staging i production), limity operacji/okres rozliczeniowy oraz dotychczasowe limity na plik i zgłoszenie. Wymaga liczników, rezerwacji miejsca odpornej na równoległe uploady, odrzucania nowych operacji po wyczerpaniu budżetu i zachowania możliwości usuwania danych. Wliczać zdjęcia CMS, pliki tymczasowe i uwzględnić kopie zapasowe. Alert kosztowy np. 5 USD w Billing > Billable Usage jest dodatkowym ostrzeżeniem, a nie gwarancją rachunku 0 USD.
+Wdrożono limit miejsca łącznie 8 GB (0,5 GB staging + 7,5 GB production) oraz limity operacji dzienne/miesięczne. Przydział jest atomowy; do czasu potwierdzonego usunięcia wlicza także pliki tymczasowe i niepotwierdzone zapisy. Przyszłe zdjęcia CMS muszą korzystać z tego samego mechanizmu; kopie zapasowe i zasoby spoza aplikacji wymagają osobnego uwzględnienia. Alert kosztowy np. 5 USD w Billing > Billable Usage jest dodatkowym ostrzeżeniem, a nie gwarancją rachunku 0 USD.
 
 Darmowy limit R2 Standard dotyczy całego konta: 10 GB-month, 1 mln operacji Class A i 10 mln Class B na okres rozliczeniowy. Nie jest oddzielny dla każdego bucketu. Inne projekty, działania z panelu/API i opóźnione metryki mogą ograniczyć skuteczność własnej kontroli kosztów. Przyszłe limity aplikacji nie gwarantują zerowych kosztów całego konta.
 
@@ -139,7 +139,7 @@ Wszystkie daty aplikacji: UTC Unix milliseconds. Zmiana statusu na `closed` usta
 
 Indeksy obejmują listy według modułu/statusu, retencję, historię sprawy, sesje, kolejkę usuwania i wygasające rezerwacje. Zapis kilku związanych rekordów wykonywać w `DB.batch()` — transakcje D1 rollbackują całą partię po błędzie. Przy zmianach panelu stosować `WHERE id = ? AND revision = ?` oraz kontrolować `meta.changes`. Przy rezerwacji używać warunkowego atomowego UPDATE: `consumed + reserved + amount <= ceiling`; nie wykonywać osobnego odczytu i bezwarunkowego zapisu. Rezerwację i wpis jej identyfikatora zapisywać w jednej transakcji. Dopiero CF3/CF4 podłączy te mechanizmy do rzeczywistych żądań.
 
-**Limity kosztów nie są jeszcze aktywne.** Task 2 przygotowuje strukturę i testuje atomowe operacje; nie ustawiono pułapów ani alertu. W CF4 budżet staging + production musi mieścić się w łącznej puli (np. podział limitów na środowiska), uwzględniać CMS, pliki tymczasowe i operacje sprzątania. Osobne lokalne liczniki w dwóch D1 nie są wspólnym licznikiem konta Cloudflare.
+**Stan po tasku 2:** przygotowano strukturę i atomowe operacje. Aktualne limity API opisano w tasku 4; alert na koncie nie jest skonfigurowany. W CF4 budżet staging + production musi mieścić się w łącznej puli (np. podział limitów na środowiska), uwzględniać CMS, pliki tymczasowe i operacje sprzątania. Osobne lokalne liczniki w dwóch D1 nie są wspólnym licznikiem konta Cloudflare.
 
 ### Polecenia i testy
 
@@ -211,3 +211,66 @@ Port lokalny 8788. Przy braku APP_SECRET `/api/config` bezpiecznie zwraca `submi
 - Zdalna migracja/ledger i FK check poprawne w obu D1, zero zgłoszeń. Moduły z obu dry runs mają identyczny SHA256; wdrożono dokładny moduł przez plugin z bindings zgodnymi z repo. Health HTTPS 200, config zwraca false dla publicznej wysyłki/Google/załączników. Staging POST potwierdza 503 bez tworzenia danych.
 
 Źródła: [Workers best practices](https://developers.cloudflare.com/workers/best-practices/workers-best-practices/), [Google session tokens](https://developers.google.com/maps/documentation/places/web-service/using-session-tokens), [Places billing/field masks](https://developers.google.com/maps/documentation/places/web-service/usage-and-billing), [Dokumentacja ULDK](https://uldk.gugik.gov.pl/opis.html).
+
+
+## Task 4 — prywatne pliki R2 i ochrona kosztów
+
+Wdrożono `0003_r2_accounting.sql` i obsługę załączników w staging/production. `SUBMISSIONS_ENABLED=false` nadal blokuje publiczne przyjmowanie zgłoszeń. API config ma końcowe limity plików i `attachments=true` dopiero dla aktywnego środowiska; frontend podłączymy po CF5/CF6 w CF8. Nie uruchomiono maila ani konta administratora.
+
+### Przepływ plików
+
+Multipart musi zaczynać się od jednego pola `payload`, potem najwyżej 5 plików `attachments`. Parser `@mjackson/multipart-parser` czyta strumień i udostępnia kolejne części; aplikacja przygotowuje i zapisuje jeden plik naraz. Każda część pliku jest buforowana do 5 MiB w celu sprawdzenia typu, wymiarów i hasha; cały multipart nie jest czytany przez `request.formData()`. Limit załączników 20 MiB łącznie; limit całego strumienia 20 MiB + 64 KiB na dane i nagłówki, pole payload 32 KiB, nagłówek części 4 KiB. Na błąd parsera/anulowanie zamykany jest pozostały strumień. Dwie równoległe wysyłki multipart na środowisko; nadmiar i ponowienie trwającej wysyłki dostają 425, umożliwiający ponowienie tego samego formularza. Przetwarzanie kolejnej części po 120 s od rozpoczęcia jest odrzucane.
+
+Akceptowane: JPEG, PNG, WebP i PDF. Rozmiar, rozszerzenie, deklarowany MIME i rozpoznana sygnatura muszą się zgadzać. Zdjęcia wymagają poprawnych wymiarów i maks. 40 mln pikseli; sprawdzane są zakończenie JPEG/PNG i rozmiar kontenera WebP. PDF wymaga nagłówka i zakończenia EOF. HEIC/HEIF nie trafia do R2 w oryginalnym formacie: konwersja będzie kończona po stronie przeglądarki w CF5. Jest to kontrola kontenera i nagłówków, bez pełnego dekodowania obrazu, rekonstrukcji PDF lub skanera antywirusowego. Serwer nie kompresuje zdjęć ani nie usuwa EXIF; kompresja/usuwanie metadanych i miniatury/prezentacja są po stronie klienta/panelu.
+
+Każdy obiekt dostaje nowy nieprzewidywalny klucz `private/UUID`; imię, adres i oryginalna nazwa pliku nie trafiają do klucza ani metadanych R2. Typ MIME jest jedyną metadaną HTTP. Nazwa oryginalna jest w chronionej tabeli D1. Bucket Standard pozostaje bez publicznego r2.dev/domeny. Pierwszy zapis atomowo przydziela miejsce, rejestruje obiekt i konsumuje Class A zanim nastąpi `FILES.put`. Brak limitu lub przekroczenie pułapu blokuje wywołanie R2.
+
+Po zapisaniu wszystkich plików transakcja D1 tworzy sprawę, podpina pliki i ustawia `ready`. Fingerprint obejmuje nazwy i SHA256 plików; identyczne ponowienie nie wykonuje kolejnych zapisów R2. Lease identyfikatora wysyłki zapobiega równoległym uploadom tej samej sprawy. Poprzednie potwierdzenia bez plików zachowują format fingerprinta z CF3.
+
+### Odczyt po autoryzacji
+
+GET `/api/admin/cases/:caseId/files/:assetId` sprawdza hash cookie `rpv_session`, termin sesji i wersję autoryzacji administratora, następnie przypisanie gotowego prywatnego pliku do konkretnej sprawy. Dopiero wtedy konsumuje Class B i pobiera R2. Brak/wygaśnięcie/unieważnienie sesji: 401; niepowiązany plik: 404; limit: 503 przed R2. Nie ma publicznych ani presigned URL-i.
+
+Odpowiedź domyślnie jest pobraniem, ma private/no-store, nosniff i CSP sandbox. `?preview=1` pozwala wyświetlić obraz inline; PDF pozostaje pobieraniem. Nie ma serwerowych miniaturek ani cache publicznego. Rozmiar zwracanego obiektu musi być zgodny z ewidencją D1. Utworzenie prawdziwego konta, logowanie i użycie tych linków w UI to CF6.
+
+### Limity aplikacyjne
+
+Wszystkie liczby miejsca są w bajtach dziesiętnych; limity na plik używają MiB.
+
+| Limit | staging | production |
+| --- | --- | --- |
+| Miejsce wraz z rezerwacjami | 500 000 000 B | 7 500 000 000 B |
+| Class A / dzień UTC | 100 | 1000 |
+| Class A / miesiąc UTC | 1000 | 10 000 |
+| Class B / dzień UTC | 500 | 5000 |
+| Class B / miesiąc UTC | 10 000 | 100 000 |
+| Nowe próby serwisu / dzień, wszystkie IP | 10 | 50 |
+
+Dodatkowo pozostają limity z CF3 na IP. Stałe okna UTC mogą obejmować inną granicę niż okres rozliczeniowy Cloudflare; pułapy dzienne oraz duży zapas operacji względem free tier ograniczają zużycie także przy takiej różnicy. Liczniki obu środowisk są niezależne, ale **pule sumują się do 8 GB**, a operacje są ustawione znacznie poniżej wspólnego free tier konta. Przy zmianie pułapów utrzymać sumę obu środowisk; zmniejszenie limitu nie resetuje zużycia. Podniesienie już utworzonego pułapu wymaga osobnego kontrolowanego działania, a nie bezwarunkowego wyzerowania liczników.
+
+`r2_objects` utrzymuje zajęte bajty także po usunięciu danych klienta. Zapis odrzucony przez R2 wlicza się do prób Class A; również odczyt nieistniejącego pliku lub przerwany download wlicza się do Class B. Nie zwracać limitów operacji po błędzie. Rezerwacja miejsca zwalnia się dopiero po potwierdzonym `R2.delete` i transakcji ewidencji. Usuwanie działa mimo wyczerpania limitów A/B; R2 DeleteObject jest operacją darmową w Standard. Nie stosować ListObjects do publicznych requestów.
+
+Ochrona obejmuje API tej aplikacji; zmiany z panelu Cloudflare/S3, inne projekty, kopie zapasowe lub pominięcie helperów kosztowych mogą ją ominąć. **Nie jest to limit rachunku całego konta Cloudflare.** Budget alert 5 USD pozostaje dodatkową propozycją; nie został ustawiony. Produkcja nie przyjmuje jeszcze publicznych zgłoszeń. Przed otwarciem formularzy w CF8 pozostaje ochrona przed automatycznym spamem (np. Turnstile) oraz końcowe sprawdzenie free planu/metryk.
+
+### Sprzątanie
+
+Pliki nieudanej wysyłki są usuwane przez trwałą kolejkę D1. `r2_objects.uploaded_at` rozróżnia potwierdzony put od niepewnego wyniku; przy niepewnym put miejsce pozostaje zablokowane i cleanup czeka co najmniej 1 h od przydziału. Przy awarii D1/R2 pozostają wpisy pozwalające ponowić, bez danych klienta w kolejce. Sprzątanie jest idempotentne i ponowne wykonanie nie zmniejsza licznika drugi raz. Nieudane delete stosuje rosnące opóźnienie retry.
+
+Oba Workers mają cron `17 * * * *` (minuta 17 każdej godziny UTC): usuwa wygasłe pending assets/leases oraz przetwarza małe partie do 5 zadań usuwania. Przeterminowane pending pliki są identyfikowane po D1, bez kosztownego listowania całego R2. Harmonogram nie usuwa jeszcze zamkniętych spraw po 24 h — to CF12 wraz z częstotliwością obsługi zaległej kolejki i retencją kopii. Dłuższa kolejka może wymagać kilku uruchomień.
+
+### QA i wdrożenie
+
+- `cf:files:test`: JPEG/PNG/WebP/PDF, odrzucenie niezgodnego rozszerzenia/MIME, fałszywej sygnatury/HEIC, niekompletnego PDF i zbyt dużych wymiarów; prywatne odczyty z sesją i jej unieważnieniem, podgląd, brak przypisania do sprawy; zatrzymanie A/B przed R2.
+- Ponowienie bez dodatkowego put; równoległe ponowienia z jedną wysyłką; niepełne/niepoprawne formularze, anulowanie dalszego strumienia; usuwanie pierwszego pliku po błędzie kolejnego; odmowa delete, niepewny put, retry; atomowy limit miejsca i zwalnianie go tylko raz; limit dwóch aktywnych uploadów.
+- `cf:api:test`: dotychczasowe przepływy i rzeczywisty skompilowany upload multipart do prywatnego R2 w workerd/Miniflare. Google nadal korzysta z atrap; płatnych zapytań brak.
+- `cf:db:test`, `cf:check` i generowane typy poprawne. Oba dry runs: 357,52 KiB / 82,12 KiB gzip, identyczny SHA256. To kod serwera i nie zwiększa skryptów ładowanych na publicznej stronie.
+- Wdrożenie exact modułu przez plugin z vars/bindings zgodnymi z repo; migracja i ledger w obu D1, FK check bez błędów, zero zgłoszeń/obiektów w ewidencji. Schedules zapisane w obu Workers, publiczny r2.dev nadal wyłączony.
+- Zdalne API obu środowisk: `/api/config` pokazuje wysyłkę/Google/załączniki wyłączone, limity 5 MiB/5 plików/20 MiB; anonimowe GET pliku zwraca 401. Pełny upload z prawdziwym kontem i danymi staging będzie sprawdzony po CF6 w CF8; obecne testy zapisu/odczytu/usuwania R2 były lokalne.
+
+```sh
+npm run cf:files:test
+npm run cf:api:test
+npm run cf:db:test
+```
+
+Źródła: [R2 pricing i darmowe operacje delete](https://developers.cloudflare.com/r2/pricing/), [Workers R2 binding](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/), [multipart parser](https://github.com/mjackson/multipart-parser).

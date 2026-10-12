@@ -25,7 +25,8 @@
     "cf:db:migrate:local": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --local",
     "cf:db:migrate:staging": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --env staging --remote",
     "cf:db:migrate:production": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --env production --remote",
-    "cf:api:test": "node --experimental-strip-types scripts/cloudflare-api-test.mjs"
+    "cf:api:test": "node --experimental-strip-types scripts/cloudflare-api-test.mjs",
+    "cf:files:test": "node --experimental-strip-types scripts/cloudflare-files-test.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
@@ -37,6 +38,7 @@
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@fontsource-variable/roboto": "^5.3.0",
+    "@mjackson/multipart-parser": "0.10.1",
     "astro": "^7.3.8",
     "browser-image-compression": "^2.0.2",
     "fastify": "^5.12.5",

@@ -61,7 +61,7 @@ try {
   const multipart = await worker.fetch(new Request('https://api.example.test/api/service', { method: 'POST', headers: { origin, 'Idempotency-Key': crypto.randomUUID(), 'CF-Connecting-IP': '192.0.2.3' }, body: form }), env);
   assert.equal(multipart.status, 201, await multipart.clone().text());
   form.append('attachments', new Blob(['fake'], { type: 'image/jpeg' }), 'test.jpg');
-  assert.equal((await worker.fetch(new Request('https://api.example.test/api/service', { method: 'POST', headers: { origin, 'Idempotency-Key': crypto.randomUUID() }, body: form }), env)).status, 503);
+  assert.equal((await worker.fetch(new Request('https://api.example.test/api/service', { method: 'POST', headers: { origin, 'Idempotency-Key': crypto.randomUUID() }, body: form }), env)).status, 422);
   form.delete('attachments'); form.append('payload', '{}');
   assert.equal((await worker.fetch(new Request('https://api.example.test/api/service', { method: 'POST', headers: { origin, 'Idempotency-Key': crypto.randomUUID() }, body: form }), env)).status, 400);
   const oversized = new ReadableStream({ start(controller) { controller.enqueue(new Uint8Array(40000)); controller.close(); } });
@@ -157,7 +157,7 @@ try {
   execFileSync(process.execPath, ['node_modules/wrangler/bin/wrangler.js', 'deploy', '--config', 'cloudflare/wrangler.jsonc', '--env', 'staging', '--dry-run', '--outdir', bundle], { env: { ...process.env, CI: 'true' } });
   runtime = new Miniflare(convertV4MiniflareOptions({ resourcePersistencePath: join(state, 'v3'), workers: [{ name: 'rpv-api-local',
     modules: true, modulesRoot: bundle, scriptPath: join(bundle, 'index.js'), compatibilityDate: '2026-10-11', compatibilityFlags: ['nodejs_compat'],
-    bindings: { ENVIRONMENT: 'local', PUBLIC_ORIGINS: origin, SUBMISSIONS_ENABLED: 'true', GOOGLE_DAILY_LIMIT: '100', GOOGLE_MONTHLY_LIMIT: '1000', APP_SECRET: env.APP_SECRET },
+    bindings: { ENVIRONMENT: 'local', PUBLIC_ORIGINS: origin, SUBMISSIONS_ENABLED: 'true', GOOGLE_DAILY_LIMIT: '100', GOOGLE_MONTHLY_LIMIT: '1000', APP_SECRET: env.APP_SECRET, R2_STORAGE_LIMIT: '7500000000', R2_A_DAY_LIMIT: '1000', R2_A_MONTH_LIMIT: '10000', R2_B_DAY_LIMIT: '5000', R2_B_MONTH_LIMIT: '100000' },
     d1Databases: { DB: '00000000-0000-0000-0000-000000000001' }, r2Buckets: ['FILES'],
   }] }));
   const runtimeKey = crypto.randomUUID();
@@ -167,6 +167,19 @@ try {
   const actual = await runtimeRequest(); assert.equal(actual.status, 201, await actual.clone().text());
   assert.match((await actual.json()).reference, /^SRV-\d{4}-\d{6}$/);
   assert.equal((await runtimeRequest()).status, 200);
+  const attachmentKey = crypto.randomUUID();
+  const actualForm = new FormData(); actualForm.append('payload', JSON.stringify(example));
+  actualForm.append('attachments', new Blob(['%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF\n'], { type: 'application/pdf' }), 'test.pdf');
+  const encodedActual = new Request('https://api.example.test/api/service', { method: 'POST', body: actualForm });
+  const actualUpload = await runtime.dispatchFetch('https://api.example.test/api/service', {
+    method: 'POST', headers: { origin, 'Idempotency-Key': attachmentKey, 'CF-Connecting-IP': '192.0.2.201', 'Content-Type': encodedActual.headers.get('Content-Type') }, body: await encodedActual.arrayBuffer(),
+  });
+  assert.equal(actualUpload.status, 201, await actualUpload.clone().text());
+  const runtimeDB = await runtime.getD1Database('DB');
+  const actualAsset = await runtimeDB.prepare("SELECT object_key FROM file_assets WHERE original_name = 'test.pdf'").first();
+  const runtimeBucket = await runtime.getR2Bucket('FILES');
+  assert.ok((await (await runtimeBucket.get(actualAsset.object_key)).text()).startsWith('%PDF-'));
+  console.log('Compiled Workers runtime: streaming multipart and private R2 put OK');
   console.log('Compiled Workers runtime: real HTTP handler, Web Crypto, shared validation and D1 receipt OK');
   console.log('Workers API: validation, multipart, persistence, idempotency races, limits, CORS, Google sessions, PRG/proof and atomic quotas OK');
 } finally {
