@@ -9,6 +9,14 @@ try {
  const data={name:'  Jan Testowy  ',email:'jan@example.test',phone:'',topic:'Wycena instalacji',message:'Proszę o kontakt w sprawie instalacji.',privacy:true,website:''};
  const send=(body=data,key=crypto.randomUUID(),ip=crypto.randomUUID(),environment=env,headers={})=>worker.fetch(new Request('https://api.example.test/api/contact',{method:'POST',headers:{origin,'Content-Type':'application/json','Idempotency-Key':key,'CF-Connecting-IP':ip,...headers},body:JSON.stringify(body)}),environment);
  const key=crypto.randomUUID(),first=await send(data,key);assert.equal(first.status,201,await first.clone().text());const receipt=await first.json();assert.match(receipt.reference,/^KON-\d{4}-000001$/);
+ const protectedEnv={...env,ENVIRONMENT:'production',TURNSTILE_SECRET:'synthetic-test-secret'};
+ const beforeProtection=await db.prepare('SELECT count(*) n FROM cases').first();
+ assert.equal((await send(data,undefined,undefined,protectedEnv)).status,403);
+ const failedHandler=createHandler(async()=>Response.json({success:false}));
+ const protectedRequest=()=>new Request('https://api.example.test/api/contact',{method:'POST',headers:{origin,'Content-Type':'application/json','Idempotency-Key':crypto.randomUUID(),'X-Turnstile-Token':'synthetic-token'},body:JSON.stringify(data)});
+ assert.equal((await failedHandler.fetch(protectedRequest(),protectedEnv)).status,403);
+ assert.equal((await db.prepare('SELECT count(*) n FROM cases').first()).n,beforeProtection.n);
+ const preflight=await worker.fetch(new Request('https://api.example.test/api/contact',{method:'OPTIONS',headers:{origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'content-type,idempotency-key,x-turnstile-token'}}),protectedEnv);assert.equal(preflight.status,204);
  assert.equal((await send(data,key)).status,200);assert.equal((await send({...data,message:'Changed'},key)).status,409);
  const row=await db.prepare("SELECT * FROM cases WHERE module='kontakt'").first();assert.equal(row.name,'Jan Testowy');assert.equal(row.phone,'');assert.equal(row.address_json,null);assert.equal(row.installation_json,null);assert.equal(row.subject,'Wycena instalacji');assert.equal(row.status,'new');
  for(const bad of [{...data,email:'bad'},{...data,phone:'abcdef'},{...data,topic:'forged'},{...data,privacy:'true'},{...data,website:'spam'},{...data,message:' '.repeat(10)},{...data,message:'x'.repeat(5001)},{...data,module:'serwis'},[]])assert.equal((await send(bad)).status,Array.isArray(bad)?400:422);
@@ -30,5 +38,13 @@ try {
  assert.equal((await admin('/cases/'+row.id,'PATCH',{revision:1,status:'closed',owner:'admin',note:'Kontakt zakończony'})).status,200);
  assert.equal((await(await admin('/cases/'+row.id)).json()).events.length,2);
  const closed=await db.prepare('SELECT closed_at,delete_after FROM cases WHERE id=?').bind(row.id).first();assert.equal(closed.delete_after-closed.closed_at,86400000);
- console.log('Contact D1: validation, JSON/body limits, origins, disabled gate, optional phone, durable receipt, concurrent retry, quotas, module isolation, private details/status/note and 24h retention passed.');
+ const consumed=new Set();
+ const guarded=createHandler(async(_url,options)=>{const token=options.body.get('response');const success=!consumed.has(token);consumed.add(token);return Response.json({success,hostname:'127.0.0.1',action:'contact'});});
+ const protectedKey=crypto.randomUUID();
+ const guardedSend=token=>guarded.fetch(new Request('https://api.example.test/api/contact',{method:'POST',headers:{origin,'Content-Type':'application/json','Idempotency-Key':protectedKey,'X-Turnstile-Token':token},body:JSON.stringify(data)}),protectedEnv);
+ const guardedFirst=await guardedSend('first-token');assert.equal(guardedFirst.status,201);const guardedReceipt=await guardedFirst.json();
+ assert.equal((await guardedSend('first-token')).status,403);
+ assert.equal((await(await guardedSend('fresh-retry-token')).json()).reference,guardedReceipt.reference);
+ assert.equal((await db.prepare('SELECT count(*) n FROM cases').first()).n,9);
+ console.log('Contact D1: validation, quotas, durable receipts, private dashboard, retention; Turnstile rejection before writes, one-use token replay rejection and fresh-token idempotent retry passed.');
 }finally{await proxy?.dispose();await rm(state,{recursive:true,force:true});}

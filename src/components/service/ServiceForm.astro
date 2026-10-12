@@ -7,7 +7,7 @@ const api = import.meta.env.PUBLIC_SERVICE_API_URL ?? '';
 <div class="service-panel" id="formularz">
   <nav class="topic-switch" aria-label="Rodzaj kontaktu"><a href={`${home}kontakt/`}>Kontakt</a><a href={`${home}serwis/`} aria-current="page">Zgłoś serwis</a></nav>
   <div><h2>Zgłoszenie serwisowe</h2><p>Podaj dane instalacji i opisz problem. Pola oznaczone * są wymagane.</p></div>
-  <form data-service-form data-api={api} novalidate autocomplete="on" method="post">
+  <form data-service-form data-api={api} data-turnstile={import.meta.env.PUBLIC_TURNSTILE_SITEKEY ?? ''} novalidate autocomplete="on" method="post">
     <fieldset><legend>Dane kontaktowe</legend>
       <FormField name="name" label="Imię i nazwisko *" placeholder="Imię i nazwisko" required autocomplete="section-service name" maxlength={120} />
       <div class="field-row"><FormField name="phone" label="Telefon *" placeholder="515 114 676" type="tel" inputmode="tel" autocomplete="section-service tel" required maxlength={30} /><FormField name="email" label="Adres e-mail *" placeholder="twoj@email.pl" type="email" inputmode="email" autocomplete="section-service email" required maxlength={254} /></div>

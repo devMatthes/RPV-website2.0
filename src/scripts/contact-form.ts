@@ -1,6 +1,8 @@
 import type { ContactSubmission } from '../lib/contact-types';
+import { attachTurnstile } from './form-turnstile';
 const form=document.querySelector<HTMLFormElement>('[data-contact-form]');
 if(form) {
+ const verification=attachTurnstile(form,'contact');
  const button=form.querySelector<HTMLButtonElement>('[type=submit]')!,feedback=form.querySelector<HTMLElement>('.form-feedback')!,notice=form.querySelector<HTMLElement>('.api-notice')!;
  const input=(name:string)=>form.elements.namedItem(name) as HTMLInputElement;
  const data=():ContactSubmission=>({name:input('name').value,email:input('email').value,phone:input('phone').value,topic:input('topic').value,message:input('message').value,privacy:input('privacy').checked,website:input('website').value});
@@ -28,8 +30,9 @@ if(form) {
    const next=JSON.stringify(result.data);if(signature!==next){signature=next;key=crypto.randomUUID();}
    button.disabled=true;button.textContent='Wysyłamy…';
    locked=Array.from(form.querySelectorAll<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>('input,select,textarea'));locked.forEach(field=>field.disabled=true);
+   show('Weryfikujemy formularz…');const token=await verification.token();
    show('Wysyłamy wiadomość…');const abort=new AbortController();timer=setTimeout(()=>abort.abort(),30000);
-   const response=await fetch(`${form.dataset.api.replace(/\/$/,'')}/api/contact`,{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json','Idempotency-Key':key},body:next,signal:abort.signal});
+   const response=await fetch(`${form.dataset.api.replace(/\/$/,'')}/api/contact`,{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json','Idempotency-Key':key,'X-Turnstile-Token':token},body:next,signal:abort.signal});
    let receipt:{reference?:string;message?:string;errors?:Record<string,string>};
    try{receipt=await response.json();}catch{throw new Error('Nie otrzymaliśmy potwierdzenia zapisu. Spróbuj ponownie.');}
    if(!response.ok){if(receipt.errors)errors(receipt.errors);throw new Error(receipt.message??'Nie udało się zapisać wiadomości.');}
@@ -37,6 +40,6 @@ if(form) {
    form.reset();attempted=false;validationVersion++;errors({});signature='';key=crypto.randomUUID();
    show(`Wiadomość ${receipt.reference} została zapisana. Zachowaj ten numer. RPV skontaktuje się z Tobą po zapoznaniu się ze szczegółami.`);
   }catch(error){show(`${error instanceof DOMException&&error.name==='AbortError'?'Serwer nie odpowiedział w czasie.':error instanceof TypeError?'Nie udało się połączyć z serwerem.':error instanceof Error?error.message:'Nie udało się wysłać wiadomości.'} Dane pozostają w formularzu. Możesz spróbować ponownie.`);}
-  finally{if(timer)clearTimeout(timer);sending=false;locked.forEach(field=>field.disabled=false);button.disabled=false;button.textContent='Wyślij wiadomość';(form.querySelector<HTMLElement>('[aria-invalid=true]')??feedback).focus();}
+  finally{verification.reset();if(timer)clearTimeout(timer);sending=false;locked.forEach(field=>field.disabled=false);button.disabled=false;button.textContent='Wyślij wiadomość';(form.querySelector<HTMLElement>('[aria-invalid=true]')??feedback).focus();}
  });
 }

@@ -60,6 +60,7 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
           PUBLIC_SERVICE_API_URL: ${{ vars.SERVICE_API_URL }}
+          PUBLIC_TURNSTILE_SITEKEY: ${{ vars.TURNSTILE_SITEKEY }}
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:

@@ -10,6 +10,7 @@ import { adminCases } from './admin-cases.ts';
 import { administrator } from './admin-session.ts';
 import { accessEnabled } from './access.ts';
 import type { JWTVerifyGetKey } from 'jose';
+import { verifyTurnstile } from './turnstile.ts';
 
 const routes = new Map([
   ['/api/health', 'GET, HEAD'], ['/api/config', 'GET'], ['/api/service', 'POST'],
@@ -42,8 +43,8 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
           if (!allowed) throw new HttpError(403, 'Niedozwolone źródło żądania.');
           const method = request.headers.get('access-control-request-method');
           const headers = (request.headers.get('access-control-request-headers') ?? '').toLowerCase().split(',').map(value => value.trim()).filter(Boolean);
-          if (!method || !methods.split(', ').includes(method) || headers.some(value => !['content-type', 'idempotency-key'].includes(value))) throw new HttpError(403, 'Niedozwolone żądanie.');
-          return new Response(null, { status: 204, headers: { ...cors, 'Access-Control-Allow-Methods': methods, 'Access-Control-Allow-Headers': 'Content-Type, Idempotency-Key', 'Access-Control-Max-Age': '600' } });
+          if (!method || !methods.split(', ').includes(method) || headers.some(value => !['content-type', 'idempotency-key', 'x-turnstile-token'].includes(value))) throw new HttpError(403, 'Niedozwolone żądanie.');
+          return new Response(null, { status: 204, headers: { ...cors, 'Access-Control-Allow-Methods': methods, 'Access-Control-Allow-Headers': 'Content-Type, Idempotency-Key, X-Turnstile-Token', 'Access-Control-Max-Age': '600' } });
         }
         if (!methods.split(', ').includes(request.method)) return json({ error: 'method_not_allowed' }, 405, { ...cors, Allow: methods });
         if (path.startsWith('/api/admin/') && ['POST','PATCH'].includes(request.method) && origin!==new URL(request.url).origin) throw new HttpError(403,'Niedozwolone źródło żądania.');
@@ -74,6 +75,7 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
         if (path === '/api/service' || path==='/api/contact') {
           const key = request.headers.get('idempotency-key');
           if (!uuid(key)) throw new HttpError(400, 'Brak poprawnego identyfikatora wysyłki.');
+          await verifyTurnstile(request, env, path==='/api/contact'?'contact':'service', fetcher ?? fetch);
           const receipt = path==='/api/contact'?await submitContact(request,env,key,owner,now):await submitService(request, env, key, owner, now);
           return json({ reference: receipt.reference }, receipt.created ? 201 : 200, cors);
         }

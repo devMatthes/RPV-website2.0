@@ -135,3 +135,16 @@ test('contact dashboard shows message-specific detail, status/note and preserves
  await expect(page.locator('[data-history]')).toContainText('Odpowiedziano klientowi');await page.locator('[data-back]').click();
  await expect(page).toHaveURL(/module=kontakt/);await expect(page.locator('[data-list-title]')).toHaveText('Wiadomości kontaktowe');
 });
+
+test('Turnstile loads on form interaction, blocks failed challenge and obtains fresh retry token',async({page})=>{
+ let scripts=0,attempts=0;const tokens=[];
+ await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',route=>{scripts++;return route.fulfill({contentType:'application/javascript',body:`let options,n=0;window.turnstile={render(_el,o){options=o;return 'widget';},reset(){},execute(){n++;setTimeout(()=>n===1?options['error-callback']():options.callback('fresh-token-'+n),5);}};`});});
+ await page.route('**/api/contact',route=>{attempts++;tokens.push(route.request().headers()['x-turnstile-token']);return attempts===1?route.fulfill({status:503,json:{message:'Spróbuj ponownie.'}}):route.fulfill({json:{reference:'KON-2026-000002'}});});
+ await page.goto('/');await consent(page);expect(scripts).toBe(0);
+ await page.route('**/kontakt/',async route=>{const response=await route.fetch();const body=await response.text();await route.fulfill({response,body:body.replace(/data-turnstile(?:="")?(?=\s|>)/,'data-turnstile="synthetic-sitekey"')});});
+ await page.goto('/kontakt/');await consent(page);expect(scripts).toBe(0);
+ await page.locator('[name=name]').fill('Test Turnstile');await page.locator('[name=email]').fill('test@example.test');await page.locator('[name=topic]').selectOption('Wycena instalacji');await page.locator('[name=message]').fill('Test weryfikacji formularza');await page.locator('[name=privacy]').check();
+ await page.getByRole('button',{name:'Wyślij wiadomość',exact:true}).click();await expect(page.locator('.form-feedback')).toContainText('Weryfikacja nie powiodła');expect(attempts).toBe(0);
+ await page.getByRole('button',{name:'Wyślij wiadomość',exact:true}).click();await expect(page.locator('.form-feedback')).toContainText('Spróbuj ponownie.');await expect(page.locator('[name=name]')).toHaveValue('Test Turnstile');
+ await page.getByRole('button',{name:'Wyślij wiadomość',exact:true}).click();await expect(page.locator('.form-feedback')).toContainText('KON-2026-000002');expect(tokens).toEqual(['fresh-token-2','fresh-token-3']);expect(scripts).toBe(1);
+});

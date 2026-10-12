@@ -7,7 +7,7 @@ const api=import.meta.env.PUBLIC_SERVICE_API_URL??'';
 <div class="form-panel" id="formularz">
   <nav class="topic-switch" aria-label="Rodzaj kontaktu"><a href={`${home}kontakt/`} aria-current="page">Kontakt</a><a href={`${home}serwis/`}>Zgłoś serwis</a></nav>
   <div class="form-introduction"><h2>Napisz do nas</h2><p>Zapytaj o wycenę, rozwiązania lub współpracę.</p></div>
-  <form data-contact-form data-api={api} novalidate method="post" autocomplete="on">
+  <form data-contact-form data-api={api} data-turnstile={import.meta.env.PUBLIC_TURNSTILE_SITEKEY ?? ''} novalidate method="post" autocomplete="on">
     <div class="fields">
       <div class="field-row"><FormField name="name" label="Imię i nazwisko *" placeholder="Jak się nazywasz?" required autocomplete="name" maxlength={120} /><FormField name="phone" label="Telefon (opcjonalnie)" placeholder="Numer telefonu" type="tel" inputmode="tel" autocomplete="tel" maxlength={30} /></div>
       <FormField name="email" label="Adres e-mail *" placeholder="twoj@email.pl" type="email" inputmode="email" required autocomplete="email" maxlength={254} />

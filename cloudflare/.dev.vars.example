@@ -4,3 +4,5 @@
 APP_SECRET=
 # Optional. Without a key, users enter the complete address manually.
 GOOGLE_PLACES_API_KEY=
+# Optional locally; mandatory in staging/production. Never expose this in PUBLIC_*.
+TURNSTILE_SECRET=

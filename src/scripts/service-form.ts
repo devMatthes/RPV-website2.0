@@ -1,8 +1,10 @@
 import { attachFiles } from './service-images';
 import { attachAddress } from './service-address';
 import type { ServiceSubmission } from '../lib/service-schema';
+import { attachTurnstile } from './form-turnstile';
 const form = document.querySelector<HTMLFormElement>('[data-service-form]');
 if (form) {
+  const verification = attachTurnstile(form, 'service');
   const button = form.querySelector<HTMLButtonElement>('[type=submit]')!;
   const feedback = form.querySelector<HTMLElement>('.form-feedback')!;
   const input = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
@@ -46,7 +48,10 @@ if (form) {
     feedback.textContent = 'Zapisujemy zgłoszenie i załączniki…'; feedback.hidden = false;
     const timeout = new AbortController(); const timer = setTimeout(()=>timeout.abort(),120_000);
     try {
-      const response = await fetch(`${form.dataset.api.replace(/\/$/,'')}/api/service`,{method:'POST',headers:{'Idempotency-Key':retryKey},body,signal:timeout.signal});
+      feedback.textContent = 'Weryfikujemy formularz…';
+      const token = await verification.token();
+      feedback.textContent = 'Zapisujemy zgłoszenie i załączniki…';
+      const response = await fetch(`${form.dataset.api.replace(/\/$/,'')}/api/service`,{method:'POST',headers:{'Idempotency-Key':retryKey,'X-Turnstile-Token':token},body,signal:timeout.signal});
       const receipt = await response.json();
       if (!response.ok) {
         if (receipt.errors) for (const [name,message] of Object.entries(receipt.errors)) { const field=input(name); const error=document.getElementById(`field-${name}-error`); if(error&&field){error.textContent=String(message);error.hidden=false;field.setAttribute('aria-invalid','true');} }
@@ -56,7 +61,7 @@ if (form) {
       feedback.textContent = `Zgłoszenie ${receipt.reference} zostało zapisane. Zachowaj ten numer. RPV skontaktuje się z Tobą telefonicznie lub mailowo. Automatyczne powiadomienia e-mail nie są jeszcze włączone.`;
       form.reset(); attachments.reset(); address.reset(); attempted=false; previousPayload=''; retryKey=crypto.randomUUID();
     } catch(problem) { feedback.textContent = problem instanceof DOMException && problem.name==='AbortError' ? 'Serwer nie odpowiedział w czasie. Dane i pliki pozostają w formularzu. Kliknij ponownie Wyślij zgłoszenie — powtórzenie nie utworzy duplikatu.' : `${problem instanceof TypeError?'Nie udało się połączyć z serwerem.':problem instanceof Error?problem.message:'Błąd połączenia.'} Dane i pliki pozostają w formularzu. Możesz spróbować ponownie.`; }
-    finally { clearTimeout(timer); sending=false; controls.forEach(field=>field.disabled=false);attachments.lock(false);button.disabled=false;button.textContent='Wyślij zgłoszenie';feedback.focus(); }
+    finally { verification.reset();clearTimeout(timer); sending=false; controls.forEach(field=>field.disabled=false);attachments.lock(false);button.disabled=false;button.textContent='Wyślij zgłoszenie';feedback.focus(); }
 
   });
 }
