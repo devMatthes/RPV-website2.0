@@ -171,3 +171,21 @@ test('CMS mobile editor saves draft, requires save before approval and renders p
  await page.getByRole('button',{name:'Zapisz szkic',exact:true}).click();await expect(page.locator('[data-cms-feedback]')).toContainText('Szkic zapisany');expect(record.draft.images[0].alt).toBe('Panele na dachu');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test('CMS page texts keep edits after lost response, approve saved revision and escape preview on mobile',async({page})=>{
+ const {textPages,textDefaults}=await import('../../src/lib/cms-texts.ts');await page.setViewportSize({width:390,height:844});let record,attempts=0,approved=0;
+ await page.route('**/api/admin/**',route=>{const request=route.request(),url=new URL(request.url());if(url.pathname.endsWith('/me'))return route.fulfill({json:{username:'Administrator'}});
+  if(url.pathname.endsWith('/approve')){expect(request.postDataJSON().revision).toBe(record.revision);approved=record.revision;return route.fulfill({json:{approvedRevision:approved}});}
+  if(request.method()==='PATCH'){attempts++;const payload=request.postDataJSON();if(attempts===1){record={draft:payload.draft,revision:1,approvedRevision:null};return route.abort('failed');}expect(payload.revision).toBe(0);expect(payload.draft).toEqual(record.draft);return route.fulfill({json:record});}
+  if(url.pathname.endsWith('/home'))return route.fulfill({json:{slug:'home',title:'Strona główna',revision:0,approvedRevision:null,draft:textDefaults(textPages[0])}});
+  return route.fulfill({json:{pages:textPages.map(item=>({slug:item.slug,title:item.title,revision:0,approvedRevision:null}))}});
+ });
+ await page.goto('/panel/live/teksty/');await expect(page.locator('[data-texts-list] button')).toHaveCount(5);await page.getByRole('button',{name:/Strona główna/}).click();
+ await page.locator('[name=heroLine1]').fill('<img src=x onerror=alert(1)>');await page.getByRole('button',{name:'Podgląd treści',exact:true}).click();await expect(page.locator('[data-texts-preview-view]')).toContainText('<img src=x onerror=alert(1)>');await expect(page.locator('[data-texts-preview-view] img')).toHaveCount(0);
+ await page.getByRole('button',{name:'Zatwierdź zapisaną wersję',exact:true}).click();await expect(page.locator('[data-texts-feedback]')).toContainText('Najpierw zapisz');expect(approved).toBe(0);
+ await page.getByRole('button',{name:'Zapisz szkic',exact:true}).click();await expect(page.locator('[data-texts-feedback]')).toContainText('Dane pozostają w formularzu');await expect(page.locator('[name=heroLine1]')).toHaveValue('<img src=x onerror=alert(1)>');
+ await page.getByRole('button',{name:'Zapisz szkic',exact:true}).click();await expect(page.locator('[data-texts-feedback]')).toContainText('Szkic zapisany');expect(attempts).toBe(2);
+ await page.getByRole('button',{name:'Zatwierdź zapisaną wersję',exact:true}).click();await expect(page.locator('[data-texts-feedback]')).toContainText('Wersja zatwierdzona');expect(approved).toBe(1);
+ await page.locator('[name=heroLine1]').fill('Kolejny szkic');await page.getByRole('button',{name:'Zatwierdź zapisaną wersję',exact:true}).click();await expect(page.locator('[data-texts-feedback]')).toContainText('Najpierw zapisz');expect(approved).toBe(1);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

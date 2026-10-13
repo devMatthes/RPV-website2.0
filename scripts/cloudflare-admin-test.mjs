@@ -23,6 +23,8 @@ try {
   }
   const cmsShell=await worker.fetch(new Request(`${origin}/panel/realizacje/`),env);assert.equal(cmsShell.status,200);const cmsHTML=await cmsShell.text();assert.ok(cmsHTML.includes('data-cms-admin'));assert.match(cmsShell.headers.get('Content-Security-Policy'),/worker-src 'self' blob:/);
   for(const match of cmsHTML.matchAll(/(?:src|href)="(\/_astro\/[^"\s]+)"/g))assert.equal((await worker.fetch(new Request(`${origin}${match[1]}`),env)).status,200);
+  const textsShell=await worker.fetch(new Request(`${origin}/panel/teksty/`),env);assert.equal(textsShell.status,200);const textsHTML=await textsShell.text();assert.ok(textsHTML.includes('data-texts-admin'));assert.ok(textsHTML.includes('href="/panel/teksty/"'));
+  for(const match of textsHTML.matchAll(/(?:src|href)="(\/_astro\/[^"\s]+)"/g))assert.equal((await worker.fetch(new Request(`${origin}${match[1]}`),env)).status,200);
   await db.prepare("INSERT INTO administrators VALUES (1,'admin',1,?)").bind(now).run();
   await db.prepare('INSERT INTO admin_sessions VALUES (?,1,1,?,?)').bind(await digest(token),now,now+60000).run();
   const auth={cookie:`rpv_session=${token}`};

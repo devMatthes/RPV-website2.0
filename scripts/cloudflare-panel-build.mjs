@@ -27,5 +27,9 @@ const cms=await readFile(join(source,'panel/live/realizacje/index.html'),'utf8')
 await mkdir(join(target,'panel/realizacje'),{recursive:true});
 await writeFile(join(target,'panel/realizacje/index.html'),cms);
 await dependencies(cms);
+const texts=await readFile(join(source,'panel/live/teksty/index.html'),'utf8');
+await mkdir(join(target,'panel/teksty'),{recursive:true});
+await writeFile(join(target,'panel/teksty/index.html'),texts);
+await dependencies(texts);
 await writeFile(join(target,'_headers'),`/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n  X-Frame-Options: DENY\n  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'\n/panel/*\n  Cache-Control: private, no-store\n/_astro/*\n  Cache-Control: public, max-age=31536000, immutable\n`);
 console.log(`Panel built: HTML and ${copied.size} referenced static assets; no public pages, submissions or uploads.`);

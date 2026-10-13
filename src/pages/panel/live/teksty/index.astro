@@ -1,0 +1,24 @@
+---
+import LiveAdminLayout from '../../../../layouts/LiveAdminLayout.astro';
+---
+<LiveAdminLayout texts>
+ <section class="texts" data-texts-view hidden>
+  <div class="texts-heading"><p class="admin-eyebrow">Treści strony</p><h1 class="admin-title">Teksty strony</h1><p class="admin-subtitle">Edytuj treści, zapisz szkic i zatwierdź wersję do publikacji.</p></div>
+  <p class="texts-note">Publikacja zmian na stronie zostanie uruchomiona w kolejnym etapie. Zatwierdzenie nie zmienia jeszcze witryny.</p>
+  <section data-texts-list class="texts-list" aria-label="Grupy tekstów"></section>
+  <form data-texts-editor hidden>
+   <div class="texts-actions"><button type="button" data-texts-back class="admin-control">← Grupy tekstów</button><span data-texts-revision></span></div>
+   <h2 data-texts-title class="texts-title"></h2>
+   <p class="texts-note">Nagłówki hero powinny być krótkie, również na telefonie. Numery i informacje o doświadczeniu podawaj tylko na podstawie potwierdzonych danych.</p>
+   <div data-texts-fields></div>
+   <div class="texts-actions"><button type="submit" class="admin-primary">Zapisz szkic</button><button type="button" data-texts-approve class="admin-control">Zatwierdź zapisaną wersję</button><button type="button" data-texts-preview class="admin-control">Podgląd treści</button></div>
+  </form>
+  <section data-texts-preview-view class="texts-preview" hidden aria-label="Podgląd edytowanych tekstów"></section>
+ </section>
+ <p data-texts-feedback class="texts-feedback" role="status" aria-live="polite" tabindex="-1">Wczytujemy panel…</p>
+ <a data-texts-login class="admin-primary" href="" hidden>Zaloguj się ponownie</a>
+ <script>import '../../../../scripts/admin-texts';</script>
+</LiveAdminLayout>
+<style is:global>
+.texts{max-width:1000px}.texts-heading{display:grid;gap:12px;margin:24px 0}.texts-note,.texts-feedback{font:400 14px/22px var(--font-ui);color:var(--color-muted);margin:16px 0;overflow-wrap:anywhere}.texts-feedback{padding:16px;border:1px solid var(--color-border);border-radius:8px}.texts-list{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}.texts-list button{display:grid;gap:8px;text-align:left;border:1px solid var(--color-border);border-radius:12px;padding:24px;color:#fff;background:var(--color-card);min-width:0}.texts-list strong{font:600 20px/28px var(--font-ui)}.texts-list span{font:400 13px/20px var(--font-ui);color:var(--color-muted)}.texts-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:24px 0}.texts-title{font:600 28px/36px var(--font-ui)}.texts fieldset{border:1px solid var(--color-border);border-radius:12px;padding:24px;margin:24px 0;min-width:0}.texts legend{padding:0 8px;font:600 18px/26px var(--font-ui)}.texts label{display:flex;flex-direction:column;gap:8px;font:500 14px/22px var(--font-ui);margin:16px 0}.texts input,.texts textarea{min-width:0;width:100%;border:1px solid var(--color-border);border-radius:8px;background:#101010;color:#fff;padding:12px;min-height:48px;font:400 14px/22px var(--font-ui)}.texts textarea{min-height:110px;resize:vertical}.texts small{font:400 12px/18px var(--font-ui);color:var(--color-muted)}.texts-preview{padding:24px;border:1px solid var(--color-border);border-radius:12px}.texts-preview h3{font:600 18px/26px var(--font-ui);margin-top:24px}.texts-preview p{white-space:pre-wrap;overflow-wrap:anywhere;font:400 16px/24px var(--font-ui);margin:8px 0}.texts [hidden]{display:none!important}@media(max-width:699px){.texts-list{grid-template-columns:minmax(0,1fr)}.texts fieldset{padding:16px}.texts-actions{align-items:flex-start}.texts-actions button{min-height:48px}}
+</style>

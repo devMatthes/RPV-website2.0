@@ -34,7 +34,8 @@
     "precf:deploy:production": "npm run cf:panel:build",
     "cf:access:test": "node --experimental-strip-types scripts/cloudflare-access-test.mjs",
     "cf:contact:test": "node --experimental-strip-types scripts/cloudflare-contact-test.mjs",
-    "cf:cms:test": "node --experimental-strip-types scripts/cloudflare-cms-test.mjs"
+    "cf:cms:test": "node --experimental-strip-types scripts/cloudflare-cms-test.mjs",
+    "cf:texts:test": "node --experimental-strip-types scripts/cloudflare-texts-test.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
