@@ -26,7 +26,7 @@ if(form) {
   try {
    const result=await validate();
    if(Object.keys(result.errors).length){show('Sprawdź zaznaczone pola.');return;}
-   if(!form.dataset.api){show('Wysyłka nie jest jeszcze dostępna. Dane pozostają w formularzu. Napisz na kontakt@rpv.pl lub zadzwoń: 515 114 676.');return;}
+   if(!form.dataset.api){show(`Wysyłka nie jest jeszcze dostępna. Dane pozostają w formularzu. Napisz na ${form.dataset.email} lub zadzwoń: ${form.dataset.phone}.`);return;}
    const next=JSON.stringify(result.data);if(signature!==next){signature=next;key=crypto.randomUUID();}
    button.disabled=true;button.textContent='Wysyłamy…';
    locked=Array.from(form.querySelectorAll<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>('input,select,textarea'));locked.forEach(field=>field.disabled=true);

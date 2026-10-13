@@ -189,3 +189,10 @@ test('CMS page texts keep edits after lost response, approve saved revision and 
  await page.locator('[name=heroLine1]').fill('Kolejny szkic');await page.getByRole('button',{name:'Zatwierdź zapisaną wersję',exact:true}).click();await expect(page.locator('[data-texts-feedback]')).toContainText('Najpierw zapisz');expect(approved).toBe(1);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test('publication panel prepares one immutable job, exposes manual workflow id and shows completed status',async({page})=>{
+ await page.setViewportSize({width:390,height:844});let job=null;const id='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+ await page.route('**/api/admin/**',route=>{const url=new URL(route.request().url());if(url.pathname.endsWith('/me'))return route.fulfill({json:{username:'Administrator'}});if(route.request().method()==='POST'){expect(route.request().postDataJSON().requestId).toBeTruthy();job={id,state:'queued',created_at:Date.now(),build_id:null,error_code:null};return route.fulfill({json:{id,dispatched:false,message:'Zestaw przygotowany.'}});}return route.fulfill({json:{jobs:job?[job]:[],dispatch:false,workflowURL:'https://github.com/devMatthes/RPV-website2.0/actions/workflows/pages.yml'}});});
+ await page.goto('/panel/live/publikacja/');await page.getByRole('button',{name:'Publikuj zatwierdzone treści',exact:true}).click();await expect(page.locator('[data-publication-feedback]')).toContainText('Zestaw przygotowany');await expect(page.locator('[data-publication-id]')).toHaveValue(id);await expect(page.locator('[data-publication-manual]')).toBeVisible();
+ job={...job,state:'published',build_id:'123456'};await page.getByRole('button',{name:'Odśwież status',exact:true}).click();await expect(page.locator('[data-publication-history]')).toContainText('Opublikowano');await expect(page.locator('[data-publication-manual]')).toBeHidden();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

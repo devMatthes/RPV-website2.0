@@ -1,5 +1,7 @@
 ---
 import { services } from '../../data/home';
+import {publishedTexts} from '../../data/published';
+const copy=publishedTexts('home');
 const home = import.meta.env.BASE_URL;
 import arrow from '../../assets/figma/desktop-imgArrowDiagonal.svg?url';
 import darkArrow from '../../assets/figma/desktop-imgArrowDiagonal1.svg?url';
@@ -12,7 +14,7 @@ import moduleMobile from '../../assets/figma/mobile-imgSolarModuleLineDrawing.sv
   <div class="service-grid">{services.map(service => <article class:list={['service-card', `service-card--${service.slug}`]}>
     <div class="category"><span>{service.category}</span><span>{service.number}</span></div>
     <h3><a class="card-link" href={`${home}uslugi/${service.slug}/`}>{service.title}</a></h3>
-    <p class="description">{service.description}</p>
+    <p class="description">{copy['service-'+service.slug]}</p>
     {service.slug === 'fotowoltaika' && <>
       <ul class="benefits">{['Dobór instalacji','Montaż i uruchomienie','Wsparcie po montażu'].map(benefit => <li>{benefit}<span aria-hidden="true">✓</span></li>)}</ul>
       <div class="module"><picture><source media="(max-width: 699px)" srcset={moduleMobile} width="161.2" height="71.92" /><img src={module} width="260" height="116" alt="" loading="lazy" /></picture></div>

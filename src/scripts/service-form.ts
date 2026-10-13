@@ -9,7 +9,7 @@ if (form) {
   const feedback = form.querySelector<HTMLElement>('.form-feedback')!;
   const input = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
   const notice = form.querySelector<HTMLElement>('.api-notice')!;
-  if (!form.dataset.api) { notice.textContent = 'Wysyłka zgłoszeń nie jest jeszcze uruchomiona. Zadzwoń: 515 114 676. Możesz przygotować dane w formularzu.'; notice.hidden = false; }
+  if (!form.dataset.api) { notice.textContent = `Wysyłka zgłoszeń nie jest jeszcze uruchomiona. Zadzwoń: ${form.dataset.phone}. Możesz przygotować dane w formularzu.`; notice.hidden = false; }
   button.disabled = false;
   const attachments = attachFiles(form);
   const address = attachAddress(form, (form.dataset.api ?? '').replace(/\/$/, ''));
@@ -37,7 +37,7 @@ if (form) {
     try { result = await validate(); } catch { sending=false; feedback.textContent='Nie udało się załadować walidacji. Sprawdź połączenie z internetem. Dane nie zostały wysłane i pozostają w formularzu.';feedback.hidden=false;feedback.focus();return; }
     if (!attachments.validate()) { sending = false; form.querySelector<HTMLElement>('.attachments')?.scrollIntoView({block:'center'}); return; }
     if (Object.keys(result.errors).length) { sending = false; form.querySelector<HTMLElement>('[aria-invalid=true]')?.focus(); return; }
-    if (!form.dataset.api) { sending = false; feedback.textContent = 'Wysyłka nie jest jeszcze dostępna. Dane pozostają w formularzu. Zadzwoń: 515 114 676.'; feedback.hidden = false; feedback.focus(); return; }
+    if (!form.dataset.api) { sending = false; feedback.textContent = `Wysyłka nie jest jeszcze dostępna. Dane pozostają w formularzu. Zadzwoń: ${form.dataset.phone}.`; feedback.hidden = false; feedback.focus(); return; }
     const payload = { ...result.data, address: { ...result.data.address, ...address.getSelection() } };
     const { proof: _proof, ...stableAddress } = payload.address;
     const signature = JSON.stringify([{ ...payload, address: stableAddress }, attachments.getFiles().map(file=>[file.name,file.size,file.lastModified])]);

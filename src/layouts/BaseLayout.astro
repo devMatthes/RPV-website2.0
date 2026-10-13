@@ -4,8 +4,10 @@ import CookiePreferences from '../components/CookiePreferences.astro';
 import favicon from '../assets/figma/desktop-imgSymbol.svg?url';
 import robotoLatin from '@fontsource-variable/roboto/files/roboto-latin-wght-normal.woff2?url';
 import robotoExtended from '../assets/fonts/roboto-polish-wght-normal.woff2?url';
+import {publishedTexts} from '../data/published';
+const homeCopy=publishedTexts('home');
 interface Props { title?: string; description?: string; }
-const { title = 'RPV — Twoja energia ze słońca', description = 'Instalacje fotowoltaiczne i systemy energetyczne dla domów, firm i inwestycji. Poznaj ofertę RPV.' } = Astro.props;
+const { title = `RPV — ${homeCopy.heroLine1} ${homeCopy.heroLine2}`, description = 'Instalacje fotowoltaiczne i systemy energetyczne dla domów, firm i inwestycji. Poznaj ofertę RPV.' } = Astro.props;
 ---
 <!doctype html>
 <html lang="pl">

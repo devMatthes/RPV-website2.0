@@ -13,6 +13,7 @@ import type { JWTVerifyGetKey } from 'jose';
 import { verifyTurnstile } from './turnstile.ts';
 import { cmsProjects } from './cms-projects.ts';
 import { cmsTexts } from './cms-texts.ts';
+import { adminPublications, publishingAPI } from './publications.ts';
 
 const routes = new Map([
   ['/api/health', 'GET, HEAD'], ['/api/config', 'GET'], ['/api/service', 'POST'],
@@ -20,7 +21,7 @@ const routes = new Map([
   ['/api/address/suggestions', 'POST'], ['/api/address/details', 'POST'],
   ['/api/admin/me', 'GET'], ['/api/admin/cases', 'GET'], ['/api/admin/logout', 'POST'],
 ]);
-export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetKey) {
+export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetKey, publishingKeys?: JWTVerifyGetKey) {
   return {
     async fetch(request: Request, env: WorkerEnv): Promise<Response> {
       const path = new URL(request.url).pathname;
@@ -28,7 +29,9 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
       const caseRoute = /^\/api\/admin\/cases\/([a-f0-9-]{36})$/.exec(path);
       const cmsRoute = /^\/api\/admin\/projects(?:\/([a-f0-9-]{36})(\/approve)?|\/(assets)(?:\/([a-f0-9-]{36}))?)?$/.exec(path);
       const textsRoute = /^\/api\/admin\/content(?:\/([a-z]+)(\/approve)?)?$/.exec(path);
-      const methods = textsRoute ? (textsRoute[2]?'POST':textsRoute[1]?'GET, PATCH':'GET') : cmsRoute ? (cmsRoute[4]?'GET':cmsRoute[3]||cmsRoute[2]?'POST':cmsRoute[1]?'GET, PATCH':'GET, POST') : attachment ? 'GET' : caseRoute ? 'GET, PATCH' : routes.get(path);
+      const publicationRoute = path==='/api/admin/publications';
+      const publishingRoute = /^\/api\/publishing\/(?:current|jobs\/[a-f0-9-]{36}(?:\/(?:claim|complete|fail)|\/assets\/[a-f0-9-]{36})?)$/.test(path);
+      const methods = publishingRoute ? (/\/(claim|complete|fail)$/.test(path)?'POST':'GET') : publicationRoute ? 'GET, POST' : textsRoute ? (textsRoute[2]?'POST':textsRoute[1]?'GET, PATCH':'GET') : cmsRoute ? (cmsRoute[4]?'GET':cmsRoute[3]||cmsRoute[2]?'POST':cmsRoute[1]?'GET, PATCH':'GET, POST') : attachment ? 'GET' : caseRoute ? 'GET, PATCH' : routes.get(path);
       const origin = request.headers.get('origin'); const allowed = origin !== null && allowedOrigins(env).has(origin);
       const cors: Record<string, string> = { Vary: 'Origin' };
       if (allowed && !path.startsWith('/api/admin/')) cors['Access-Control-Allow-Origin'] = origin;
@@ -52,6 +55,8 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
         }
         if (!methods.split(', ').includes(request.method)) return json({ error: 'method_not_allowed' }, 405, { ...cors, Allow: methods });
         if (path.startsWith('/api/admin/') && ['POST','PATCH'].includes(request.method) && origin!==new URL(request.url).origin) throw new HttpError(403,'Niedozwolone źródło żądania.');
+        if (publicationRoute) return await adminPublications(request,env,accessKeys,fetcher??fetch);
+        if (publishingRoute) return await publishingAPI(request,env,publishingKeys);
         if (cmsRoute) return await cmsProjects(request,env,accessKeys);
         if (textsRoute) return await cmsTexts(request,env,accessKeys);
         if (attachment) return await attachmentResponse(request, env, attachment[1], attachment[2],accessKeys);

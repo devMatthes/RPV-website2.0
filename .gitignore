@@ -21,3 +21,6 @@ node_modules.stalled/
 .panel-assets/
 .dev.vars*
 !.dev.vars.example
+
+.publication/
+public/cms/

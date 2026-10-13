@@ -113,7 +113,7 @@ try {
   assert.match(migrate(), /No migrations to apply/);
   proxy = await getPlatformProxy({ configPath: 'cloudflare/wrangler.jsonc', persist: { path: join(state, 'v3') }, remoteBindings: false });
   assert.equal((await proxy.env.DB.prepare("SELECT value FROM counters WHERE key = 'migration-preserved'").first()).value, 7);
-  assert.equal((await proxy.env.DB.prepare('SELECT count(*) AS n FROM d1_migrations').first()).n, 4);
+  assert.equal((await proxy.env.DB.prepare('SELECT count(*) AS n FROM d1_migrations').first()).n, 6);
   console.log('D1 migrations: retention, private files, CMS isolation, session constraints, atomic budgets, rollback and reapply OK');
 } finally {
   if (proxy) await proxy.dispose();

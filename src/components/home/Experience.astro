@@ -5,12 +5,14 @@ import Button from '../Button.astro';
 import team from '../../assets/figma/desktop-imgPhotoRpvTeam.png';
 import map from '../../assets/figma/desktop-imgVector.svg?url';
 import mapMobile from '../../assets/figma/mobile-imgProjectsPolandMap.svg?url';
+import {publishedTexts} from '../../data/published';
+const copy=publishedTexts('home');
 import dot from '../../assets/figma/desktop-imgEllipse2.svg?url';
 ---
 <section class="experience container" id="realizacje" aria-labelledby="experience-title">
   <div class="brand-statement" id="o-nas">
     <div class="brand-photo"><Brand variant="experience" /><Picture src={team} alt="Zespół pracujący przy instalacji" widths={[120,200,400]} sizes="(max-width: 699px) 120px, 200px" formats={['avif','webp']} fallbackFormat="webp" pictureAttributes={{ class: 'team-photo' }} /></div>
-    <h2 id="experience-title"><span>znani z</span><span>innowacyjnych<br />rozwiązań</span></h2>
+    <h2 id="experience-title"><span>{copy.experienceLead}</span><span class="lines">{copy.experienceHeading}</span></h2>
   </div>
   <div class="map-and-info">
     <div class="map" aria-label="Mapa przykładowych realizacji z projektu">
@@ -18,19 +20,20 @@ import dot from '../../assets/figma/desktop-imgEllipse2.svg?url';
       {[1,2,3].map(n => <span class:list={['pin', `pin--${n}`]}><img class="pin-dot" src={dot} width="16" height="16" alt="" loading="lazy" /><span class="pin-label"><strong>Warszawa</strong><span class="power-label">MOC</span><span>3,320 kW</span></span></span>)}
     </div>
     <div class="supporting-info">
-      <div class="leadership"><p>Numer 1 w regionie</p><p class="muted">Lider montażu fotowoltaiki</p></div>
-      <dl class="statistics"><div><dt>Instalacji</dt><dd>500+</dd></div><div><dt>Lat doświadczenia</dt><dd>20+</dd></div></dl>
-      <div class="invitation"><p>Poznaj galerię doskonałości</p><p class="muted">Nasze starannie wykonane instalacje łączą precyzję i wydajność</p><Button href={`${import.meta.env.BASE_URL}o-nas/`}>O nas →</Button></div>
+      <div class="leadership"><p>{copy.leadershipTitle}</p><p class="muted">{copy.leadershipDescription}</p></div>
+      <dl class="statistics"><div><dt>Instalacji</dt><dd>{copy.installationCount}</dd></div><div><dt>Lat doświadczenia</dt><dd>{copy.experienceYears}</dd></div></dl>
+      <div class="invitation"><p>{copy.invitationTitle}</p><p class="muted">{copy.invitationDescription}</p><Button href={`${import.meta.env.BASE_URL}o-nas/`}>O nas →</Button></div>
     </div>
   </div>
 </section>
 <style>
   .experience { display: flex; flex-direction: column; align-items: center; gap: 40px; padding-block: 32px 64px; }
-  .brand-statement { text-align: center; }
+  .brand-statement { max-width:100%;overflow-wrap:anywhere;text-align: center; }
   .brand-photo { display: flex; justify-content: center; align-items: center; gap: 16px; }
   .brand-photo :global(.team-photo) { width: 120px; height: 60px; border-radius: var(--radius); overflow: hidden; }
   .brand-photo :global(.team-photo img) { width: 100%; height: 100%; object-fit: cover; }
   h2 { margin-top: 12px; font: 700 36px/43px var(--font-body); letter-spacing: -.7px; }
+  .lines {white-space:pre-line;}
   h2 span { display: block; }
   h2 span:first-child { font-size: 44px; line-height: 51px; margin-bottom: 12px; }
   .map-and-info { width: 100%; max-width: 1040px; }
@@ -49,7 +52,7 @@ import dot from '../../assets/figma/desktop-imgEllipse2.svg?url';
   .leadership p + p { margin-top: 8px; }
   .statistics { display: flex; justify-content: center; gap: 24px; margin: 0; width: 100%; }
   .statistics div { display: flex; flex-direction: column-reverse; gap: 8px; flex: 1; max-width: 150px; }
-  dt { color: var(--color-muted); } dd { margin: 0; font-size: 40px; line-height: 46px; font-weight: 700; letter-spacing: -.7px; }
+  dt { color: var(--color-muted); } dd {overflow-wrap:anywhere; margin: 0; font-size: 40px; line-height: 46px; font-weight: 700; letter-spacing: -.7px; }
   .invitation { display: flex; flex-direction: column; align-items: center; gap: 12px; }
   .invitation :global(.button) { min-height: 44px; width: 120px; }
   @media (max-width: 359px) { .pin-label { min-width: 74px; padding-inline: 4px; } }

@@ -1,13 +1,15 @@
 ---
 import FormField from './FormField.astro';
 import { contactTopics } from '../../lib/contact-types';
+import {publishedTexts,publicContact,publicPhoneHref} from '../../data/published';
+const copy=publishedTexts('contact');
 const home=import.meta.env.BASE_URL;
 const api=import.meta.env.PUBLIC_SERVICE_API_URL??'';
 ---
 <div class="form-panel" id="formularz">
   <nav class="topic-switch" aria-label="Rodzaj kontaktu"><a href={`${home}kontakt/`} aria-current="page">Kontakt</a><a href={`${home}serwis/`}>Zgłoś serwis</a></nav>
-  <div class="form-introduction"><h2>Napisz do nas</h2><p>Zapytaj o wycenę, rozwiązania lub współpracę.</p></div>
-  <form data-contact-form data-api={api} data-turnstile={import.meta.env.PUBLIC_TURNSTILE_SITEKEY ?? ''} novalidate method="post" autocomplete="on">
+  <div class="form-introduction"><h2>{copy.formHeading}</h2><p>{copy.formDescription}</p></div>
+  <form data-contact-form data-api={api} data-phone={publicContact.phone} data-email={publicContact.email} data-turnstile={import.meta.env.PUBLIC_TURNSTILE_SITEKEY ?? ''} novalidate method="post" autocomplete="on">
     <div class="fields">
       <div class="field-row"><FormField name="name" label="Imię i nazwisko *" placeholder="Jak się nazywasz?" required autocomplete="name" maxlength={120} /><FormField name="phone" label="Telefon (opcjonalnie)" placeholder="Numer telefonu" type="tel" inputmode="tel" autocomplete="tel" maxlength={30} /></div>
       <FormField name="email" label="Adres e-mail *" placeholder="twoj@email.pl" type="email" inputmode="email" required autocomplete="email" maxlength={254} />
@@ -20,7 +22,7 @@ const api=import.meta.env.PUBLIC_SERVICE_API_URL??'';
     <p class="api-notice" hidden></p>
     <div class="form-feedback" role="status" aria-live="polite" tabindex="-1" hidden></div>
     <button class="button submit" type="submit" disabled>Wyślij wiadomość</button>
-    <noscript><p>Włącz JavaScript lub napisz na <a href="mailto:kontakt@rpv.pl">kontakt@rpv.pl</a> albo zadzwoń: <a href="tel:+48515114676">515 114 676</a>.</p></noscript>
+    <noscript><p>Włącz JavaScript lub napisz na <a href={`mailto:${publicContact.email}`}>{publicContact.email}</a> albo zadzwoń: <a href={publicPhoneHref}>{publicContact.phone}</a>.</p></noscript>
     <p class="required-note">* Pola wymagane</p>
   </form>
 </div>

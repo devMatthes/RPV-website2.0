@@ -35,7 +35,9 @@
     "cf:access:test": "node --experimental-strip-types scripts/cloudflare-access-test.mjs",
     "cf:contact:test": "node --experimental-strip-types scripts/cloudflare-contact-test.mjs",
     "cf:cms:test": "node --experimental-strip-types scripts/cloudflare-cms-test.mjs",
-    "cf:texts:test": "node --experimental-strip-types scripts/cloudflare-texts-test.mjs"
+    "cf:texts:test": "node --experimental-strip-types scripts/cloudflare-texts-test.mjs",
+    "cf:publication:test": "node --experimental-strip-types scripts/cloudflare-publication-test.mjs",
+    "publication:test": "node --experimental-strip-types scripts/publication-build-test.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

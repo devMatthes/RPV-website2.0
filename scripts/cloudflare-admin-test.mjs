@@ -25,6 +25,8 @@ try {
   for(const match of cmsHTML.matchAll(/(?:src|href)="(\/_astro\/[^"\s]+)"/g))assert.equal((await worker.fetch(new Request(`${origin}${match[1]}`),env)).status,200);
   const textsShell=await worker.fetch(new Request(`${origin}/panel/teksty/`),env);assert.equal(textsShell.status,200);const textsHTML=await textsShell.text();assert.ok(textsHTML.includes('data-texts-admin'));assert.ok(textsHTML.includes('href="/panel/teksty/"'));
   for(const match of textsHTML.matchAll(/(?:src|href)="(\/_astro\/[^"\s]+)"/g))assert.equal((await worker.fetch(new Request(`${origin}${match[1]}`),env)).status,200);
+  const publicationShell=await worker.fetch(new Request(`${origin}/panel/publikacja/`),env);assert.equal(publicationShell.status,200);const publicationHTML=await publicationShell.text();assert.ok(publicationHTML.includes('data-publications-admin'));
+  for(const match of publicationHTML.matchAll(/(?:src|href)="(\/_astro\/[^"\s]+)"/g))assert.equal((await worker.fetch(new Request(`${origin}${match[1]}`),env)).status,200);
   await db.prepare("INSERT INTO administrators VALUES (1,'admin',1,?)").bind(now).run();
   await db.prepare('INSERT INTO admin_sessions VALUES (?,1,1,?,?)').bind(await digest(token),now,now+60000).run();
   const auth={cookie:`rpv_session=${token}`};

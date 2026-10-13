@@ -1,3 +1,6 @@
+import {publishedProjects} from './published';
+import type {ProjectDraft} from '../lib/cms-project';
+import type {PublishedImage} from '../lib/publication-types';
 // Example project from Figma. Replace draft values only with verified project data.
 export const projectCategories = [
   { id: 'all', label: 'Wszystkie' },
@@ -6,7 +9,7 @@ export const projectCategories = [
   { id: 'pompy-ciepla', label: 'Pompy ciepła' },
   { id: 'instalacje', label: 'Instalacje' },
 ] as const;
-export const projects = [{
+const baselineProjects = [{
   slug: 'fotowoltaika-na-dachu-domu',
   category: 'fotowoltaika',
   title: 'Fotowoltaika na dachu domu',
@@ -30,7 +33,12 @@ export const projects = [{
     ['Magazyn energii / pojemność', 'Konstrukcja / sposób montażu', 'Zakres prac i zabezpieczenia'],
   ],
 }];
-export type Project = (typeof projects)[number];
+export type Project = (typeof baselineProjects)[number] & {cms?:ProjectDraft;gallery?:PublishedImage[]};
+export const projects:Project[]=publishedProjects===undefined?baselineProjects:publishedProjects.map(project=>({
+ slug:project.slug,category:project.category,title:project.title,heading:project.title,tag:projectCategories.find(c=>c.id===project.category)!.label.toUpperCase(),description:project.description,introduction:project.introduction,
+ parameters:[{label:'Lokalizacja',value:project.location},{label:'Moc / pojemność',value:project.power},{label:'Typ budynku',value:project.building},{label:'Data realizacji',value:project.date}].filter(p=>p.value),
+ story:[],specification:[],cms:project,gallery:project.gallery,
+}));
 export const projectEvidence = [
   { index: '01 / ZDJĘCIA', title: 'Zobacz wykonanie', description: 'Galeria z gotowej instalacji oraz detale montażu. Materiał przypisany do konkretnej realizacji.' },
   { index: '02 / PARAMETRY', title: 'Poznaj rozwiązanie', description: 'Moc, urządzenia, zakres prac i kontekst budynku — z danych konkretnego projektu.' },

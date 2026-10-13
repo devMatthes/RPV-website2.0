@@ -1,5 +1,6 @@
 ---
 import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import PublishedProject from '../../components/projects/PublishedProject.astro';
 import ProjectsLayout from '../../layouts/ProjectsLayout.astro';
 import ProjectGallery from '../../components/projects/ProjectGallery.astro';
 import ProjectParameters from '../../components/projects/ProjectParameters.astro';
@@ -12,6 +13,7 @@ const { project } = Astro.props;
 const home = import.meta.env.BASE_URL;
 ---
 <ProjectsLayout title={project.title} description={project.introduction}>
+  {project.cms ? <PublishedProject project={project} /> : <>
   <section class="project-section project-intro container" aria-labelledby="project-title"><a class="back-link" href={`${home}realizacje/`}>← Wszystkie realizacje</a><nav class="project-breadcrumbs" aria-label="Okruszki"><a href={`${home}realizacje/`}>Realizacje</a> / <a href={`${home}uslugi/fotowoltaika/`}>Fotowoltaika</a> / <span aria-current="page">Dom</span></nav><h1 id="project-title">{project.heading}</h1><p class="project-description">{project.introduction}</p><p class="project-note">SZABLON / Zdjęcie z obecnego projektu strony. Dane realizacji wymagają uzupełnienia.</p></section>
   <ProjectGallery />
   <section class="project-section container glance" aria-label="Parametry projektu"><ProjectParameters items={project.parameters} /><p class="project-note">*Typ przykładowego projektu. Parametry i lokalizację podajemy po weryfikacji dokumentacji.</p></section>
@@ -19,6 +21,7 @@ const home = import.meta.env.BASE_URL;
   <section class="project-section container" aria-labelledby="spec-title"><div class="project-divider"></div><h2 class="project-heading" id="spec-title">Specyfikacja instalacji.</h2><p class="project-description">Urządzenia i rozwiązania zastosowane w projekcie — bez zgadywania parametrów.</p><div class="specification">{project.specification.map(labels => <ProjectParameters items={labels.map(label => ({ label, value: 'Do uzupełnienia' }))} />)}</div></section>
   <section class="project-section container" aria-labelledby="handover-title"><h2 class="project-heading" id="handover-title">Jakość widoczna w detalach.</h2><p class="project-description">Miejsce na zdjęcia detali, dokumentację odbioru i wyniki z monitoringu tej realizacji.</p><div class="editorial"><div class="project-divider"></div><h3>Dokumentacja projektu</h3><p>Do uzupełnienia: zdjęcia montażu i zabezpieczeń, potwierdzenie odbioru oraz pomiary. Materiały publikujemy po weryfikacji i bez danych wrażliwych klienta.</p><div class="project-divider"></div><h3>Efekt potwierdzony danymi</h3><p>Do uzupełnienia: produkcja energii, okres pomiaru i źródło danych. Oszczędności lub opinię klienta dodajemy wyłącznie wtedy, gdy mamy potwierdzenie i zgodę na publikację.</p></div></section>
   <section class="project-section container" aria-labelledby="service-title"><div class="project-divider"></div><p class="eyebrow">POWIĄZANA USŁUGA</p><h2 class="project-heading" id="service-title">Fotowoltaika dopasowana do budynku.</h2><p class="project-description">Poznaj usługę, urządzenia i przebieg współpracy przed rozpoczęciem własnego projektu.</p><a class="back-link" href={`${home}uslugi/fotowoltaika/`}>Poznaj fotowoltaikę →</a></section>
+  </>}
   <ProjectCta />
 </ProjectsLayout>
 <style>

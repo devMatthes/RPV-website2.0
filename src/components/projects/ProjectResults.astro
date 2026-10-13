@@ -1,16 +1,17 @@
 ---
 import { projects, projectCategories } from '../../data/projects';
+import PublishedImage from './PublishedImage.astro';
 import ProjectImage from './ProjectImage.astro';
 const home = import.meta.env.BASE_URL;
 ---
 <section class="project-section container results" aria-label="Lista realizacji" data-project-results>
   <div class="filters" role="group" aria-label="Filtruj realizacje według kategorii">{projectCategories.map(category => <button type="button" data-category={category.id} aria-pressed={category.id === 'all' ? 'true' : 'false'} aria-controls="project-list" disabled>{category.label}</button>)}</div>
-  <p class="count" role="status" aria-live="polite" data-result-count>01 / Przykładowy projekt</p>
-  <div id="project-list">{projects.map(project => <article class="project-card" data-project-category={project.category}>
-    <ProjectImage class="card-photo" priority sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) calc(100vw - 80px), 760px" />
-    <div class="card-copy"><p class="tag">{project.tag}</p><h2><a href={`${home}realizacje/${project.slug}/`}>{project.title}</a></h2><p class="project-description">{project.description}</p><p class="project-note">Szablon realizacji · dane do uzupełnienia</p><a class="project-link" href={`${home}realizacje/${project.slug}/`}>Zobacz projekt →</a></div>
+  <p class="count" role="status" aria-live="polite" data-result-count>{String(projects.length).padStart(2,'0')} / Realizacje</p>
+  <div id="project-list">{projects.map((project,index) => <article class="project-card" data-project-category={project.category}>
+    {project.gallery?.[0] ? <PublishedImage image={project.gallery[0]} class="card-photo" priority={index===0} sizes="(max-width: 1099px) calc(100vw - 48px), 760px" /> : <ProjectImage class="card-photo" priority sizes="(max-width: 699px) calc(100vw - 48px), (max-width: 1099px) calc(100vw - 80px), 760px" />}
+    <div class="card-copy"><p class="tag">{project.tag}</p><h2><a href={`${home}realizacje/${project.slug}/`}>{project.title}</a></h2><p class="project-description">{project.description}</p>{!project.cms&&<p class="project-note">Szablon realizacji · dane do uzupełnienia</p>}<a class="project-link" href={`${home}realizacje/${project.slug}/`}>Zobacz projekt →</a></div>
   </article>)}</div>
-  <div class="empty" data-empty hidden><h2>Brak realizacji w tej kategorii.</h2><p class="project-description">Materiały kolejnych projektów zostaną dodane po uzupełnieniu danych.</p><button type="button" class="button button--ghost" data-reset>Pokaż wszystkie realizacje</button></div>
+  <div class="empty" data-empty hidden={projects.length>0}><h2>Brak realizacji w tej kategorii.</h2><p class="project-description">Materiały kolejnych projektów zostaną dodane po uzupełnieniu danych.</p><button type="button" class="button button--ghost" data-reset>Pokaż wszystkie realizacje</button></div>
 </section>
 <script>
   const results = document.querySelector<HTMLElement>('[data-project-results]');
@@ -24,7 +25,7 @@ const home = import.meta.env.BASE_URL;
       filters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.category === selected)));
       cards.forEach(card => { card.hidden = selected !== 'all' && card.dataset.projectCategory !== selected; });
       const visible = cards.filter(card => !card.hidden).length;
-      count.textContent = visible === 1 ? '01 / Przykładowy projekt' : `${String(visible).padStart(2, '0')} / Realizacje`;
+      count.textContent = `${String(visible).padStart(2, '0')} / Realizacje`;
       empty.hidden = visible > 0;
       if (updateUrl) {
         const url = new URL(location.href);
