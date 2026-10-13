@@ -11,6 +11,7 @@ import { administrator } from './admin-session.ts';
 import { accessEnabled } from './access.ts';
 import type { JWTVerifyGetKey } from 'jose';
 import { verifyTurnstile } from './turnstile.ts';
+import { cmsProjects } from './cms-projects.ts';
 
 const routes = new Map([
   ['/api/health', 'GET, HEAD'], ['/api/config', 'GET'], ['/api/service', 'POST'],
@@ -24,7 +25,8 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
       const path = new URL(request.url).pathname;
       const attachment = /^\/api\/admin\/cases\/([a-f0-9-]{36})\/files\/([a-f0-9-]{36})$/.exec(path);
       const caseRoute = /^\/api\/admin\/cases\/([a-f0-9-]{36})$/.exec(path);
-      const methods = attachment ? 'GET' : caseRoute ? 'GET, PATCH' : routes.get(path);
+      const cmsRoute = /^\/api\/admin\/projects(?:\/([a-f0-9-]{36})(\/approve)?|\/(assets)(?:\/([a-f0-9-]{36}))?)?$/.exec(path);
+      const methods = cmsRoute ? (cmsRoute[4]?'GET':cmsRoute[3]||cmsRoute[2]?'POST':cmsRoute[1]?'GET, PATCH':'GET, POST') : attachment ? 'GET' : caseRoute ? 'GET, PATCH' : routes.get(path);
       const origin = request.headers.get('origin'); const allowed = origin !== null && allowedOrigins(env).has(origin);
       const cors: Record<string, string> = { Vary: 'Origin' };
       if (allowed && !path.startsWith('/api/admin/')) cors['Access-Control-Allow-Origin'] = origin;
@@ -48,6 +50,7 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
         }
         if (!methods.split(', ').includes(request.method)) return json({ error: 'method_not_allowed' }, 405, { ...cors, Allow: methods });
         if (path.startsWith('/api/admin/') && ['POST','PATCH'].includes(request.method) && origin!==new URL(request.url).origin) throw new HttpError(403,'Niedozwolone źródło żądania.');
+        if (cmsRoute) return await cmsProjects(request,env,accessKeys);
         if (attachment) return await attachmentResponse(request, env, attachment[1], attachment[2],accessKeys);
         if (path==='/api/admin/me') { const account=await administrator(request,env,accessKeys); return json({username:account.username}); }
         if (path==='/api/admin/logout') {

@@ -21,6 +21,8 @@ try {
   for(const match of html.matchAll(/(?:src|href)="(\/_astro\/[^"\s]+)"|url\((\/_astro\/[^)\s]+)\)/g)) {
     assert.equal((await worker.fetch(new Request(`${origin}${match[1]??match[2]}`),env)).status,200);
   }
+  const cmsShell=await worker.fetch(new Request(`${origin}/panel/realizacje/`),env);assert.equal(cmsShell.status,200);const cmsHTML=await cmsShell.text();assert.ok(cmsHTML.includes('data-cms-admin'));assert.match(cmsShell.headers.get('Content-Security-Policy'),/worker-src 'self' blob:/);
+  for(const match of cmsHTML.matchAll(/(?:src|href)="(\/_astro\/[^"\s]+)"/g))assert.equal((await worker.fetch(new Request(`${origin}${match[1]}`),env)).status,200);
   await db.prepare("INSERT INTO administrators VALUES (1,'admin',1,?)").bind(now).run();
   await db.prepare('INSERT INTO admin_sessions VALUES (?,1,1,?,?)').bind(await digest(token),now,now+60000).run();
   const auth={cookie:`rpv_session=${token}`};

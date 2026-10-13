@@ -66,7 +66,7 @@ try {
   await assert.rejects(run("INSERT INTO case_attachments VALUES ('contact','big4',4)"));
   await assert.rejects(run("INSERT INTO case_attachments VALUES ('contact','big4',5)"));
 
-  await run(`INSERT INTO cms_entries VALUES ('project','project','test','{"title":"Draft"}',1,?)`, now);
+  await run(`INSERT INTO cms_entries(id,kind,slug,draft_json,revision,updated_at) VALUES ('project','project','test','{"title":"Draft"}',1,?)`, now);
   await run(`INSERT INTO cms_versions VALUES ('v1','project',1,'{"title":"Approved"}',?)`, now);
   await run(`UPDATE cms_entries SET draft_json = '{"title":"Changed draft"}', revision = 2 WHERE id = 'project'`);
   assert.equal((await first("SELECT content_json FROM cms_versions WHERE id = 'v1'")).content_json, '{"title":"Approved"}');
@@ -113,7 +113,7 @@ try {
   assert.match(migrate(), /No migrations to apply/);
   proxy = await getPlatformProxy({ configPath: 'cloudflare/wrangler.jsonc', persist: { path: join(state, 'v3') }, remoteBindings: false });
   assert.equal((await proxy.env.DB.prepare("SELECT value FROM counters WHERE key = 'migration-preserved'").first()).value, 7);
-  assert.equal((await proxy.env.DB.prepare('SELECT count(*) AS n FROM d1_migrations').first()).n, 3);
+  assert.equal((await proxy.env.DB.prepare('SELECT count(*) AS n FROM d1_migrations').first()).n, 4);
   console.log('D1 migrations: retention, private files, CMS isolation, session constraints, atomic budgets, rollback and reapply OK');
 } finally {
   if (proxy) await proxy.dispose();

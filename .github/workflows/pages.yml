@@ -45,6 +45,8 @@ jobs:
         run: npm run cf:files:test
       - name: Test contact API and private dashboard data
         run: npm run cf:contact:test
+      - name: Test CMS drafts, approvals and private images
+        run: npm run cf:cms:test
       - name: Test administrator API and concurrency
         run: npm run cf:admin:test
       - name: Test Cloudflare Access token verification

@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';import {mkdtemp,rm} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';import {execFileSync} from 'node:child_process';import {getPlatformProxy} from 'wrangler';import sharp from 'sharp';
+import {createHandler} from '../cloudflare/src/app.ts';import {digest} from '../cloudflare/src/security.ts';import {cleanupFiles} from '../cloudflare/src/storage.ts';
+const state=await mkdtemp(join(tmpdir(),'rpv-cms-'));let proxy;
+try{
+ execFileSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','migrations','apply','DB','--config','cloudflare/wrangler.jsonc','--local','--persist-to',state],{env:{...process.env,CI:'true'}});
+ proxy=await getPlatformProxy({configPath:'cloudflare/wrangler.jsonc',persist:{path:join(state,'v3')},remoteBindings:false});const env=proxy.env,db=env.DB,worker=createHandler(),origin='https://panel.example.test',now=Date.now(),token='d'.repeat(64);
+ await db.prepare("INSERT INTO administrators VALUES (1,'admin',1,?)").bind(now).run();await db.prepare('INSERT INTO admin_sessions VALUES (?,1,1,?,?)').bind(await digest(token),now,now+3600000).run();
+ const send=(path='',method='GET',body,headers={})=>worker.fetch(new Request(origin+'/api/admin/projects'+path,{method,headers:{cookie:`rpv_session=${token}`,...(body?{origin,'Content-Type':'application/json'}:{}),...headers},...(body?{body:JSON.stringify(body)}:{})}),env);
+ const draft={title:'Testowa realizacja',slug:'testowa-realizacja',category:'fotowoltaika',description:'Opis realizacji',introduction:'Wprowadzenie',location:'Miasto',power:'10 kWp',building:'Dom',date:'2026-10-13',assumptions:'Założenia',scope:'Zakres prac',result:'',specification:'Parametr',archived:false,images:[]};
+ assert.equal((await send('', 'GET',undefined,{cookie:''})).status,401);assert.equal((await send('', 'POST',{draft,revision:0},{origin:'https://evil.example'})).status,403);
+ assert.equal((await send('', 'POST',{draft:{...draft,slug:'../escape'},revision:0})).status,422);
+ const first=await send('','POST',{draft,revision:0});assert.equal(first.status,201,await first.clone().text());const record=await first.json();assert.equal(record.revision,1);
+ assert.equal((await send('','POST',{draft,revision:0})).status,409);
+ assert.equal((await send('/'+record.id+'/approve','POST',{revision:1})).status,422);
+ const bytes=await sharp({create:{width:16,height:16,channels:3,background:'#1689cc'}}).png().toBuffer();
+ const add=()=>worker.fetch(new Request(origin+'/api/admin/projects/assets',{method:'POST',headers:{origin,cookie:`rpv_session=${token}`,'Content-Type':'image/png','X-File-Name':encodeURIComponent('test.png')},body:bytes}),env);
+ const upload=await add();assert.equal(upload.status,201,await upload.clone().text());const photo=await upload.json();
+ assert.equal((await send('/assets/'+photo.id)).status,200);assert.equal((await send('/assets/'+photo.id,'GET',undefined,{cookie:''})).status,401);
+ const savedDraft={...draft,images:[{id:photo.id,alt:'Zdjęcie instalacji'}]};
+ const races=await Promise.all([send('/'+record.id,'PATCH',{revision:1,draft:savedDraft}),send('/'+record.id,'PATCH',{revision:1,draft:{...savedDraft,title:'Konkurencyjna zmiana'}})]);assert.deepEqual(races.map(r=>r.status).sort(),[200,409]);
+ const current=await(await send('/'+record.id)).json();assert.equal(current.revision,2);assert.equal(current.draft.images.length,1);
+ const stored=await db.prepare('SELECT * FROM file_assets WHERE id=?').bind(photo.id).first();assert.equal(stored.visibility,'cms');assert.equal(stored.state,'ready');assert.equal(stored.expires_at,null);assert.match(stored.object_key,/^cms\//);
+ assert.equal((await send('/'+record.id+'/approve','POST',{revision:2})).status,200);assert.equal((await send('/'+record.id+'/approve','POST',{revision:2})).status,200);assert.equal((await db.prepare('SELECT count(*) n FROM cms_versions').first()).n,1);
+ const approved=await db.prepare('SELECT content_json FROM cms_versions').first();assert.deepEqual(JSON.parse(approved.content_json),current.draft);
+ assert.equal((await send('/'+record.id,'PATCH',{revision:2,draft:{...current.draft,title:'Nowszy szkic',images:[]}})).status,200);
+ assert.ok(await db.prepare('SELECT id FROM file_assets WHERE id=?').bind(photo.id).first());assert.equal((await db.prepare('SELECT count(*) n FROM cms_version_assets').first()).n,1);
+ assert.deepEqual((await db.prepare('SELECT content_json FROM cms_versions').first()).content_json,approved.content_json);
+ assert.equal((await send('/'+record.id+'/approve','POST',{revision:2})).status,409);
+ assert.equal((await send('/'+record.id,'PATCH',{revision:3,draft:{...current.draft,slug:'zmieniony-adres'}})).status,422);
+ const held=[crypto.randomUUID(),crypto.randomUUID()];for(const lease of held)await db.prepare('INSERT INTO upload_requests VALUES (?,?,?)').bind(await digest(lease),lease,now+3600000).run();assert.equal((await add()).status,425);for(const lease of held)await db.prepare('DELETE FROM upload_requests WHERE key_hash=?').bind(await digest(lease)).run();
+ const archived={...current.draft,archived:true,images:[]};assert.equal((await send('/'+record.id,'PATCH',{revision:3,draft:archived})).status,200);assert.equal((await send('/'+record.id+'/approve','POST',{revision:4})).status,200);
+ const orphan=await(await add()).json();await db.prepare('UPDATE file_assets SET expires_at=? WHERE id=?').bind(now-1,orphan.id).run();await cleanupFiles(env,now);assert.equal(await db.prepare('SELECT id FROM file_assets WHERE id=?').bind(orphan.id).first(),null);assert.equal(await env.FILES.get((await db.prepare('SELECT object_key FROM file_assets WHERE id=?').bind(photo.id).first()).object_key)===null,false);
+ await db.prepare("INSERT INTO file_assets VALUES (?,'private/forged','private','x.png','image/png',10,?,'ready',?,NULL)").bind('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','a'.repeat(64),now).run();
+ assert.equal((await send('/'+record.id,'PATCH',{revision:4,draft:{...archived,images:[{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',alt:'Nie wolno'}]}})).status,422);
+ const listing=await(await send('?search=Nowszy')).json();assert.equal(listing.total,0);assert.equal((await(await send()).json()).total,1);
+ assert.equal((await send('/'+record.id,'DELETE',undefined,{origin})).status,405);
+ console.log('CMS: authenticated drafts/images, CSRF, validation, unique slugs, atomic concurrent edits, immutable approval, asset provenance, retained version images, archived approval, orphan cleanup and pagination passed.');
+}finally{await proxy?.dispose();await rm(state,{recursive:true,force:true});}

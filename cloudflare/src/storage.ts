@@ -23,7 +23,7 @@ export async function budgetBatch(env: WorkerEnv, statements: D1PreparedStatemen
     throw error;
   }
 }
-export async function upload(env: WorkerEnv, file: StoredUpload, bytes: Uint8Array, now: number) {
+export async function upload(env: WorkerEnv, file: StoredUpload, bytes: Uint8Array, now: number, visibility: 'private' | 'cms' = 'private') {
   const scope = `r2:${env.ENVIRONMENT}:storage`;
   await budgetBatch(env, [
     env.DB.prepare("INSERT OR IGNORE INTO usage_budgets(scope,metric,period_start,period_end,ceiling) VALUES (?,'storage_bytes',0,?,?)").bind(scope, storageEnd, limit(env.R2_STORAGE_LIMIT)),
@@ -31,7 +31,7 @@ export async function upload(env: WorkerEnv, file: StoredUpload, bytes: Uint8Arr
     ...operationStatements(env, 'r2_class_a', now),
     env.DB.prepare('INSERT INTO r2_objects(object_key,bytes,scope,created_at) VALUES (?,?,?,?)').bind(file.key, file.bytes, scope, now),
     env.DB.prepare(`INSERT INTO file_assets(id,object_key,visibility,original_name,content_type,bytes,sha256,state,created_at,expires_at)
-      VALUES (?,?,'private',?,?,?,?,'pending',?,?)`).bind(file.id, file.key, file.name, file.mime, file.bytes, file.hash, now, now + 3600000),
+      VALUES (?,?,?,?,?,?,?,'pending',?,?)`).bind(file.id, file.key, visibility, file.name, file.mime, file.bytes, file.hash, now, now + 3600000),
   ]);
   // Charge before calling R2; failed/ambiguous puts retain usage and storage ownership.
   await env.FILES.put(file.key, bytes, { httpMetadata: { contentType: file.mime }, storageClass: 'Standard' });
@@ -44,7 +44,9 @@ export async function discardUploads(env: WorkerEnv, ids: string[]) {
 export async function cleanupFiles(env: WorkerEnv, now: number) {
   await env.DB.prepare(`DELETE FROM file_assets WHERE id IN
     (SELECT a.id FROM file_assets a WHERE a.state = 'pending' AND a.expires_at <= ?
-     AND NOT EXISTS(SELECT 1 FROM case_attachments ca WHERE ca.asset_id = a.id) LIMIT 20)`).bind(now).run();
+     AND NOT EXISTS(SELECT 1 FROM case_attachments ca WHERE ca.asset_id = a.id)
+     AND NOT EXISTS(SELECT 1 FROM cms_draft_assets da WHERE da.asset_id = a.id)
+     AND NOT EXISTS(SELECT 1 FROM cms_version_assets va WHERE va.asset_id = a.id) LIMIT 20)`).bind(now).run();
   const jobs = await env.DB.prepare('SELECT object_key,attempts FROM file_deletion_jobs WHERE retry_after <= ? ORDER BY retry_after LIMIT 5').bind(now).all<{ object_key: string; attempts: number }>();
   for (const job of jobs.results) {
     try {

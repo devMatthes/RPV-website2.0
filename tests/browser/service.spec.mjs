@@ -148,3 +148,26 @@ test('Turnstile loads on form interaction, blocks failed challenge and obtains f
  await page.getByRole('button',{name:'Wyślij wiadomość',exact:true}).click();await expect(page.locator('.form-feedback')).toContainText('Spróbuj ponownie.');await expect(page.locator('[name=name]')).toHaveValue('Test Turnstile');
  await page.getByRole('button',{name:'Wyślij wiadomość',exact:true}).click();await expect(page.locator('.form-feedback')).toContainText('KON-2026-000002');expect(tokens).toEqual(['fresh-token-2','fresh-token-3']);expect(scripts).toBe(1);
 });
+
+test('CMS mobile editor saves draft, requires save before approval and renders preview as plain text',async({page})=>{
+ await page.setViewportSize({width:390,height:844});let record,approved=0,photo=0;const bytes=await sharp({create:{width:32,height:32,channels:3,background:'#1689cc'}}).png().toBuffer();
+ await page.route('**/api/admin/**',route=>{const request=route.request(),url=new URL(request.url());
+  if(url.pathname.endsWith('/assets')&&request.method()==='POST'){photo++;expect(request.headers()['x-file-name']).toBeTruthy();return route.fulfill({json:{id:photo===1?'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa':'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'}});}
+  if(url.pathname.includes('/assets/'))return route.fulfill({contentType:'image/png',body:bytes});
+  if(url.pathname.endsWith('/me'))return route.fulfill({json:{username:'Administrator'}});
+  if(url.pathname.endsWith('/approve')){expect(request.postDataJSON().revision).toBe(record.revision);approved=record.revision;return route.fulfill({json:{approvedRevision:approved}});}
+  if(request.method()==='POST'||request.method()==='PATCH'){const {draft,revision}=request.postDataJSON();record={id:'88888888-8888-4888-8888-888888888888',revision:revision+1,draft,approvedRevision:approved||null};return route.fulfill({json:record});}
+  return route.fulfill({json:{projects:[],total:0,page:1,pageSize:12}});
+ });
+ await page.goto('/panel/live/realizacje/');await page.getByRole('button',{name:'Dodaj realizację',exact:true}).click();
+ await page.locator('[name=title]').fill('Instalacja testowa');await page.locator('[name=slug]').fill('instalacja-testowa');await page.locator('[name=description]').fill('<img src=x onerror=alert(1)>');await page.locator('[name=introduction]').fill('Wprowadzenie');await page.locator('[name=scope]').fill('Zakres prac');await page.locator('[name=archived]').check();
+ await page.getByRole('button',{name:'Podgląd treści',exact:true}).click();await expect(page.locator('[data-preview-description]')).toHaveText('<img src=x onerror=alert(1)>');await expect(page.locator('[data-preview-description] img')).toHaveCount(0);
+ await page.getByRole('button',{name:'Zatwierdź zapisaną wersję',exact:true}).click();await expect(page.locator('[data-cms-feedback]')).toContainText('Najpierw zapisz');expect(approved).toBe(0);
+ await page.getByRole('button',{name:'Zapisz szkic',exact:true}).click();await expect(page.locator('[data-cms-feedback]')).toContainText('Szkic zapisany');expect(record.revision).toBe(1);
+ await page.getByRole('button',{name:'Zatwierdź zapisaną wersję',exact:true}).click();await expect(page.locator('[data-cms-feedback]')).toContainText('Wersja zatwierdzona');expect(approved).toBe(1);
+ await page.locator('[name=title]').fill('Nowy tytuł');await page.getByRole('button',{name:'Zatwierdź zapisaną wersję',exact:true}).click();await expect(page.locator('[data-cms-feedback]')).toContainText('Najpierw zapisz');expect(approved).toBe(1);
+ await page.locator('[data-cms-upload]').setInputFiles({name:'test.png',mimeType:'image/png',buffer:bytes});await expect(page.locator('[data-cms-feedback]')).toContainText('Zdjęcie dodane');await page.locator('.cms-image input').fill('Panele na dachu');
+ await page.getByRole('button',{name:'Podgląd zdjęcia',exact:true}).click();await expect(page.locator('.cms-image img')).toBeVisible();
+ await page.getByRole('button',{name:'Zapisz szkic',exact:true}).click();await expect(page.locator('[data-cms-feedback]')).toContainText('Szkic zapisany');expect(record.draft.images[0].alt).toBe('Panele na dachu');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
