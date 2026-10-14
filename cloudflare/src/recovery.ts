@@ -101,7 +101,7 @@ async function step(env: WorkerEnv, now: number) {
       const queue = await env.DB.prepare('SELECT count(*) AS n FROM file_deletion_jobs').first<{ n: number }>();
       // Finish deletes before inventory; otherwise an earlier inventory page could resurrect ownership.
       if (queue?.n) return { complete: false, phase: 'markers', filesPending: queue.n, next: 'step' };
-      await env.DB.prepare('UPDATE recovery_state SET phase=?,cursor=? WHERE id=1').bind(list.truncated ? 'markers' : 'inventory', list.truncated ? list.cursor : null).run();
+      await env.DB.prepare("UPDATE recovery_state SET phase='inventory',cursor=NULL WHERE id=1").run();
     }
   } else {
     await env.DB.batch([
