@@ -34,7 +34,7 @@
     "staging": {
       "name": "rpv-api-staging",
       "workers_dev": true,
-      "triggers": { "crons": ["17 * * * *"] },
+      "triggers": { "crons": ["*/15 * * * *"] },
       "vars": { "ENVIRONMENT": "staging", "ACCESS_ENABLED": "false", "ACCESS_ISSUER": "", "ACCESS_AUD": "", "ADMIN_ORIGIN": "", "PUBLIC_ORIGINS": "https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "false", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "500000000", "R2_A_DAY_LIMIT": "100", "R2_A_MONTH_LIMIT": "1000", "R2_B_DAY_LIMIT": "500", "R2_B_MONTH_LIMIT": "10000" },
       "d1_databases": [{
         "binding": "DB",
@@ -53,7 +53,7 @@
       "name": "rpv-api-production",
       "routes": [{ "pattern": "panel.rpv.pl", "custom_domain": true }],
       "workers_dev": true,
-      "triggers": { "crons": ["17 * * * *"] },
+      "triggers": { "crons": ["*/15 * * * *"] },
       "vars": { "ENVIRONMENT": "production", "ACCESS_ENABLED": "true", "ACCESS_ISSUER": "https://shrill-haze-2285.cloudflareaccess.com", "ACCESS_AUD": "8a3f7dda7cb534e8f13ab4489d480fd2940699da2b16129763383835e78860f7", "ADMIN_ORIGIN": "https://panel.rpv.pl", "PUBLIC_ORIGINS": "https://rpv.pl,https://www.rpv.pl,https://devmatthes.github.io", "SUBMISSIONS_ENABLED": "true", "GOOGLE_DAILY_LIMIT": "100", "GOOGLE_MONTHLY_LIMIT": "1000", "R2_STORAGE_LIMIT": "7500000000", "R2_A_DAY_LIMIT": "1000", "R2_A_MONTH_LIMIT": "10000", "R2_B_DAY_LIMIT": "5000", "R2_B_MONTH_LIMIT": "100000" },
       "d1_databases": [{
         "binding": "DB",

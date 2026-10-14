@@ -58,6 +58,8 @@ jobs:
         run: npm run cf:cms:test
       - name: Test editable page texts and approved revisions
         run: npm run cf:texts:test
+      - name: Test retention and isolated backup recovery
+        run: npm run cf:retention:test
       - name: Test approved publication and GitHub OIDC
         run: npm run cf:publication:test
       - name: Test static CMS publication

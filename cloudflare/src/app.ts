@@ -14,12 +14,14 @@ import { verifyTurnstile } from './turnstile.ts';
 import { cmsProjects } from './cms-projects.ts';
 import { cmsTexts } from './cms-texts.ts';
 import { adminPublications, publishingAPI } from './publications.ts';
+import { adminRecovery } from './recovery.ts';
 
 const routes = new Map([
   ['/api/health', 'GET, HEAD'], ['/api/config', 'GET'], ['/api/service', 'POST'],
   ['/api/contact', 'POST'],
   ['/api/address/suggestions', 'POST'], ['/api/address/details', 'POST'],
   ['/api/admin/me', 'GET'], ['/api/admin/cases', 'GET'], ['/api/admin/logout', 'POST'],
+  ['/api/admin/maintenance/recovery', 'POST'],
 ]);
 export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetKey, publishingKeys?: JWTVerifyGetKey) {
   return {
@@ -36,6 +38,7 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
       const cors: Record<string, string> = { Vary: 'Origin' };
       if (allowed && !path.startsWith('/api/admin/')) cors['Access-Control-Allow-Origin'] = origin;
       try {
+        if (env.RECOVERY_MODE==='true' && path.startsWith('/api/') && !['/api/health','/api/admin/maintenance/recovery'].includes(path)) throw new HttpError(503,'Trwa odtwarzanie danych. Spróbuj później.');
         if (path==='/' && request.method==='GET') return new Response(null,{status:302,headers:{Location:'/panel/','Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'}});
         if (path==='/panel' || path.startsWith('/panel/')) {
           if (env.ACCESS_ENABLED==='true') {
@@ -55,6 +58,7 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
         }
         if (!methods.split(', ').includes(request.method)) return json({ error: 'method_not_allowed' }, 405, { ...cors, Allow: methods });
         if (path.startsWith('/api/admin/') && ['POST','PATCH'].includes(request.method) && origin!==new URL(request.url).origin) throw new HttpError(403,'Niedozwolone źródło żądania.');
+        if (path==='/api/admin/maintenance/recovery') return await adminRecovery(request,env,accessKeys);
         if (publicationRoute) return await adminPublications(request,env,accessKeys,fetcher??fetch);
         if (publishingRoute) return await publishingAPI(request,env,publishingKeys);
         if (cmsRoute) return await cmsProjects(request,env,accessKeys);

@@ -37,6 +37,7 @@
     "cf:cms:test": "node --experimental-strip-types scripts/cloudflare-cms-test.mjs",
     "cf:texts:test": "node --experimental-strip-types scripts/cloudflare-texts-test.mjs",
     "cf:publication:test": "node --experimental-strip-types scripts/cloudflare-publication-test.mjs",
+    "cf:retention:test": "node --experimental-strip-types scripts/cloudflare-retention-test.mjs",
     "publication:test": "node --experimental-strip-types scripts/publication-build-test.mjs"
   },
   "dependencies": {

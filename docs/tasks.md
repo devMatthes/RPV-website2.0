@@ -51,10 +51,10 @@ Aktualny plan, zasoby i polecenia: [cloudflare.md](cloudflare.md).
 - [x] CF3. API serwisu na Workers: walidacja, zapis D1, idempotencja, CORS i trwałe limity; sesje Google/PRG i podpis TERYT. Wdrożono staging/production z wysyłką publiczną wyłączoną do CF8. Załączniki w CF4, zwykły kontakt w CF7.
 - [x] CF4. Strumieniowany multipart, prywatne R2, odczyt po sprawdzeniu sesji, limity miejsca/operacji i trwałe sprzątanie. Wdrożono w obu środowiskach; publiczna wysyłka pozostaje wyłączona.
 - [x] CF5. Zdjęcia/HEIC przygotowywane lokalnie, lazy loading, anulowanie, miniatury 128 px, końcowe limity 5 MiB/5 plików/20 MiB. Walidacja, Chrome i build poprawne; publiczny backend czeka na CF8.
-- [ ] CF6. Logowanie i rzeczywisty panel na Workers.
-- [ ] CF7. Formularz zwykłego kontaktu.
-- [ ] CF8. Testy i produkcyjne wdrożenie formularzy.
-- [ ] CF9. CMS realizacji.
-- [ ] CF10. CMS tekstów.
-- [ ] CF11. Publikacja wersji treści i zdjęć przez Astro/GitHub Actions.
-- [ ] CF12. Usuwanie zamkniętych spraw po 24 h, kopie zapasowe i końcowe QA.
+- [x] CF6. Logowanie i rzeczywisty panel na Workers.
+- [x] CF7. Formularz zwykłego kontaktu.
+- [x] CF8. Testy i produkcyjne wdrożenie formularzy.
+- [x] CF9. CMS realizacji.
+- [x] CF10. CMS tekstów.
+- [x] CF11. Publikacja wersji treści i zdjęć przez Astro/GitHub Actions.
+- [x] CF12. Usuwanie zamkniętych spraw po 24 h, kolejka R2, D1 Time Travel, rejestr retencji, tryb awaryjnego odtwarzania i QA. Szczegóły: [retention.md](retention.md).
