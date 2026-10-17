@@ -10,7 +10,7 @@ test('desktop navigation: hover, direct parent links, keyboard, dismissal and ca
   const toggle=nav.locator('.nav-toggle').first();
   await expect(toggle).toBeHidden();await services.hover();await expect(services).toHaveAttribute('aria-expanded','true');
   await expect(nav.locator('#desktop-services .mega-primary a')).toHaveCount(6);
-  const panel=nav.locator('#desktop-services');const bounds=await panel.boundingBox();expect(bounds.x).toBe(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(1440);
+  const panel=nav.locator('#desktop-services');await expect.poll(()=>panel.evaluate(el=>el.clientHeight>=el.scrollHeight)).toBe(true);const bounds=await panel.boundingBox();expect(bounds.x).toBe(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(1440);
   expect(bounds.width).toBe(await page.evaluate(()=>document.documentElement.clientWidth));
   await expect(page.locator('[data-nav-scrim]')).toBeVisible();
   expect(await page.locator('[data-nav-scrim]').evaluate(el=>getComputedStyle(el).backdropFilter)).toContain('blur');
@@ -154,33 +154,30 @@ test('moving across the services/projects boundary changes content without reope
   await page.mouse.move(24,800);await expect(page.locator('[data-nav-scrim]')).toBeHidden();
 });
 
-test('dismissal uses one fast continuous edge through blur and menu without a boundary pause',async({page})=>{
+test('opening and closing keep the panel opaque while height and backdrop opacity change',async({page})=>{
   await page.setViewportSize({width:1440,height:1000});await page.goto('/');await consent(page);
-  const services=page.getByRole('navigation',{name:'Główna nawigacja',exact:true}).getByRole('link',{name:'Usługi',exact:true});
-  await services.focus();
-  await page.waitForFunction(()=>document.querySelector('#desktop-services').getAnimations({subtree:true}).length===0);
   const frames=await page.evaluate(async()=>{
     const panel=document.querySelector('#desktop-services'),scrim=document.querySelector('[data-nav-scrim]');
-    const boundary=panel.getBoundingClientRect().bottom;
-    const bottom=element=>{const parts=getComputedStyle(element).clipPath.match(/[-\d.]+px/g)?.map(parseFloat)??[0];return parts[2]??parts[0];};
+    const trigger=document.querySelector('[aria-controls="desktop-services"]');
+    const sample=()=>{const style=getComputedStyle(panel),backdrop=getComputedStyle(scrim);return {height:panel.getBoundingClientRect().height,opacity:style.opacity,transform:style.transform,clip:style.clipPath,blurOpacity:Number(backdrop.opacity),blurClip:backdrop.clipPath,hidden:scrim.hidden};};
+    trigger.focus();
+    trigger.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}));
+    const opening=[];
+    for(let frame=0;frame<28;frame++){await new Promise(requestAnimationFrame);opening.push(sample());}
     const started=performance.now();
-    document.querySelector('[aria-controls="desktop-services"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
-    const result=[];
-    for(let frame=0;frame<90;frame++){
-      await new Promise(requestAnimationFrame);
-      result.push({blurEdge:innerHeight-bottom(scrim),panelEdge:boundary-bottom(panel),hidden:scrim.hidden,boundary,elapsed:performance.now()-started});
-      if(scrim.hidden)break;
-    }
-    return result;
+    trigger.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    const closing=[];
+    for(let frame=0;frame<60;frame++){await new Promise(requestAnimationFrame);closing.push({...sample(),elapsed:performance.now()-started});if(scrim.hidden)break;}
+    return {opening,closing};
   });
-  const visible=frames.filter(frame=>!frame.hidden);
-  expect(visible.some(frame=>frame.blurEdge>frame.boundary)).toBe(true);
-  expect(visible.some(frame=>frame.blurEdge<frame.boundary)).toBe(true);
-  for(let index=0;index<visible.length;index++){
-    const frame=visible[index];
-    expect(Math.abs(frame.blurEdge-frame.panelEdge)).toBeLessThan(1);
-    if(index>0)expect(visible[index-1].blurEdge-frame.blurEdge).toBeGreaterThan(.05);
-  }
-  expect(frames.at(-1).hidden).toBe(true);
-  expect(frames.at(-1).elapsed).toBeLessThan(450);
+  const fullHeight=frames.opening.at(-1).height;
+  expect(frames.opening.some(frame=>frame.height>0&&frame.height<fullHeight-1)).toBe(true);
+  expect(frames.opening.some(frame=>frame.blurOpacity>0&&frame.blurOpacity<1)).toBe(true);
+  const closing=frames.closing.filter(frame=>!frame.hidden);
+  expect(closing.some(frame=>frame.height>0&&frame.height<fullHeight-1)).toBe(true);
+  expect(closing.some(frame=>frame.blurOpacity>0&&frame.blurOpacity<1)).toBe(true);
+  for(const frame of [...frames.opening,...closing]){expect(frame.opacity).toBe('1');expect(frame.transform).toBe('none');expect(frame.clip).toBe('none');expect(frame.blurClip).toBe('none');}
+  for(let index=1;index<closing.length;index++){expect(closing[index].height).toBeLessThan(closing[index-1].height);expect(closing[index].blurOpacity).toBeLessThanOrEqual(closing[index-1].blurOpacity);}
+  expect(frames.closing.at(-1).hidden).toBe(true);
+  expect(frames.closing.at(-1).elapsed).toBeLessThan(400);
 });

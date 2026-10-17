@@ -8,39 +8,15 @@ const header=document.querySelector<HTMLElement>('.header');
 const scrim=document.querySelector<HTMLElement>('[data-nav-scrim]');
 let backdropAnimation:Animation|undefined;
 let backdropClosing=false;
-function revealBackdrop(previousClip?:string) {
+function fadeBackdrop(open:boolean,previousOpacity?:string) {
   if(!scrim)return;
-  const from=previousClip??(backdropAnimation?getComputedStyle(scrim).clipPath:`inset(0px 0px ${innerHeight}px 0px)`);
+  const from=previousOpacity??(backdropAnimation?getComputedStyle(scrim).opacity:open?'0':'1');
   backdropAnimation?.cancel();
-  backdropClosing=false;
-  const to='inset(0px 0px 0px 0px)';
-  const animation=scrim.animate([{clipPath:from},{clipPath:to}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'});
+  backdropClosing=!open;
+  const animation=scrim.animate([{opacity:from},{opacity:open?1:0}],{duration:open?280:200,easing:'cubic-bezier(.4,0,.6,1)',fill:'both'});
   backdropAnimation=animation;
-  void animation.finished.then(()=>{if(backdropAnimation===animation){animation.cancel();backdropAnimation=undefined;}}).catch(()=>{/* Reversed or dismissed. */});
-}
-function dismissSurface(panel:HTMLElement):Animation[] {
-  const bounds=panel.getBoundingClientRect();
-  const clip=backdropAnimation&&scrim?getComputedStyle(scrim).clipPath:'none';
-  const bottom=Number.parseFloat(clip.match(/[-\d.]+px/g)?.[2]??'0');
-  const edge=Math.max(bounds.top,innerHeight-bottom);
-  backdropAnimation?.cancel();
-  backdropClosing=true;
-  // Both masks follow the same viewport edge and clock, including the panel boundary.
-  const timing={duration:240,easing:'cubic-bezier(.4,0,.6,1)',fill:'both' as FillMode};
-  const active=[panel.animate([
-    {clipPath:`inset(0px 0px ${bounds.bottom-edge}px 0px)`},
-    {clipPath:`inset(0px 0px ${bounds.height}px 0px)`},
-  ],timing)];
-  if(scrim){
-    backdropAnimation=scrim.animate([
-      {clipPath:`inset(0px 0px ${innerHeight-edge}px 0px)`},
-      {clipPath:`inset(0px 0px ${innerHeight-bounds.top}px 0px)`},
-    ],timing);
-    active.push(backdropAnimation);
-  }
-  const start=document.timeline.currentTime;
-  if(start!==null)active.forEach(animation=>{animation.startTime=start;});
-  return active;
+  void animation.finished.then(()=>{if(backdropAnimation===animation&&open){animation.cancel();backdropAnimation=undefined;}}).catch(()=>{/* Reversed or dismissed. */});
+  return animation;
 }
 function syncBackdrop() {
   const open=desktop.matches&&groups.some(group=>(group.hasAttribute('data-open')||group.hasAttribute('data-closing'))&&group.closest('.navigation--desktop'));
@@ -53,14 +29,13 @@ function setOpen(group:HTMLElement,open:boolean,immediate=false,switching=false)
   clearTimeout(leaveTimers.get(group));
   const wasOpen=group.hasAttribute('data-open');
   const backdropWasOpen=header?.hasAttribute('data-mega-open');
-  const backdropFrom=backdropAnimation&&scrim?getComputedStyle(scrim).clipPath:undefined;
+  const backdropFrom=backdropAnimation&&scrim?getComputedStyle(scrim).opacity:undefined;
   const running=animations.get(group);
   if(wasOpen===open&&!immediate)return;
   const panel=group.querySelector<HTMLElement>('.mega-panel');
   const animate=panel&&desktop.matches&&!reducedMotion.matches&&!immediate;
   // Read the current frame before cancelling so a quick reversal stays continuous.
-  const current=panel&&running?getComputedStyle(panel):null;
-  const from=current?{clipPath:current.clipPath,opacity:current.opacity,transform:current.transform}:null;
+  const currentHeight=panel&&running?panel.getBoundingClientRect().height:undefined;
   const rows=panel?[...panel.querySelectorAll<HTMLElement>('.mega-primary,.mega-secondary')].flatMap(column=>[...column.querySelectorAll<HTMLElement>('.mega-label,li')].map((element,row)=>({element,row}))):[];
   const rowFrames=rows.map(({element})=>{const style=getComputedStyle(element);return {opacity:style.opacity,transform:style.transform};});
   animations.delete(group);
@@ -71,21 +46,28 @@ function setOpen(group:HTMLElement,open:boolean,immediate=false,switching=false)
   group.querySelector<HTMLButtonElement>('.nav-toggle')?.setAttribute('aria-expanded',String(open));
   if(group.closest('.navigation--desktop'))group.querySelector<HTMLAnchorElement>('.nav-link')?.setAttribute('aria-expanded',String(open));
   syncBackdrop();
+  group.toggleAttribute('data-animating',!!animate);
   if(!animate)return;
-  if(open&&(!backdropWasOpen||backdropClosing))revealBackdrop(backdropFrom);
-  const collapsed={clipPath:'inset(0 0 100% 0)',opacity:0,transform:'translateY(-8px)'};
-  const expanded={clipPath:'inset(0 0 0% 0)',opacity:1,transform:'translateY(0)'};
-  const active:Animation[]=!open?dismissSurface(panel):switching?[]:[panel.animate([from??collapsed,expanded],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'})];
-  if(open)rows.forEach(({element,row},index)=>{
-    const hidden={opacity:0,transform:switching?'translateY(0)':'translateY(-6px)'};
+  const fullHeight=panel.getBoundingClientRect().height;
+  if(open&&(!backdropWasOpen||backdropClosing))fadeBackdrop(true,backdropFrom);
+  // Animate the opaque surface's height; only its text and the backdrop fade.
+  const active:Animation[]=switching?[]:[panel.animate([
+    {height:`${currentHeight??(open?0:fullHeight)}px`},
+    {height:`${open?fullHeight:0}px`},
+  ],{duration:open?240:200,easing:'cubic-bezier(.4,0,.6,1)',fill:'both'})];
+  if(!open){const fade=fadeBackdrop(false,backdropFrom);if(fade)active.push(fade);}
+  const lastRow=Math.max(...rows.map(({row})=>row));
+  rows.forEach(({element,row},index)=>{
+    const hidden={opacity:0,transform:switching?'translateY(0)':'translateY(-4px)'};
     const visible={opacity:1,transform:'translateY(0)'};
-    active.push(element.animate([running?rowFrames[index]:hidden,visible],{duration:switching?160:220,delay:switching?0:row*24,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'}));
+    active.push(element.animate([running?rowFrames[index]:open?hidden:visible,open?visible:hidden],{duration:switching?120:open?220:100,delay:switching?0:open?40+row*18:(lastRow-row)*8,easing:'cubic-bezier(.4,0,.6,1)',fill:'both'}));
   });
   animations.set(group,active);
   void Promise.all(active.map(animation=>animation.finished)).then(()=>{
     if(animations.get(group)!==active)return;
     animations.delete(group);
     group.removeAttribute('data-closing');
+    group.removeAttribute('data-animating');
     active.forEach(animation=>animation.cancel());
     syncBackdrop();
   }).catch(()=>{/* A new pointer or keyboard action superseded this animation. */});
@@ -114,9 +96,9 @@ groups.forEach(group=>{
     if(!(event.relatedTarget instanceof Node)||!group.contains(event.relatedTarget))setOpen(group,false);
   });
   group.addEventListener('keydown',event=>{
-    if(event.key==='Escape'&&group.hasAttribute('data-open')){event.preventDefault();event.stopPropagation();(desktop.matches?link:button).focus();setOpen(group,false);}
+    if(event.key==='Escape'&&group.hasAttribute('data-open')){event.preventDefault();event.stopPropagation();(desktop.matches?link:button).focus({preventScroll:true});setOpen(group,false);}
     if((event.key==='ArrowDown'||event.key==='ArrowUp')&&(event.target===button||event.target===link)){
-      event.preventDefault();open();(event.key==='ArrowDown'?links[0]:links.at(-1))?.focus();
+      event.preventDefault();open();(event.key==='ArrowDown'?links[0]:links.at(-1))?.focus({preventScroll:true});
     }
   });
 });
