@@ -12,6 +12,7 @@ const home = import.meta.env.BASE_URL;
     <button class="menu-button button button--ghost" aria-haspopup="dialog" data-menu-open>Menu</button>
   </div>
 </header>
+<div class="nav-scrim" data-nav-scrim hidden aria-hidden="true"></div>
 <dialog class="mobile-menu" aria-labelledby="menu-title">
   <div class="menu-heading"><a href={home} aria-label="RPV — strona główna"><Brand /></a><button class="button button--ghost" data-menu-close autofocus>Zamknij</button></div>
   <h2 id="menu-title" class="sr-only">Menu strony</h2>
@@ -22,7 +23,8 @@ const home = import.meta.env.BASE_URL;
   import '../scripts/navigation';
 </script>
 <style>
-  .header { height: 76px; padding-inline: var(--gutter); display: flex; align-items: center; justify-content: space-between; gap: 24px; position: relative; z-index: 20; }
+  .header { --mega-surface:#101317; height: 76px; padding-inline: var(--gutter); display: flex; align-items: center; justify-content: space-between; gap: 24px; position: relative; z-index: 20; }
+  .nav-scrim { display:none; }
   .home { display: inline-flex; }
   .header :global(.navigation--desktop) { display: none; }
   .header-actions { display: flex; align-items: center; gap: 24px; }
@@ -35,5 +37,16 @@ const home = import.meta.env.BASE_URL;
   .menu-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   @media (min-width: 700px) { .header { height: 86px; } .header-actions :global(.service-action) { display: flex; } }
-  @media (min-width: 1100px) { .header { height: 81px; } .home, .header-actions { flex: 1; } .header-actions { justify-content: end; } .menu-button { display: none; } .header :global(.navigation--desktop) { display: block; } }
+  @media (min-width: 1100px) {
+    .header { height:81px; } .header[data-mega-open] { background:var(--mega-surface); }
+    .header[data-mega-open]::before { content:''; position:fixed; inset:0 0 auto; height:var(--nav-bottom,81px); z-index:-1; background:var(--mega-surface); }
+    .home,.header-actions { flex:1; } .header-actions { justify-content:end; } .menu-button { display:none; } .header :global(.navigation--desktop) { display:block; }
+    .nav-scrim { display:block; position:fixed; inset:0; z-index:15; background:#050910b8; }
+    @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+      .nav-scrim { background:#05091066; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+    }
+    @media(prefers-reduced-transparency:reduce) {
+      .nav-scrim { background:#050910b8; -webkit-backdrop-filter:none; backdrop-filter:none; }
+    }
+  }
 </style>

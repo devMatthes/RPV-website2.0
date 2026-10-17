@@ -9,13 +9,17 @@ test('desktop navigation: hover, direct parent links, keyboard, dismissal and ca
   const services=nav.getByRole('link',{name:'Usługi',exact:true});
   const toggle=nav.getByRole('button',{name:'Pokaż podmenu Usługi',exact:true});
   await expect(toggle).toBeVisible();await services.hover();await expect(toggle).toHaveAttribute('aria-expanded','true');
-  await expect(nav.locator('#desktop-services a')).toHaveCount(7);
-  const panel=nav.locator('#desktop-services');const bounds=await panel.boundingBox();expect(bounds.x+bounds.width).toBeLessThanOrEqual(1440);
+  await expect(nav.locator('#desktop-services .mega-primary a')).toHaveCount(6);
+  const panel=nav.locator('#desktop-services');const bounds=await panel.boundingBox();expect(bounds.x).toBe(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(1440);
+  expect(bounds.width).toBe(await page.evaluate(()=>document.documentElement.clientWidth));
+  await expect(page.locator('[data-nav-scrim]')).toBeVisible();
+  expect(await page.locator('[data-nav-scrim]').evaluate(el=>getComputedStyle(el).backdropFilter)).toContain('blur');
   await nav.getByRole('link',{name:'Pompy ciepła',exact:true}).hover();await expect(panel).toBeVisible();
   if(process.env.NAVIGATION_SCREENSHOTS)await page.screenshot({path:'outputs/navigation-desktop.png'});
-  await page.mouse.click(32,130);await expect(toggle).toHaveAttribute('aria-expanded','false');
-  await services.focus();await services.press('ArrowDown');await expect(nav.getByRole('link',{name:'Wszystkie usługi',exact:true})).toBeFocused();
-  await page.keyboard.press('Escape');await expect(toggle).toBeFocused();await expect(panel).toBeHidden();
+  await services.focus();await page.locator('[data-nav-scrim]').click({position:{x:32,y:bounds.y+bounds.height+32}});await expect(toggle).toHaveAttribute('aria-expanded','false');
+  await expect(page.locator('[data-nav-scrim]')).toBeHidden();await expect(page).toHaveURL(/\/$/);
+  await services.focus();await services.press('ArrowDown');await expect(nav.locator('.mega-primary').getByRole('link',{name:'Fotowoltaika',exact:true})).toBeFocused();
+  await page.keyboard.press('Escape');await expect(toggle).toBeFocused();await expect(panel).toBeHidden();await expect(page.locator('[data-nav-scrim]')).toBeHidden();
   await services.click();await expect(page).toHaveURL(/\/uslugi\/$/);await expect(page.locator('h1')).toContainText('Usługi dla domu');
   await expect(page.locator('#uslugi article')).toHaveCount(6);await noOverflow(page);
   if(process.env.NAVIGATION_SCREENSHOTS)await page.screenshot({path:'outputs/services-desktop.png',fullPage:true});
@@ -30,7 +34,7 @@ test('mobile and tablet: separate disclosure, home link, no quote CTA and respon
   for(const width of [320,390,834,1099]){
     await page.setViewportSize({width,height:900});await page.goto('/uslugi/');await consent(page);await noOverflow(page);
     if(process.env.NAVIGATION_SCREENSHOTS&&width===390)await page.screenshot({path:'outputs/services-mobile.png',fullPage:true});
-    await page.getByRole('button',{name:'Menu',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Menu strony',exact:true});
+    await page.getByRole('button',{name:'Menu',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Menu strony',exact:true});await expect(page.locator('[data-nav-scrim]')).toBeHidden();
     await expect(dialog.getByRole('link',{name:'Strona główna',exact:true})).toBeVisible();await expect(dialog.getByRole('link',{name:'Darmowa wycena',exact:true})).toHaveCount(0);
     const toggle=dialog.getByRole('button',{name:'Pokaż podmenu Usługi',exact:true});await toggle.click();await expect(toggle).toHaveAttribute('aria-expanded','true');
     await expect(dialog.getByRole('link',{name:'Rozdzielnice i elektryka',exact:true})).toBeVisible();
@@ -39,10 +43,22 @@ test('mobile and tablet: separate disclosure, home link, no quote CTA and respon
     await page.keyboard.press('Escape');await expect(dialog).toBeVisible();await expect(toggle).toHaveAttribute('aria-expanded','false');
     await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Menu',exact:true})).toBeFocused();
   }
-  for(const width of [1100,1280]){await page.setViewportSize({width,height:900});await noOverflow(page);await expect(page.getByRole('navigation',{name:'Główna nawigacja',exact:true})).toBeVisible();}
+  for(const width of [1100,1280,1920,2560]){await page.setViewportSize({width,height:900});await noOverflow(page);const nav=page.getByRole('navigation',{name:'Główna nawigacja',exact:true});await expect(nav).toBeVisible();await nav.getByRole('link',{name:'Usługi',exact:true}).hover();const bounds=await nav.locator('#desktop-services').boundingBox();expect(bounds.x).toBe(0);expect(bounds.width).toBe(await page.evaluate(()=>document.documentElement.clientWidth));await page.keyboard.press('Escape');await expect(page.locator('[data-nav-scrim]')).toBeHidden();await noOverflow(page);}
   await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Menu',exact:true}).click();
   const dialog=page.getByRole('dialog',{name:'Menu strony',exact:true});await dialog.getByRole('button',{name:'Pokaż podmenu Usługi',exact:true}).click();await dialog.getByRole('link',{name:'Magazyny energii',exact:true}).click();
   await expect(page).toHaveURL(/\/uslugi\/magazyny-energii\/$/);await expect(dialog).toBeHidden();expect(errors).toEqual([]);
+});
+
+test('mega menu backdrop: switch sections, hover dismissal, scrolling and reduced transparency',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});await page.goto('/');await consent(page);
+  const nav=page.getByRole('navigation',{name:'Główna nawigacja',exact:true}),scrim=page.locator('[data-nav-scrim]');
+  await nav.getByRole('link',{name:'Usługi',exact:true}).hover();await expect(scrim).toBeVisible();
+  await nav.getByRole('link',{name:'Realizacje',exact:true}).hover();await expect(nav.locator('#desktop-services')).toBeHidden();await expect(nav.locator('#desktop-projects')).toBeVisible();await expect(scrim).toBeVisible();
+  if(process.env.NAVIGATION_SCREENSHOTS)await page.screenshot({path:'outputs/navigation-projects.png'});
+  await page.mouse.move(24,800);await expect(scrim).toBeHidden();
+  await nav.getByRole('link',{name:'Usługi',exact:true}).hover();await page.evaluate(()=>window.scrollTo(0,180));await expect(scrim).toBeHidden();await page.evaluate(()=>window.scrollTo(0,0));await page.mouse.move(24,800);
+  const cdp=await page.context().newCDPSession(page);await cdp.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-transparency',value:'reduce'}]});
+  await nav.getByRole('link',{name:'Usługi',exact:true}).hover();await expect(scrim).toBeVisible();expect(await scrim.evaluate(el=>getComputedStyle(el).backdropFilter)).toBe('none');
 });
 
 test('services and project navigation remains usable without JavaScript on desktop',async({browser})=>{

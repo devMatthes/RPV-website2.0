@@ -1,5 +1,5 @@
 ---
-import {services} from '../data/home';
+import {services,audiences} from '../data/home';
 import {projectCategories} from '../data/projects';
 interface Props { id: string; label: string; desktop?: boolean; showHome?: boolean; }
 const {id,label,desktop=false,showHome=false}=Astro.props;
@@ -20,7 +20,20 @@ const path=Astro.url.pathname;
       <a class:list={['nav-link',{'is-active':link.href===home?path===home:path.startsWith(link.href)}]} href={link.href} aria-current={path===link.href?'page':undefined}>{link.label}</a>
       {link.children&&<button class="nav-toggle" type="button" hidden aria-label={`Pokaż podmenu ${link.label}`} aria-expanded="false" aria-controls={`${id}-${link.id}`}><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></button>}
     </div>
-    {link.children&&<ul class="nav-submenu" id={`${id}-${link.id}`} aria-label={link.label}>{link.children.map(child=><li><a href={child.href} aria-current={link.id==='services'&&path===child.href?'page':undefined}>{child.label}</a></li>)}</ul>}
+    {link.children&&(desktop?
+      <div class="nav-submenu mega-panel" id={`${id}-${link.id}`} role="region" aria-label={link.label}>
+        <div class="mega-inner">
+          <div class="mega-primary"><p class="mega-label">{link.id==='services'?'Poznaj nasze usługi':'Zobacz realizacje'}</p>
+            <ul aria-label={link.id==='services'?'Usługi RPV':'Kategorie realizacji'}>{link.children.slice(1).map(child=><li><a href={child.href} aria-current={link.id==='services'&&path===child.href?'page':undefined}>{child.label}</a></li>)}</ul>
+          </div>
+          <div class="mega-secondary"><p class="mega-label">Rozwiązania dla Ciebie</p><ul aria-label="Dla kogo">{audiences.map(audience=><li><a href={`${home}${audience.slug}/`}>{audience.title}</a></li>)}</ul></div>
+          <div class="mega-secondary"><p class="mega-label">Na skróty</p><ul aria-label="Na skróty">
+            <li><a href={link.href}>{link.children[0].label}<span class="overview-arrow" aria-hidden="true">↗</span></a></li>
+            <li><a href={`${home}kontakt/`}>Porozmawiajmy</a></li><li><a href={`${home}serwis/`}>Zgłoś serwis</a></li>
+          </ul></div>
+        </div>
+      </div>:
+      <ul class="nav-submenu" id={`${id}-${link.id}`} aria-label={link.label}>{link.children.map(child=><li><a href={child.href} aria-current={link.id==='services'&&path===child.href?'page':undefined}>{child.label}</a></li>)}</ul>)}
   </li>)}</ul>
 </nav>
 <style>
@@ -38,15 +51,22 @@ const path=Astro.url.pathname;
   .nav-submenu a:hover,.nav-submenu a[aria-current='page'] { color:#6bb9f6; }
   .nav-item[data-open]>.nav-submenu,.navigation--mobile:not([data-enhanced]) .nav-submenu { display:block; }
   @media(min-width:1100px) {
-    .navigation--desktop .nav-list { flex-direction:row; align-items:center; gap:8px; }
-    .navigation--desktop .nav-row { gap:0; border-radius:8px; }
-    .navigation--desktop .nav-row:hover { background:#ffffff0d; }
+    .navigation--desktop { align-self:stretch; }
+    .navigation--desktop .nav-list { height:100%; flex-direction:row; align-items:stretch; gap:8px; }
+    .navigation--desktop .nav-item { position:static; display:flex; align-items:center; }
+    .navigation--desktop .nav-row { height:100%; gap:0; }
     .navigation--desktop .nav-link { display:flex; align-items:center; justify-content:center; min-height:44px; padding:10px 16px; font:600 14px/21px var(--font-ui); white-space:nowrap; border-radius:8px; }
     .navigation--desktop [data-has-submenu] .nav-link { padding-right:4px; }
     .navigation--desktop .nav-toggle { width:36px; border:0; }
-    .navigation--desktop .nav-submenu { position:absolute; left:0; top:100%; z-index:30; width:292px; max-width:calc(100vw - 48px); margin:0; padding:8px; border:1px solid var(--color-border); border-radius:12px; background:#101317; box-shadow:0 16px 48px #0009; }
-    .navigation--desktop .nav-submenu a { padding:12px; border-radius:6px; font-size:14px; font-weight:500; }
-    .navigation--desktop .nav-submenu a:hover,.navigation--desktop .nav-submenu a:focus-visible { background:#ffffff0d; }
+    .navigation--desktop .nav-item[data-open] .nav-link { color:#6bb9f6; }
+    .navigation--desktop .mega-panel { position:fixed; left:0; right:0; top:var(--nav-bottom,81px); z-index:30; max-height:calc(100dvh - var(--nav-bottom,81px)); overflow-y:auto; margin:0; padding:0; border:0; border-bottom:1px solid var(--color-border); background:var(--mega-surface,#101317); }
+    .mega-inner { width:min(1280px,calc(100% - var(--gutter)*2)); margin-inline:auto; padding-block:40px 48px; display:grid; grid-template-columns:minmax(0,1.5fr) repeat(2,minmax(0,1fr)); gap:64px; }
+    .mega-label { margin-bottom:16px; color:var(--color-muted); font:400 13px/20px var(--font-ui); }
+    .navigation--desktop .mega-panel a { width:fit-content; max-width:100%; padding:6px 0; border-radius:4px; font:500 16px/24px var(--font-ui); text-decoration:none; }
+    .navigation--desktop .mega-primary a { min-height:42px; padding-block:5px; font:500 28px/34px var(--font-heading); letter-spacing:-.3px; }
+    .navigation--desktop .mega-secondary a { min-height:40px; }
+    .overview-arrow { margin-left:10px; font-size:18px; }
+    .navigation--desktop .mega-panel a:hover,.navigation--desktop .mega-panel a:focus-visible { color:#6bb9f6; }
     .navigation--desktop:not([data-enhanced]) .nav-item:is(:hover,:focus-within)>.nav-submenu { display:block; }
   }
 </style>
