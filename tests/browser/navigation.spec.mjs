@@ -81,3 +81,37 @@ test('touch navigation: tapping parent navigates and separate arrows reveal cate
     await expect(page).toHaveURL(/\/realizacje\/\?kategoria=magazyny-energii$/);await expect(page.locator('[data-category=magazyny-energii]')).toHaveAttribute('aria-pressed','true');
   }finally{await context.close();}
 });
+
+test('header hover is consistent across layouts and adjacent menu targets have no dead zone',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});
+  for(const route of ['/','/o-nas/','/uslugi/']){
+    await page.goto(route);await consent(page);
+    const logo=page.locator('.header .home');await logo.hover();
+    expect(await logo.evaluate(el=>getComputedStyle(el).textDecorationLine)).toBe('none');
+    const nav=page.getByRole('navigation',{name:'Główna nawigacja',exact:true});
+    const services=nav.getByRole('link',{name:'Usługi',exact:true}),projects=nav.getByRole('link',{name:'Realizacje',exact:true});
+    await services.hover();expect(await services.evaluate(el=>getComputedStyle(el).textDecorationLine)).toBe('none');
+    await expect(nav.getByText('Na skróty',{exact:true})).toHaveCount(0);
+    expect(await nav.locator('#desktop-services').evaluate(el=>getComputedStyle(el).borderBottomWidth)).toBe('0px');
+    const first=await services.boundingBox(),next=await projects.boundingBox();
+    expect(Math.abs(first.x+first.width-next.x)).toBeLessThanOrEqual(1);
+    await page.mouse.move(first.x+first.width-.5,first.y+first.height/2);await page.mouse.move(next.x+.5,next.y+next.height/2);
+    await expect(projects).toHaveAttribute('aria-expanded','true');await expect(page.locator('[data-nav-scrim]')).toBeVisible();
+    await expect(nav.locator('#desktop-services')).toBeHidden();
+  }
+});
+
+test('animated menu can reverse and switch rapidly without leaving a blocking overlay; reduced motion skips it',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});await page.goto('/');await consent(page);
+  const nav=page.getByRole('navigation',{name:'Główna nawigacja',exact:true});
+  const services=nav.getByRole('link',{name:'Usługi',exact:true}),projects=nav.getByRole('link',{name:'Realizacje',exact:true});
+  await services.hover();await page.mouse.move(24,800);
+  await expect(services).toHaveAttribute('aria-expanded','false');
+  await services.hover();await projects.hover();await services.hover();await services.focus();
+  await services.press('ArrowDown');await expect(nav.locator('.mega-primary').getByRole('link',{name:'Fotowoltaika',exact:true})).toBeFocused();
+  await page.keyboard.press('Escape');await expect(nav.locator('#desktop-services')).toBeHidden();await expect(page.locator('[data-nav-scrim]')).toBeHidden();
+  expect(await nav.evaluate(el=>el.getAnimations({subtree:true}).length)).toBe(0);
+  await page.emulateMedia({reducedMotion:'reduce'});await projects.focus();
+  await expect(nav.locator('#desktop-projects')).toBeVisible();expect(await nav.evaluate(el=>el.getAnimations({subtree:true}).length)).toBe(0);
+  await page.keyboard.press('Escape');await expect(page.locator('[data-nav-scrim]')).toBeHidden();
+});

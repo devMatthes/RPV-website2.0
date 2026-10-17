@@ -27,10 +27,6 @@ const path=Astro.url.pathname;
             <ul aria-label={link.id==='services'?'Usługi RPV':'Kategorie realizacji'}>{link.children.slice(1).map(child=><li><a href={child.href} aria-current={link.id==='services'&&path===child.href?'page':undefined}>{child.label}</a></li>)}</ul>
           </div>
           <div class="mega-secondary"><p class="mega-label">Rozwiązania dla Ciebie</p><ul aria-label="Dla kogo">{audiences.map(audience=><li><a href={`${home}${audience.slug}/`}>{audience.title}</a></li>)}</ul></div>
-          <div class="mega-secondary"><p class="mega-label">Na skróty</p><ul aria-label="Na skróty">
-            <li><a href={link.href}>{link.children[0].label}<span class="overview-arrow" aria-hidden="true">↗</span></a></li>
-            <li><a href={`${home}kontakt/`}>Porozmawiajmy</a></li><li><a href={`${home}serwis/`}>Zgłoś serwis</a></li>
-          </ul></div>
         </div>
       </div>:
       <ul class="nav-submenu" id={`${id}-${link.id}`} aria-label={link.label}>{link.children.map(child=><li><a href={child.href} aria-current={link.id==='services'&&path===child.href?'page':undefined}>{child.label}</a></li>)}</ul>)}
@@ -50,18 +46,18 @@ const path=Astro.url.pathname;
   .nav-item[data-open]>.nav-submenu,.navigation--mobile:not([data-enhanced]) .nav-submenu { display:block; }
   @media(min-width:1100px) {
     .navigation--desktop { align-self:stretch; }
-    .navigation--desktop .nav-list { height:100%; flex-direction:row; align-items:stretch; gap:8px; }
+    .navigation--desktop .nav-list { height:100%; flex-direction:row; align-items:stretch; gap:0; }
     .navigation--desktop .nav-item { position:static; display:flex; align-items:center; }
     .navigation--desktop .nav-row { height:100%; gap:0; }
     .navigation--desktop .nav-link { display:flex; align-items:center; justify-content:center; min-height:44px; padding:10px 16px; font:600 14px/21px var(--font-ui); white-space:nowrap; border-radius:8px; }
     .navigation--desktop .nav-toggle { display:none; }
-    .navigation--desktop .mega-panel { position:fixed; left:0; right:0; top:var(--nav-bottom,81px); z-index:30; max-height:calc(100dvh - var(--nav-bottom,81px)); overflow-y:auto; margin:0; padding:0; border:0; border-bottom:1px solid var(--color-border); background:var(--mega-surface,#101317); }
-    .mega-inner { width:min(1280px,calc(100% - var(--gutter)*2)); margin-inline:auto; padding-block:40px 48px; display:grid; grid-template-columns:minmax(0,1.5fr) repeat(2,minmax(0,1fr)); gap:64px; }
+    .navigation--desktop .mega-panel { position:fixed; left:0; right:0; top:var(--nav-bottom,81px); z-index:30; max-height:calc(100dvh - var(--nav-bottom,81px)); overflow-y:auto; margin:0; padding:0; border:0; background:var(--mega-surface,#101317); }
+    .navigation--desktop .nav-item[data-closing]>.mega-panel { display:block; pointer-events:none; }
+    .mega-inner { width:min(1280px,calc(100% - var(--gutter)*2)); margin-inline:auto; padding-block:40px 48px; display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:64px; }
     .mega-label { margin-bottom:16px; color:var(--color-muted); font:400 13px/20px var(--font-ui); }
     .navigation--desktop .mega-panel a { width:fit-content; max-width:100%; padding:6px 0; border-radius:4px; font:500 16px/24px var(--font-ui); text-decoration:none; }
     .navigation--desktop .mega-primary a { min-height:42px; padding-block:5px; font:500 28px/34px var(--font-heading); letter-spacing:-.3px; }
     .navigation--desktop .mega-secondary a { min-height:40px; }
-    .overview-arrow { margin-left:10px; font-size:18px; }
     .navigation--desktop:not([data-enhanced]) .nav-item:is(:hover,:focus-within)>.nav-submenu { display:block; }
   }
 </style>
