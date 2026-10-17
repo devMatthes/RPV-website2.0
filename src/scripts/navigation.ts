@@ -8,15 +8,39 @@ const header=document.querySelector<HTMLElement>('.header');
 const scrim=document.querySelector<HTMLElement>('[data-nav-scrim]');
 let backdropAnimation:Animation|undefined;
 let backdropClosing=false;
-function animateBackdrop(open:boolean,panel:HTMLElement) {
+function revealBackdrop(previousClip?:string) {
   if(!scrim)return;
-  const from=backdropAnimation?getComputedStyle(scrim).clipPath:`inset(0px 0px ${open?innerHeight:0}px 0px)`;
+  const from=previousClip??(backdropAnimation?getComputedStyle(scrim).clipPath:`inset(0px 0px ${innerHeight}px 0px)`);
   backdropAnimation?.cancel();
-  backdropClosing=!open;
-  const to=`inset(0px 0px ${open?0:Math.max(0,innerHeight-panel.getBoundingClientRect().bottom)}px 0px)`;
-  const animation=scrim.animate([{clipPath:from},{clipPath:to}],{duration:open?360:240,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'});
+  backdropClosing=false;
+  const to='inset(0px 0px 0px 0px)';
+  const animation=scrim.animate([{clipPath:from},{clipPath:to}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'});
   backdropAnimation=animation;
-  void animation.finished.then(()=>{if(backdropAnimation===animation&&open){animation.cancel();backdropAnimation=undefined;}}).catch(()=>{/* Reversed or dismissed. */});
+  void animation.finished.then(()=>{if(backdropAnimation===animation){animation.cancel();backdropAnimation=undefined;}}).catch(()=>{/* Reversed or dismissed. */});
+}
+function dismissSurface(panel:HTMLElement):Animation[] {
+  const bounds=panel.getBoundingClientRect();
+  const clip=backdropAnimation&&scrim?getComputedStyle(scrim).clipPath:'none';
+  const bottom=Number.parseFloat(clip.match(/[-\d.]+px/g)?.[2]??'0');
+  const edge=Math.max(bounds.top,innerHeight-bottom);
+  backdropAnimation?.cancel();
+  backdropClosing=true;
+  // Both masks follow the same viewport edge and clock, including the panel boundary.
+  const timing={duration:240,easing:'cubic-bezier(.4,0,.6,1)',fill:'both' as FillMode};
+  const active=[panel.animate([
+    {clipPath:`inset(0px 0px ${bounds.bottom-edge}px 0px)`},
+    {clipPath:`inset(0px 0px ${bounds.height}px 0px)`},
+  ],timing)];
+  if(scrim){
+    backdropAnimation=scrim.animate([
+      {clipPath:`inset(0px 0px ${innerHeight-edge}px 0px)`},
+      {clipPath:`inset(0px 0px ${innerHeight-bounds.top}px 0px)`},
+    ],timing);
+    active.push(backdropAnimation);
+  }
+  const start=document.timeline.currentTime;
+  if(start!==null)active.forEach(animation=>{animation.startTime=start;});
+  return active;
 }
 function syncBackdrop() {
   const open=desktop.matches&&groups.some(group=>(group.hasAttribute('data-open')||group.hasAttribute('data-closing'))&&group.closest('.navigation--desktop'));
@@ -29,6 +53,7 @@ function setOpen(group:HTMLElement,open:boolean,immediate=false,switching=false)
   clearTimeout(leaveTimers.get(group));
   const wasOpen=group.hasAttribute('data-open');
   const backdropWasOpen=header?.hasAttribute('data-mega-open');
+  const backdropFrom=backdropAnimation&&scrim?getComputedStyle(scrim).clipPath:undefined;
   const running=animations.get(group);
   if(wasOpen===open&&!immediate)return;
   const panel=group.querySelector<HTMLElement>('.mega-panel');
@@ -47,16 +72,14 @@ function setOpen(group:HTMLElement,open:boolean,immediate=false,switching=false)
   if(group.closest('.navigation--desktop'))group.querySelector<HTMLAnchorElement>('.nav-link')?.setAttribute('aria-expanded',String(open));
   syncBackdrop();
   if(!animate)return;
-  if(open&&(!backdropWasOpen||backdropClosing))animateBackdrop(true,panel);
-  if(!open&&!groups.some(other=>other!==group&&other.closest('.navigation--desktop')&&other.hasAttribute('data-open')))animateBackdrop(false,panel);
+  if(open&&(!backdropWasOpen||backdropClosing))revealBackdrop(backdropFrom);
   const collapsed={clipPath:'inset(0 0 100% 0)',opacity:0,transform:'translateY(-8px)'};
   const expanded={clipPath:'inset(0 0 0% 0)',opacity:1,transform:'translateY(0)'};
-  const active:Animation[]=switching?[]:[panel.animate([from??(open?collapsed:expanded),open?expanded:collapsed],{duration:open?360:220,delay:open?0:340,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'})];
-  const lastRow=Math.max(...rows.map(({row})=>row));
-  rows.forEach(({element,row},index)=>{
+  const active:Animation[]=!open?dismissSurface(panel):switching?[]:[panel.animate([from??collapsed,expanded],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'})];
+  if(open)rows.forEach(({element,row},index)=>{
     const hidden={opacity:0,transform:switching?'translateY(0)':'translateY(-6px)'};
     const visible={opacity:1,transform:'translateY(0)'};
-    active.push(element.animate([running?rowFrames[index]:open?hidden:visible,open?visible:hidden],{duration:switching?160:open?220:160,delay:switching?0:(open?row*24:240+(lastRow-row)*24),easing:'cubic-bezier(.22,1,.36,1)',fill:'both'}));
+    active.push(element.animate([running?rowFrames[index]:hidden,visible],{duration:switching?160:220,delay:switching?0:row*24,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'}));
   });
   animations.set(group,active);
   void Promise.all(active.map(animation=>animation.finished)).then(()=>{
@@ -83,7 +106,7 @@ groups.forEach(group=>{
   button.hidden=false;
   button.addEventListener('click',()=>{if(group.hasAttribute('data-open'))setOpen(group,false);else open();});
   group.addEventListener('pointerenter',()=>{if(desktop.matches&&hover.matches)open();});
-  group.addEventListener('pointerleave',()=>{if(desktop.matches&&!group.contains(document.activeElement))leaveTimers.set(group,setTimeout(()=>setOpen(group,false),120));});
+  group.addEventListener('pointerleave',()=>{if(desktop.matches&&!group.contains(document.activeElement))leaveTimers.set(group,setTimeout(()=>setOpen(group,false),80));});
   link.addEventListener('focus',()=>{if(desktop.matches)open();});
   group.addEventListener('focusout',event=>{
     // During native pointer focus changes activeElement can briefly be body.

@@ -154,27 +154,33 @@ test('moving across the services/projects boundary changes content without reope
   await page.mouse.move(24,800);await expect(page.locator('[data-nav-scrim]')).toBeHidden();
 });
 
-test('dismissal retracts blur from the viewport bottom before collapsing the menu',async({page})=>{
+test('dismissal uses one fast continuous edge through blur and menu without a boundary pause',async({page})=>{
   await page.setViewportSize({width:1440,height:1000});await page.goto('/');await consent(page);
   const services=page.getByRole('navigation',{name:'Główna nawigacja',exact:true}).getByRole('link',{name:'Usługi',exact:true});
   await services.focus();
   await page.waitForFunction(()=>document.querySelector('#desktop-services').getAnimations({subtree:true}).length===0);
   const frames=await page.evaluate(async()=>{
     const panel=document.querySelector('#desktop-services'),scrim=document.querySelector('[data-nav-scrim]');
-    const targetBottom=innerHeight-panel.getBoundingClientRect().bottom;
-    const bottom=element=>{const parts=getComputedStyle(element).clipPath.match(/[-\d.]+(?:px|%)/g)?.map(parseFloat)??[0];return parts[2]??parts[0];};
+    const boundary=panel.getBoundingClientRect().bottom;
+    const bottom=element=>{const parts=getComputedStyle(element).clipPath.match(/[-\d.]+px/g)?.map(parseFloat)??[0];return parts[2]??parts[0];};
+    const started=performance.now();
     document.querySelector('[aria-controls="desktop-services"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     const result=[];
     for(let frame=0;frame<90;frame++){
       await new Promise(requestAnimationFrame);
-      result.push({blurBottom:bottom(scrim),panelBottom:bottom(panel),hidden:scrim.hidden,targetBottom});
+      result.push({blurEdge:innerHeight-bottom(scrim),panelEdge:boundary-bottom(panel),hidden:scrim.hidden,boundary,elapsed:performance.now()-started});
       if(scrim.hidden)break;
     }
     return result;
   });
-  expect(frames.some(frame=>frame.blurBottom>10&&frame.panelBottom===0&&!frame.hidden)).toBe(true);
-  const collapsing=frames.filter(frame=>frame.panelBottom>1&&!frame.hidden);
-  expect(collapsing.length).toBeGreaterThan(0);
-  for(const frame of collapsing)expect(frame.blurBottom).toBeGreaterThanOrEqual(frame.targetBottom-1);
+  const visible=frames.filter(frame=>!frame.hidden);
+  expect(visible.some(frame=>frame.blurEdge>frame.boundary)).toBe(true);
+  expect(visible.some(frame=>frame.blurEdge<frame.boundary)).toBe(true);
+  for(let index=0;index<visible.length;index++){
+    const frame=visible[index];
+    expect(Math.abs(frame.blurEdge-frame.panelEdge)).toBeLessThan(1);
+    if(index>0)expect(visible[index-1].blurEdge-frame.blurEdge).toBeGreaterThan(.05);
+  }
   expect(frames.at(-1).hidden).toBe(true);
+  expect(frames.at(-1).elapsed).toBeLessThan(450);
 });
