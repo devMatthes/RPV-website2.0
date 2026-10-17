@@ -111,7 +111,11 @@ test('animated menu can reverse and switch rapidly without leaving a blocking ov
   await services.press('ArrowDown');await expect(nav.locator('.mega-primary').getByRole('link',{name:'Fotowoltaika',exact:true})).toBeFocused();
   await page.keyboard.press('Escape');await expect(nav.locator('#desktop-services')).toBeHidden();await expect(page.locator('[data-nav-scrim]')).toBeHidden();
   expect(await nav.evaluate(el=>el.getAnimations({subtree:true}).length)).toBe(0);
-  await page.emulateMedia({reducedMotion:'reduce'});await projects.focus();
-  await expect(nav.locator('#desktop-projects')).toBeVisible();expect(await nav.evaluate(el=>el.getAnimations({subtree:true}).length)).toBe(0);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.waitForFunction(()=>matchMedia('(prefers-reduced-motion:reduce)').matches);
+  await projects.focus();
+  await expect(nav.locator('#desktop-projects')).toBeVisible();
+  // Global reduced-motion CSS retains 0.01 ms focus-outline transitions.
+  expect(await nav.evaluate(el=>el.getAnimations({subtree:true}).filter(animation=>Number(animation.effect?.getTiming().duration)>1).length)).toBe(0);
   await page.keyboard.press('Escape');await expect(page.locator('[data-nav-scrim]')).toBeHidden();
 });
