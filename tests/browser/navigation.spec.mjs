@@ -119,3 +119,62 @@ test('animated menu can reverse and switch rapidly without leaving a blocking ov
   expect(await nav.evaluate(el=>el.getAnimations({subtree:true}).filter(animation=>Number(animation.effect?.getTiming().duration)>1).length)).toBe(0);
   await page.keyboard.press('Escape');await expect(page.locator('[data-nav-scrim]')).toBeHidden();
 });
+
+
+test('moving across the services/projects boundary changes content without reopening the panel',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});await page.goto('/');await consent(page);
+  const nav=page.getByRole('navigation',{name:'Główna nawigacja',exact:true});
+  const services=nav.getByRole('link',{name:'Usługi',exact:true}),projects=nav.getByRole('link',{name:'Realizacje',exact:true});
+  await services.hover();
+  await page.waitForFunction(()=>document.querySelector('#desktop-services').getAnimations({subtree:true}).length===0);
+  const baseline=await nav.locator('#desktop-services').boundingBox();
+  await page.evaluate(()=>{
+    window.backdropInterruptions=0;
+    new MutationObserver(records=>{window.backdropInterruptions+=records.filter(record=>record.attributeName==='hidden').length;}).observe(document.querySelector('[data-nav-scrim]'),{attributes:true,attributeFilter:['hidden']});
+  });
+  for(let turn=0;turn<4;turn++){
+    const target=turn%2===0?projects:services;
+    const box=await target.boundingBox();
+    // Cross the actual boundary slowly, then linger on its inside edge.
+    await page.mouse.move(turn%2===0?box.x+2:box.x+box.width-2,box.y+box.height/2,{steps:12});
+    await expect(target).toHaveAttribute('aria-expanded','true');
+    const panel=nav.locator(turn%2===0?'#desktop-projects':'#desktop-services');
+    const samples=await panel.evaluate(async el=>{
+      const frames=[];
+      for(let frame=0;frame<12;frame++){
+        await new Promise(requestAnimationFrame);
+        const style=getComputedStyle(el),bounds=el.getBoundingClientRect();
+        frames.push({clip:style.clipPath,opacity:style.opacity,transform:style.transform,height:bounds.height,top:bounds.top});
+      }
+      return frames;
+    });
+    for(const frame of samples){expect(frame.clip).toBe('none');expect(frame.opacity).toBe('1');expect(frame.transform).toBe('none');expect(Math.abs(frame.height-baseline.height)).toBeLessThanOrEqual(1);expect(Math.abs(frame.top-baseline.y)).toBeLessThanOrEqual(1);}
+  }
+  expect(await page.evaluate(()=>window.backdropInterruptions)).toBe(0);
+  await page.mouse.move(24,800);await expect(page.locator('[data-nav-scrim]')).toBeHidden();
+});
+
+test('dismissal retracts blur from the viewport bottom before collapsing the menu',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});await page.goto('/');await consent(page);
+  const services=page.getByRole('navigation',{name:'Główna nawigacja',exact:true}).getByRole('link',{name:'Usługi',exact:true});
+  await services.focus();
+  await page.waitForFunction(()=>document.querySelector('#desktop-services').getAnimations({subtree:true}).length===0);
+  const frames=await page.evaluate(async()=>{
+    const panel=document.querySelector('#desktop-services'),scrim=document.querySelector('[data-nav-scrim]');
+    const targetBottom=innerHeight-panel.getBoundingClientRect().bottom;
+    const bottom=element=>{const parts=getComputedStyle(element).clipPath.match(/[-\d.]+(?:px|%)/g)?.map(parseFloat)??[0];return parts[2]??parts[0];};
+    document.querySelector('[aria-controls="desktop-services"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    const result=[];
+    for(let frame=0;frame<90;frame++){
+      await new Promise(requestAnimationFrame);
+      result.push({blurBottom:bottom(scrim),panelBottom:bottom(panel),hidden:scrim.hidden,targetBottom});
+      if(scrim.hidden)break;
+    }
+    return result;
+  });
+  expect(frames.some(frame=>frame.blurBottom>10&&frame.panelBottom===0&&!frame.hidden)).toBe(true);
+  const collapsing=frames.filter(frame=>frame.panelBottom>1&&!frame.hidden);
+  expect(collapsing.length).toBeGreaterThan(0);
+  for(const frame of collapsing)expect(frame.blurBottom).toBeGreaterThanOrEqual(frame.targetBottom-1);
+  expect(frames.at(-1).hidden).toBe(true);
+});

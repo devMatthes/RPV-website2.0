@@ -53,7 +53,7 @@ const path=Astro.url.pathname;
     .navigation--desktop .nav-toggle { display:none; }
     .navigation--desktop .mega-panel { position:fixed; left:0; right:0; top:var(--nav-bottom,81px); z-index:30; max-height:calc(100dvh - var(--nav-bottom,81px)); overflow-y:auto; margin:0; padding:0; border:0; background:var(--mega-surface,#101317); }
     .navigation--desktop .nav-item[data-closing]>.mega-panel { display:block; pointer-events:none; }
-    .mega-inner { width:min(1280px,calc(100% - var(--gutter)*2)); margin-inline:auto; padding-block:40px 48px; display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:64px; }
+    .mega-inner { min-height:388px; width:min(1280px,calc(100% - var(--gutter)*2)); margin-inline:auto; padding-block:40px 48px; display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:64px; }
     .mega-label { margin-bottom:16px; color:var(--color-muted); font:400 13px/20px var(--font-ui); }
     .navigation--desktop .mega-panel a { width:fit-content; max-width:100%; padding:6px 0; border-radius:4px; font:500 16px/24px var(--font-ui); text-decoration:none; }
     .navigation--desktop .mega-primary a { min-height:42px; padding-block:5px; font:500 28px/34px var(--font-heading); letter-spacing:-.3px; }
