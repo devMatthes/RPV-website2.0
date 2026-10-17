@@ -7,8 +7,8 @@ test('desktop navigation: hover, direct parent links, keyboard, dismissal and ca
   await page.setViewportSize({width:1440,height:1000});await page.goto('/');await consent(page);
   const nav=page.getByRole('navigation',{name:'Główna nawigacja',exact:true});
   const services=nav.getByRole('link',{name:'Usługi',exact:true});
-  const toggle=nav.getByRole('button',{name:'Pokaż podmenu Usługi',exact:true});
-  await expect(toggle).toBeVisible();await services.hover();await expect(toggle).toHaveAttribute('aria-expanded','true');
+  const toggle=nav.locator('.nav-toggle').first();
+  await expect(toggle).toBeHidden();await services.hover();await expect(services).toHaveAttribute('aria-expanded','true');
   await expect(nav.locator('#desktop-services .mega-primary a')).toHaveCount(6);
   const panel=nav.locator('#desktop-services');const bounds=await panel.boundingBox();expect(bounds.x).toBe(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(1440);
   expect(bounds.width).toBe(await page.evaluate(()=>document.documentElement.clientWidth));
@@ -19,7 +19,7 @@ test('desktop navigation: hover, direct parent links, keyboard, dismissal and ca
   await services.focus();await page.locator('[data-nav-scrim]').click({position:{x:32,y:bounds.y+bounds.height+32}});await expect(toggle).toHaveAttribute('aria-expanded','false');
   await expect(page.locator('[data-nav-scrim]')).toBeHidden();await expect(page).toHaveURL(/\/$/);
   await services.focus();await services.press('ArrowDown');await expect(nav.locator('.mega-primary').getByRole('link',{name:'Fotowoltaika',exact:true})).toBeFocused();
-  await page.keyboard.press('Escape');await expect(toggle).toBeFocused();await expect(panel).toBeHidden();await expect(page.locator('[data-nav-scrim]')).toBeHidden();
+  await page.keyboard.press('Escape');await expect(services).toBeFocused();await expect(panel).toBeHidden();await expect(page.locator('[data-nav-scrim]')).toBeHidden();
   await services.click();await expect(page).toHaveURL(/\/uslugi\/$/);await expect(page.locator('h1')).toContainText('Usługi dla domu');
   await expect(page.locator('#uslugi article')).toHaveCount(6);await noOverflow(page);
   if(process.env.NAVIGATION_SCREENSHOTS)await page.screenshot({path:'outputs/services-desktop.png',fullPage:true});

@@ -12,6 +12,7 @@ function syncBackdrop() {
 function setOpen(group:HTMLElement,open:boolean) {
   group.toggleAttribute('data-open',open);
   group.querySelector<HTMLButtonElement>('.nav-toggle')?.setAttribute('aria-expanded',String(open));
+  if(group.closest('.navigation--desktop'))group.querySelector<HTMLAnchorElement>('.nav-link')?.setAttribute('aria-expanded',String(open));
   syncBackdrop();
 }
 const closeAll=()=>groups.forEach(group=>setOpen(group,false));
@@ -32,7 +33,7 @@ groups.forEach(group=>{
     if(!(event.relatedTarget instanceof Node)||!group.contains(event.relatedTarget))setOpen(group,false);
   });
   group.addEventListener('keydown',event=>{
-    if(event.key==='Escape'&&group.hasAttribute('data-open')){event.preventDefault();event.stopPropagation();button.focus();setOpen(group,false);}
+    if(event.key==='Escape'&&group.hasAttribute('data-open')){event.preventDefault();event.stopPropagation();(desktop.matches?link:button).focus();setOpen(group,false);}
     if((event.key==='ArrowDown'||event.key==='ArrowUp')&&(event.target===button||event.target===link)){
       event.preventDefault();open();(event.key==='ArrowDown'?links[0]:links.at(-1))?.focus();
     }
