@@ -1,0 +1,12 @@
+# Nawigacja i zbiorcza strona usług
+
+- `/uslugi/` prezentuje wszystkie sześć usług, z istniejącymi kartami i opisami z zatwierdzonych tekstów CMS. Wykorzystuje dotychczasowy layout, typografię i wspólne CTA. Okruszki szczegółów usług prowadzą do tej strony zamiast sekcji strony głównej.
+- W nagłówku nazwy „Usługi” i „Realizacje” są zwykłymi linkami do stron zbiorczych. Rozwinięcie nie przechwytuje kliknięcia nazwy. Osobny przycisk strzałki steruje podmenu i podaje `aria-expanded`/`aria-controls`.
+- Na desktopie podmenu otwiera się po najechaniu. Dostępne są też przycisk i klawiatura: fokus na nazwie, strzałki w dół/górę do pierwszego/ostatniego linku, zwykły Tab, Escape z powrotem do przycisku. Kliknięcie poza menu i wyjście fokusu zamykają rozwinięcie. Podmenu pozostaje otwarte podczas przechodzenia myszą do jego zawartości.
+- Menu usług zawiera sześć podstron i link „Wszystkie usługi”. Menu realizacji korzysta z istniejących kategorii oraz adresów `/realizacje/?kategoria=…`; prowadzą do przefiltrowanej listy, a nie nowych szablonów lub sztucznych projektów. Nazwa „Realizacje” otwiera pełną listę.
+- Na telefonie i tablecie każde podmenu otwiera osobna strzałka. Nazwy nadal nawigują bezpośrednio. Zachowano „Strona główna” oraz brak przycisku „Darmowa wycena” w dialogu menu. Escape najpierw zamyka rozwinięcie, kolejny zamyka dialog i przywraca fokus. Rozwinięte menu może przewijać się pionowo.
+- Bez JavaScriptu desktop zachowuje linki i rozwijanie CSS po hover/fokusie. Interaktywne przyciski pojawiają się dopiero po inicjalizacji skryptu. Nowa nawigacja nie wymaga biblioteki, zapytań API, obrazów ani animacji; HTML jest generowany statycznie. Wszystkie adresy respektują `BASE_URL` dla GitHub Pages.
+
+Scenariusze `tests/browser/navigation.spec.mjs` sprawdzają hover i przejście do podmenu, zwykłe kliknięcia nazw, klawiaturę i Escape, rzeczywiste linki do usług i kategorii realizacji, menu 320/390/834/1099 px, desktop 1100/1280/1440 px, brak poziomego przewijania i desktop bez JavaScriptu oraz kliknięcia dotykowe w kontekście z `hasTouch`. Zrzuty do kontroli wizualnej można zapisać przez `NAVIGATION_SCREENSHOTS=1` w ignorowanym katalogu `outputs/`.
+
+Walidacja lokalna: Astro/TypeScript 100 plików, 0 błędów/ostrzeżeń; statyczny build 72 stron; 4 nowe scenariusze Playwright zaliczone. Zrzuty strony usług i podmenu sprawdzono na desktopie oraz mobile. Skrypt nawigacji w gotowym HTML: 1920 B, około 761 B gzip, inline — bez dodatkowego żądania sieciowego. Nie jest to pełny ponowny pomiar Lighthouse ani test fizycznego Safari/iPhone.
