@@ -1,6 +1,8 @@
 ---
 import { services } from '../../data/home';
 import {publishedTexts} from '../../data/published';
+interface Props { overview?: boolean; }
+const {overview=false}=Astro.props;
 const copy=publishedTexts('home');
 const home = import.meta.env.BASE_URL;
 import arrow from '../../assets/figma/desktop-imgArrowDiagonal.svg?url';
@@ -9,8 +11,8 @@ import lightArrow from '../../assets/figma/desktop-imgArrowDiagonal2.svg?url';
 import module from '../../assets/figma/desktop-imgSolarModuleLineDrawing.svg?url';
 import moduleMobile from '../../assets/figma/mobile-imgSolarModuleLineDrawing.svg?url';
 ---
-<section class="services container" id="uslugi" aria-labelledby="services-title">
-  <div class="intro"><p class="eyebrow">Nasze Usługi</p><h2 id="services-title">Kompleksowe rozwiązania energetyczne dla domu i firmy</h2><p class="subtitle">Innowacyjne technologie i profesjonalne doradztwo w jednym miejscu.</p></div>
+<section class:list={['services','container',{overview}]} id="uslugi" aria-labelledby={overview?'services-overview-title':'services-title'}>
+  {!overview&&<div class="intro"><p class="eyebrow">Nasze Usługi</p><h2 id="services-title">Kompleksowe rozwiązania energetyczne dla domu i firmy</h2><p class="subtitle">Innowacyjne technologie i profesjonalne doradztwo w jednym miejscu.</p></div>}
   <div class="service-grid">{services.map(service => <article class:list={['service-card', `service-card--${service.slug}`]}>
     <div class="category"><span>{service.category}</span><span>{service.number}</span></div>
     <h3><a class="card-link" href={`${home}uslugi/${service.slug}/`}>{service.title}</a></h3>
@@ -30,6 +32,8 @@ import moduleMobile from '../../assets/figma/mobile-imgSolarModuleLineDrawing.sv
   h2 { max-width: 800px; font-size: 32px; line-height: 37px; letter-spacing: -.7px; }
   .subtitle { max-width: 700px; font-size: 16px; line-height: 23px; color: var(--color-muted); }
   .service-grid { display: grid; gap: 16px; margin-top: 40px; }
+  .services.overview { padding-top: 16px; }
+  .overview .service-grid { margin-top: 0; }
   .service-card { position: relative; padding: 24px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius); display: flex; flex-direction: column; gap: 12px; transition: border-color 160ms; }
   .service-card:hover { border-color: #6baee7; }
   .category { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; line-height: 18px; color: var(--color-muted); letter-spacing: 1px; }

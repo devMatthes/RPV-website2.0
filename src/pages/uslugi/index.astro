@@ -1,0 +1,29 @@
+---
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import Breadcrumbs from '../../components/content/Breadcrumbs.astro';
+import ContentCta from '../../components/content/ContentCta.astro';
+import Services from '../../components/home/Services.astro';
+const home=import.meta.env.BASE_URL;
+const description='Fotowoltaika, pompy ciepła, magazyny energii, klimatyzacja i instalacje elektryczne. Poznaj zakres usług RPV i wybierz rozwiązanie dla swojego budynku.';
+---
+<ContentLayout title="Usługi" description={description}>
+  <section class="content-section container services-intro" aria-labelledby="services-overview-title">
+    <Breadcrumbs label="Usługi" />
+    <p class="eyebrow">NASZE USŁUGI</p>
+    <h1 id="services-overview-title">Usługi dla domu,<br /> firm i inwestycji.</h1>
+    <p class="content-description">Od doboru rozwiązania i projektu po montaż i uruchomienie. Poznaj naszą ofertę i sprawdź, co możemy zrobić dla Twojego budynku.</p>
+  </section>
+  <Services overview />
+  <section class="content-section container support" aria-labelledby="services-support-title">
+    <div><h2 class="content-heading" id="services-support-title">Masz już instalację?</h2><p class="content-description">Jeśli potrzebujesz pomocy z działającym systemem, przejdź do formularza serwisowego i opisz problem.</p></div>
+    <a class="text-link" href={`${home}serwis/`}>Zgłoś serwis <span aria-hidden="true">→</span></a>
+  </section>
+  <ContentCta />
+</ContentLayout>
+<style>
+  .services-intro .content-description { max-width: 740px; }
+  .support { border-top: 1px solid var(--color-border); }
+  .support>div { display: grid; gap: 20px; max-width: 740px; }
+  .text-link { gap: 16px; }
+  @media(min-width:1100px) { .support { flex-direction: row; justify-content: space-between; align-items: center; } }
+</style>
