@@ -20,7 +20,7 @@ const {title,description,about=false,editorial=false}=Astro.props;
 .content-page :global(.content-note){font:400 12px/18px var(--font-body);color:var(--color-muted)}
 .content-page :global(.content-columns){display:grid;grid-template-columns:minmax(0,1fr);gap:32px;width:100%}
 .content-page :global(.text-link){display:inline-flex;align-items:center;min-height:48px;font:600 14px/21px var(--font-ui)}
-.content-page :global(a:hover){text-decoration:underline;text-underline-offset:5px}
+.content-page main :global(a:hover){text-decoration:underline;text-underline-offset:5px}
 .content-page :global(.divider){width:100%;border-top:1px solid var(--color-border)}
 @media(min-width:700px){.content-page :global(.content-section){padding-block:64px}.content-page :global(h1){font-size:56px;line-height:64px}.editorial :global(h1){font-size:48px;line-height:55px}.content-page :global(.content-heading){font-size:40px;line-height:46px}.content-page :global(.content-description){font-size:18px;line-height:27px}.content-page :global(.content-columns){grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:1100px){.about::before{height:680px}.content-page :global(.content-section){padding-block:80px}.content-page :global(h1){font-size:72px;line-height:83px}.editorial :global(h1){font-size:64px;line-height:74px}.content-page :global(.content-heading){font-size:48px;line-height:55px}.editorial :global(.content-heading){font-size:40px;line-height:46px}}
