@@ -21,27 +21,37 @@ export async function publicReviews(request: Request, env: WorkerEnv, cors: Reco
     // Separate reviews ceiling plus the existing shared Google budget. Reserve before I/O.
     await consumeGoogle(env.DB, limit(env.GOOGLE_REVIEWS_DAILY_LIMIT, 30), limit(env.GOOGLE_REVIEWS_MONTHLY_LIMIT, 500), now, 'reviews');
     await consumeGoogle(env.DB, limit(env.GOOGLE_DAILY_LIMIT, 100), limit(env.GOOGLE_MONTHLY_LIMIT, 1000), now);
+    let diagnostics: Record<string, string> | undefined;
     try {
       const response = await fetcher(`https://places.googleapis.com/v1/${path}`, {
         method: body ? 'POST' : 'GET',
         headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': env.GOOGLE_PLACES_API_KEY!, 'X-Goog-FieldMask': mask },
-        ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(6000), redirect: 'error',
+        ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(6000), redirect: 'manual',
       });
-      if (!response.ok) { await response.body?.cancel(); throw new Error('Provider unavailable'); }
+      if (!response.ok) {
+        diagnostics = { provider: String(response.status) };
+        try {
+          const error = record(record(JSON.parse(await boundedText(response.body, 16384))).error);
+          const reasons = [error.status, ...(Array.isArray(error.details) ? error.details.map(detail => record(detail).reason) : [])]
+            .filter((value): value is string => typeof value === 'string' && /^[A-Z_]{1,80}$/.test(value));
+          diagnostics.provider += reasons.length ? ' ' + reasons.join(' ') : '';
+        } catch { /* Never expose the provider message, metadata or credentials. */ }
+        throw new Error('Provider unavailable');
+      }
       return objectBody(JSON.parse(await boundedText(response.body, 160 * 1024)));
-    } catch { throw new HttpError(503, unavailable); }
+    } catch (error) { throw new HttpError(503, unavailable, diagnostics ?? { provider: error instanceof Error && /^[A-Za-z]{1,40}$/.test(error.name) ? error.name : 'NETWORK_ERROR' }); }
   }
   let id = env.GOOGLE_REVIEWS_PLACE_ID || (await env.DB.prepare('SELECT place_id FROM google_review_place WHERE singleton=1').first<{place_id:string}>())?.place_id;
   if (!id) {
-    const result = await google('places:searchText', 'places.id', { textQuery: googleReviewListing.search, languageCode: 'pl', regionCode: 'PL', pageSize: 1 });
+    const result = await google('places:searchText', 'places.id', { textQuery: googleReviewListing.search, languageCode: 'pl', regionCode: 'PL', pageSize: 1, includePureServiceAreaBusinesses: true });
     id = Array.isArray(result.places) ? record(result.places[0]).id as string : undefined;
   }
-  if (!placeId(id)) throw new HttpError(503, unavailable);
+  if (!placeId(id)) throw new HttpError(503, unavailable, { provider: 'LISTING_NOT_FOUND' });
   const result = await google(`places/${encodeURIComponent(id)}?languageCode=pl`, 'displayName,formattedAddress,websiteUri,rating,userRatingCount,googleMapsUri,reviews');
   const name = text(record(result.displayName).text, 200) ?? '';
   let matchingWebsite = false;
   try { matchingWebsite = ['rpv.pl', 'www.rpv.pl', 'rpv.net.pl', 'www.rpv.net.pl'].includes(new URL(String(result.websiteUri)).hostname); } catch { /* Address can confirm the listing instead. */ }
-  if (!/\brpv\b/i.test(name) || (!matchingWebsite && !/sobawiny/i.test(String(result.formattedAddress)))) throw new HttpError(503, unavailable);
+  if (!/\brpv\b/i.test(name) || (!matchingWebsite && !/sobawiny/i.test(String(result.formattedAddress)))) throw new HttpError(503, unavailable, { provider: 'LISTING_MISMATCH' });
   // Store the identifier only after confirming the business; Place IDs may be retained.
   await env.DB.prepare('INSERT INTO google_review_place(singleton,place_id) VALUES(1,?) ON CONFLICT(singleton) DO UPDATE SET place_id=excluded.place_id').bind(id).run();
   const url = googleUrl(result.googleMapsUri) ?? googleReviewListing.url;

@@ -4,9 +4,10 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {getPlatformProxy} from 'wrangler';
+import {Miniflare,convertV4MiniflareOptions} from 'miniflare';
 import {createHandler} from '../cloudflare/src/app.ts';
 import {consumeGoogle} from '../cloudflare/src/database.ts';
-const state=await mkdtemp(join(tmpdir(),'rpv-reviews-'));let proxy;
+const state=await mkdtemp(join(tmpdir(),'rpv-reviews-'));let proxy,runtime;
 try {
  execFileSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','migrations','apply','DB','--config','cloudflare/wrangler.jsonc','--local','--persist-to',state],{env:{...process.env,CI:'true'}});
  proxy=await getPlatformProxy({configPath:'cloudflare/wrangler.jsonc',persist:{path:join(state,'v3')},remoteBindings:false});
@@ -28,11 +29,12 @@ try {
  assert.equal(response.headers.get('Cache-Control'),'private, no-store');
  let data=await response.json();assert.equal(calls.length,2);assert.equal(data.reviews.length,2);assert.equal(data.reviews[0].rating,3);assert.equal(data.rating,4.7);assert.equal(data.count,27);
  assert.equal(data.reviews[1].authorUrl,undefined);assert.equal(data.reviews[1].avatarUrl,undefined);assert.equal(data.reviews[1].text,'<script>test</script>');
- assert.equal(calls[0].init.headers['X-Goog-FieldMask'],'places.id');assert.equal(JSON.parse(calls[0].init.body).pageSize,1);
- assert.equal(calls[1].init.headers['X-Goog-Api-Key'],'synthetic-provider-key');assert.ok(!JSON.stringify(data).includes('synthetic-provider-key'));
+ assert.equal(JSON.parse(calls[0].init.body).includePureServiceAreaBusinesses,true);assert.equal(calls[0].init.headers['X-Goog-FieldMask'],'places.id');assert.equal(JSON.parse(calls[0].init.body).pageSize,1);
+ assert.equal(calls[1].init.redirect,'manual');assert.equal(calls[1].init.headers['X-Goog-Api-Key'],'synthetic-provider-key');assert.ok(!JSON.stringify(data).includes('synthetic-provider-key'));
  assert.deepEqual(await db.prepare('SELECT * FROM google_review_place').all().then(x=>x.results),[{singleton:1,place_id:'synthetic_place_id'}]);
  assert.equal((await send()).status,200);assert.equal(calls.length,3); // No reviews cache; only the Place ID is reused.
  provider=()=>Response.json({error:{message:'synthetic-provider-key'}},{status:403});response=await send();assert.equal(response.status,503);assert.ok(!(await response.text()).includes('synthetic-provider-key'));
+ provider=()=>Response.json({error:{status:'PERMISSION_DENIED',message:'synthetic-provider-key',details:[{reason:'API_KEY_HTTP_REFERRER_BLOCKED',metadata:{secret:'synthetic-provider-key'}}]}},{status:403});response=await send();assert.equal((await response.json()).errors.provider,'403 PERMISSION_DENIED API_KEY_HTTP_REFERRER_BLOCKED');
  provider=()=>new Response('x'.repeat(165000));assert.equal((await send()).status,503);
  provider=()=>Response.json({...fixture,displayName:{text:'Inna firma'},formattedAddress:'Warszawa'});assert.equal((await send()).status,503);
  provider=()=>Response.json(fixture);const before=calls.length;
@@ -47,5 +49,17 @@ try {
  await consumeGoogle(db,100,1,Date.now());const sharedBefore=calls.length;
  assert.equal((await send({GOOGLE_MONTHLY_LIMIT:'1'})).status,429);assert.equal(calls.length,sharedBefore);
  assert.equal((await db.prepare('SELECT count(*) n FROM cases').first()).n,0);
+ await db.prepare('DELETE FROM usage_budgets').run();
+ await proxy.dispose();proxy=undefined;
+ const bundle=join(state,'bundle');
+ execFileSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','deploy','--config','cloudflare/wrangler.jsonc','--env','production','--dry-run','--outdir',bundle],{env:{...process.env,CI:'true'}});
+ let runtimeCalls=0;
+ runtime=new Miniflare(convertV4MiniflareOptions({resourcePersistencePath:join(state,'v3'),workers:[{name:'rpv-api-local',modules:true,modulesRoot:bundle,scriptPath:join(bundle,'index.js'),compatibilityDate:'2026-10-11',compatibilityFlags:['nodejs_compat'],
+  bindings:{APP_SECRET:env.APP_SECRET,GOOGLE_PLACES_API_KEY:env.GOOGLE_PLACES_API_KEY,PUBLIC_ORIGINS:'http://127.0.0.1:4321',GOOGLE_REVIEWS_ENABLED:'true',GOOGLE_REVIEWS_PLACE_ID:'',GOOGLE_REVIEWS_DAILY_LIMIT:'30',GOOGLE_REVIEWS_MONTHLY_LIMIT:'500',GOOGLE_DAILY_LIMIT:'100',GOOGLE_MONTHLY_LIMIT:'1000'},
+  d1Databases:{DB:'00000000-0000-0000-0000-000000000001'},outboundService:async request=>{runtimeCalls++;assert.equal(new URL(request.url).hostname,'places.googleapis.com');return Response.json(fixture);},
+ }]}));
+ const compiled=await runtime.dispatchFetch('https://api.test/api/reviews',{headers:{origin:'http://127.0.0.1:4321','CF-Connecting-IP':'192.0.2.250'}});
+ assert.equal(compiled.status,200,await compiled.clone().text());assert.equal((await compiled.json()).reviews.length,2);assert.equal(runtimeCalls,1);
+ console.log('Compiled workerd: real request options, outbound provider fixture and persistent D1 budget passed.');
  console.log('Reviews: fixed verified listing, minimal fields, source/author attribution, real ratings, safe URLs, no content storage, provider failure/size limits, concurrent ceilings, shared address budget and UTC monthly reset passed.');
-} finally {await proxy?.dispose();await rm(state,{recursive:true,force:true});}
+} finally {await runtime?.dispose();await proxy?.dispose();await rm(state,{recursive:true,force:true});}
