@@ -1,48 +1,56 @@
 ---
-import { Image } from 'astro:assets';
-import { reviews } from '../../data/home';
-import avatar0 from '../../assets/figma/desktop-imgAvatar.png';
-import avatar1 from '../../assets/figma/desktop-imgAvatar1.png';
-import avatar2 from '../../assets/figma/desktop-imgAvatar2.png';
-import avatar3 from '../../assets/figma/desktop-imgAvatar3.png';
-import avatar4 from '../../assets/figma/desktop-imgAvatar4.png';
-const avatars = [avatar0,avatar1,avatar2,avatar3,avatar4];
+import { googleReviewListing } from '../../lib/google-reviews';
+const api = import.meta.env.PUBLIC_SERVICE_API_URL ?? '';
 ---
-<section class="testimonials" aria-labelledby="testimonials-title">
-  <h2 class="container" id="testimonials-title">Zaufali nam profesjonaliści</h2>
-  <p class="subtitle container">Zobacz, co nasi klienci mówią o współpracy z RPV.pl. Jakość i innowacja potwierdzona przez Google Reviews.</p>
-  <div class="carousel" tabindex="0" aria-label="Opinie klientów">
-    <div class="track">{[0,1].map(copy => <div class="review-group" aria-hidden={copy === 1 ? 'true' : undefined}>
-      {reviews.map((review,i) => <figure class="review">
-        <p class="stars" aria-label="5 na 5 gwiazdek">★★★★★</p>
-        <blockquote>„{review.quote}”</blockquote>
-        <figcaption><Image src={avatars[i]} alt="" width={48} height={48} widths={[48,96]} sizes="48px" format="webp" /><div><p class="reviewer-name">{review.name}</p><p class="reviewer-role">{review.role}</p></div></figcaption>
-      </figure>)}
-    </div>)}</div>
+<div data-reviews-trigger aria-hidden="true"></div>
+<section class="testimonials" data-google-reviews data-api={api} aria-labelledby="testimonials-title" hidden>
+  <h2 class="container" id="testimonials-title">Zaufali nam klienci</h2>
+  <div class="summary container">
+    <p data-review-summary></p>
+    <a href={googleReviewListing.url} data-review-listing target="_blank" rel="noopener noreferrer">Zobacz opinie w <span class="google-attribution" translate="no">Google Maps</span><span class="sr-only"> (otwiera nową kartę)</span></a>
   </div>
+  <p class="subtitle container">Opinie klientów RPV. Kolejność według trafności w Google Maps.</p>
+  <div class="carousel container" tabindex="0" role="region" aria-label="Opinie klientów — przewiń, aby zobaczyć kolejne">
+    <div class="track" data-review-cards></div>
+  </div>
+  <p class="policy container"><a href="https://support.google.com/contributionpolicy/answer/7400114" target="_blank" rel="noopener noreferrer">Jak Google weryfikuje opinie</a> · <a href="https://maps.google.com/help/terms_maps/" target="_blank" rel="noopener noreferrer">Warunki Google Maps</a> · <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Prywatność Google</a></p>
+  <template data-review-template>
+    <figure class="review">
+      <p class="stars" data-review-stars></p>
+      <blockquote data-review-text></blockquote>
+      <figcaption>
+        <span class="avatar"><span data-review-initials aria-hidden="true"></span><img data-review-avatar alt="" width="48" height="48" loading="lazy" decoding="async" referrerpolicy="no-referrer" hidden /></span>
+        <div><a class="reviewer-name" data-review-author target="_blank" rel="noopener noreferrer"></a><p class="reviewer-date" data-review-date></p></div>
+      </figcaption>
+      <a class="review-source" data-review-source target="_blank" rel="noopener noreferrer">Zobacz opinię w Google Maps</a>
+    </figure>
+  </template>
 </section>
 <script>
-  const section = document.querySelector<HTMLElement>('.testimonials');
-  if (section) {
-    new IntersectionObserver(entries => section.classList.toggle('offscreen', !entries[0].isIntersecting)).observe(section);
-  }
+  import '../../scripts/google-reviews';
 </script>
 <style>
-  .testimonials { padding-block: 32px 64px; display: flex; flex-direction: column; align-items: center; gap: 40px; --review-width: 312px; --review-gap: 24px; }
+  [data-reviews-trigger] { height: 1px; margin-bottom: -1px; visibility: hidden; }
+  .testimonials[hidden] { display: none; }
+  .testimonials { padding-block: 32px 64px; display: flex; flex-direction: column; align-items: center; gap: 24px; --review-width: 312px; }
   h2 { font: 700 32px/37px var(--font-body); letter-spacing: -.7px; text-align: center; }
+  .summary { display: flex; gap: 12px 24px; justify-content: center; flex-wrap: wrap; text-align: center; }
+  .summary p { font-weight: 600; }
+  .summary a, .policy a, .review-source { text-decoration: underline; text-underline-offset: 3px; }
+  .google-attribution { font: 400 14px/20px 'Roboto Variable', Roboto, sans-serif; white-space: nowrap; }
   .subtitle { max-width: 700px; color: var(--color-muted); text-align: center; font-size: 16px; line-height: 24px; }
-  .carousel { width: 100%; overflow: hidden; }
-  .track { display: flex; width: max-content; animation: review-loop 70s linear infinite; }
-  .review-group { display: flex; gap: var(--review-gap); padding-right: var(--review-gap); }
-  .review { width: var(--review-width); min-height: 304px; padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius); display: flex; flex-direction: column; gap: 20px; }
+  .carousel { overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; padding-bottom: 16px; }
+  .track { display: flex; gap: 24px; }
+  .review { flex: 0 0 min(var(--review-width), 100%); min-width: 0; min-height: 304px; padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius); display: flex; flex-direction: column; gap: 20px; scroll-snap-align: start; overflow-wrap: anywhere; }
   .stars { color: var(--color-accent); font: 500 20px/30px var(--font-ui); }
-  blockquote { font: 300 16px/24px var(--font-body); flex: 1; }
+  blockquote { font: 300 16px/24px var(--font-body); flex: 1; white-space: pre-line; }
   figcaption { display: flex; align-items: center; gap: 16px; }
-  figcaption :global(img) { border-radius: 50%; object-fit: cover; }
+  .avatar { width: 48px; height: 48px; flex: 0 0 48px; position: relative; border-radius: 50%; background: var(--color-surface); display: grid; place-items: center; }
+  .avatar img { position: absolute; inset: 0; border-radius: 50%; object-fit: cover; }
+  .avatar img[hidden] { display: none; }
   .reviewer-name { font-size: 16px; line-height: 24px; font-weight: 600; }
-  .reviewer-role { font-size: 12px; line-height: 18px; color: var(--color-muted); margin-top: 4px; }
-  .carousel:hover .track, .carousel:focus-within .track, .offscreen .track { animation-play-state: paused; }
-  @keyframes review-loop { to { transform: translateX(-50%); } }
+  .reviewer-date, .policy, .review-source { font-size: 12px; line-height: 18px; color: var(--color-muted); }
+  .reviewer-date { margin-top: 4px; }
+  .policy { text-align: center; }
   @media (min-width: 700px) { .testimonials { --review-width: 400px; padding-block: 0 80px; } h2 { font-size: 48px; line-height: 55px; } .subtitle { font-size: 18px; line-height: 27px; } .review { min-height: 280px; padding: 32px; } }
-  @media (prefers-reduced-motion: reduce) { .track { animation: none; } .carousel { overflow-x: auto; } .review-group[aria-hidden] { display: none; } }
 </style>

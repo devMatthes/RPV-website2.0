@@ -34,3 +34,9 @@ Responsywne AVIF/WebP generowane w buildzie, eager/high-priority dla zdjęcia LC
 To lokalny etap wizualny strony głównej. Nie ma backendu ani obsługi formularzy. CTA wyceny i serwisu przewijają do danych kontaktowych; oferta ma nieaktywne odnośniki do czasu dodania podstron. Mapa jest wizualną ilustracją, nie interaktywną bazą realizacji. Poradnik i dokumenty prawne są obecnie tekstem w stopce.
 
 Przed publikacją trzeba wymienić przykładowe opinie o AI, potwierdzić przykładowe lokalizacje Warszawa / 3,320 kW, statystyki 500+ / 20+, deklarację lidera, dane kontaktowe i treści prawne. Podgląd ma noindex/nofollow. Dalsze podstrony w `tasks.md`; testy Safari/Firefox i na fizycznych urządzeniach pozostają przed publikacją.
+
+## Aktualizacja opinii — 18.10.2026
+
+Przykładowe recenzje z Figmy zastąpiono integracją Google Places na Cloudflare. Treści nie trafiają do statycznego builda ani D1. Sekcja jest całkowicie ukryta do czasu uzyskania poprawnych opinii; niepowodzenie i wyczerpanie limitu nie pozostawiają pustego miejsca. Karty używają natywnego przewijania bez automatycznej animacji. Szczegóły konfiguracji i limitów: [google-reviews.md](google-reviews.md).
+
+Sprawdzono 9 scenariuszy przeglądarkowych, w tym 320/390/834/1440 px, leniwe pojedyncze pobranie, prawdziwe oceny, atrybucję, brak wstrzykiwania HTML, ukrycie przy 503/429 i pustych lub niepoprawnych opiniach. Testy D1 obejmują równoczesne limity, wspólną pulę z adresami, zmianę miesiąca, brak cache treści i bezpieczną diagnostykę. Dodatkowo skompilowany Worker uruchomiono w workerd z symulowanym dostawcą. Sprawdzono rzeczywiste pobranie z właściwej wizytówki na produkcyjnym API.

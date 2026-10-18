@@ -36,10 +36,11 @@ test('PV artwork anchors to the card bottom-right, reserving the left for the of
   assert.doesNotMatch(source, /\.service-card--fotowoltaika \.artwork[^}]*object-fit: cover/);
 });
 
-test('testimonials have no manual pause toggle, while retaining reduced-motion support', async () => {
+test('testimonials use native scrolling without automatic motion', async () => {
   const source = await readFile(new URL('src/components/home/Testimonials.astro', root), 'utf8');
   assert.doesNotMatch(source, /pause-button|user-paused|aria-pressed/);
-  assert.match(source, /prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(source, /@keyframes|animation:\s*review-loop/);
+  assert.match(source, /overflow-x: auto/);
 });
 
 test('cards use borderless subtle hover scaling with reduced-motion support', async () => {
