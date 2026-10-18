@@ -50,6 +50,8 @@ jobs:
         run: npm run cf:db:test
       - name: Test Workers service API and address integration
         run: npm run cf:api:test
+      - name: Test Google reviews, attribution and request ceilings
+        run: npm run cf:reviews:test
       - name: Test private R2 uploads and cost safeguards
         run: npm run cf:files:test
       - name: Test contact API and private dashboard data

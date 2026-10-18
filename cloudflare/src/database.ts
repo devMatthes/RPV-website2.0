@@ -9,12 +9,12 @@ export async function consumeWindow(db: D1Database, owner: string, action: strin
     WHERE hits < ? RETURNING hits`).bind(owner, action, start, start + duration, max).first();
   if (!row) throw new HttpError(429, 'Zbyt wiele prób. Spróbuj ponownie później.', undefined, Math.ceil((start + duration - now) / 1000));
 }
-export async function consumeGoogle(db: D1Database, daily: number, monthly: number, now: number) {
+export async function consumeGoogle(db: D1Database, daily: number, monthly: number, now: number, prefix = 'google') {
   const date = new Date(now); const day = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
   const month = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1);
   const nextMonth = Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1);
   const statements = [
-    ['google-day', day, day + 86400000, daily], ['google-month', month, nextMonth, monthly],
+    [`${prefix}-day`, day, day + 86400000, daily], [`${prefix}-month`, month, nextMonth, monthly],
   ].flatMap(([scope, start, end, ceiling]) => [
     db.prepare("INSERT OR IGNORE INTO usage_budgets(scope,metric,period_start,period_end,ceiling) VALUES (?,'google_requests',?,?,?)").bind(scope, start, end, ceiling),
     db.prepare("UPDATE usage_budgets SET consumed = consumed + 1, ceiling = min(ceiling, ?) WHERE scope = ? AND metric = 'google_requests' AND period_start = ?").bind(ceiling, scope, start),

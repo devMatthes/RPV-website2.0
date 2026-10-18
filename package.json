@@ -25,6 +25,7 @@
     "cf:db:migrate:local": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --local",
     "cf:db:migrate:staging": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --env staging --remote",
     "cf:db:migrate:production": "wrangler d1 migrations apply DB --config cloudflare/wrangler.jsonc --env production --remote",
+    "cf:reviews:test": "node --experimental-strip-types scripts/cloudflare-reviews-test.mjs",
     "cf:api:test": "node --experimental-strip-types scripts/cloudflare-api-test.mjs",
     "cf:files:test": "node --experimental-strip-types scripts/cloudflare-files-test.mjs",
     "cf:panel:build": "node scripts/cloudflare-panel-build.mjs",

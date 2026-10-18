@@ -1,3 +1,4 @@
+import { publicReviews } from './reviews.ts';
 import { addressAPI } from './address.ts';
 import { allowedOrigins, enabled, secret, type WorkerEnv } from './config.ts';
 import { consumeWindow } from './database.ts';
@@ -18,7 +19,7 @@ import { adminRecovery } from './recovery.ts';
 
 const routes = new Map([
   ['/api/health', 'GET, HEAD'], ['/api/config', 'GET'], ['/api/service', 'POST'],
-  ['/api/contact', 'POST'],
+  ['/api/contact', 'POST'], ['/api/reviews', 'GET'],
   ['/api/address/suggestions', 'POST'], ['/api/address/details', 'POST'],
   ['/api/admin/me', 'GET'], ['/api/admin/cases', 'GET'], ['/api/admin/logout', 'POST'],
   ['/api/admin/maintenance/recovery', 'POST'],
@@ -83,6 +84,7 @@ export function createHandler(fetcher?: typeof fetch, accessKeys?: JWTVerifyGetK
           limits: fileLimits,
         }, 200, cors);
         if (!allowed) throw new HttpError(403, 'Niedozwolone źródło żądania.');
+        if (path === '/api/reviews') return await publicReviews(request,env,cors,fetcher??fetch);
         if (!enabled(env)) throw new HttpError(503, 'Usługa nie jest jeszcze uruchomiona.');
         const now = Date.now();
         const owner = await sign(`ip:${request.headers.get('CF-Connecting-IP') ?? 'unknown'}`, secret(env));
