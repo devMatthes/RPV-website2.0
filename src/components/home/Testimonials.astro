@@ -31,6 +31,7 @@ const api = import.meta.env.PUBLIC_SERVICE_API_URL ?? '';
 </script>
 <style>
   [data-reviews-trigger] { height: 1px; margin-bottom: -1px; visibility: hidden; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .testimonials[hidden] { display: none; }
   .testimonials { padding-block: 32px 64px; display: flex; flex-direction: column; align-items: center; gap: 24px; --review-width: 312px; }
   h2 { font: 700 32px/37px var(--font-body); letter-spacing: -.7px; text-align: center; }
