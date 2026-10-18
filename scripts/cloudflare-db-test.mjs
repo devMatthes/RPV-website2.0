@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -113,7 +113,9 @@ try {
   assert.match(migrate(), /No migrations to apply/);
   proxy = await getPlatformProxy({ configPath: 'cloudflare/wrangler.jsonc', persist: { path: join(state, 'v3') }, remoteBindings: false });
   assert.equal((await proxy.env.DB.prepare("SELECT value FROM counters WHERE key = 'migration-preserved'").first()).value, 7);
-  assert.equal((await proxy.env.DB.prepare('SELECT count(*) AS n FROM d1_migrations').first()).n, 7);
+  const expectedMigrations = (await readdir(new URL('../cloudflare/migrations/', import.meta.url))).filter(name => /^\d+_.*\.sql$/.test(name)).sort();
+  const appliedMigrations = await proxy.env.DB.prepare('SELECT name FROM d1_migrations ORDER BY name').all();
+  assert.deepEqual(appliedMigrations.results.map(row => row.name), expectedMigrations);
   console.log('D1 migrations: retention, private files, CMS isolation, session constraints, atomic budgets, rollback and reapply OK');
 } finally {
   if (proxy) await proxy.dispose();
