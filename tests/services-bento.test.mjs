@@ -17,13 +17,35 @@ test('bento uses five optimized product photographs with transparent backgrounds
   }
 });
 
-test('service cards retain CMS copy, accessible full-card navigation and separate quote action', async () => {
+test('service cards retain CMS copy and accessible full-card navigation without a quote action', async () => {
   const source = await readFile(new URL('src/components/home/Services.astro', root), 'utf8');
   assert.match(source, /publishedTexts\('home'\)/);
   assert.match(source, /aria-labelledby=\{titleId\} aria-describedby=\{descriptionId\}/);
   assert.match(source, /home \+ 'uslugi\/' \+ service\.slug/);
-  assert.match(source, /class="quote" href=\{home \+ 'kontakt\/'\}/);
+  assert.doesNotMatch(source, /class="quote"|Darmowa wycena/);
   assert.match(source, /card-link:focus-visible/);
   assert.match(source, /loading="lazy"/);
   assert.doesNotMatch(source, /ArrowDiagonal|SolarModuleLineDrawing|Bestseller|↗|class="benefits"/);
+  assert.doesNotMatch(source, /Usługi RPV|class="eyebrow"/);
+});
+
+test('PV artwork anchors to the card bottom-right, reserving the left for the offer', async () => {
+  const source = await readFile(new URL('src/components/home/Services.astro', root), 'utf8');
+  assert.match(source, /\.service-card--fotowoltaika \.artwork \{ position: absolute; width: 76%; aspect-ratio: 1024 \/ 1490; right: -15%; bottom: -14%;/);
+  assert.doesNotMatch(source, /\.service-card--fotowoltaika \{[^}]*background:/);
+  assert.doesNotMatch(source, /\.service-card--fotowoltaika \.artwork[^}]*object-fit: cover/);
+});
+
+test('testimonials have no manual pause toggle, while retaining reduced-motion support', async () => {
+  const source = await readFile(new URL('src/components/home/Testimonials.astro', root), 'utf8');
+  assert.doesNotMatch(source, /pause-button|user-paused|aria-pressed/);
+  assert.match(source, /prefers-reduced-motion: reduce/);
+});
+
+test('cards use borderless subtle hover scaling with reduced-motion support', async () => {
+  const source = await readFile(new URL('src/components/home/Services.astro', root), 'utf8');
+  assert.match(source, /border: 0/);
+  assert.match(source, /transform: scale\(1\.015\)/);
+  assert.match(source, /prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(source, /border-color/);
 });

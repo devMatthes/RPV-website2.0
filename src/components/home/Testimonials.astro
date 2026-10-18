@@ -11,7 +11,7 @@ const avatars = [avatar0,avatar1,avatar2,avatar3,avatar4];
 <section class="testimonials" aria-labelledby="testimonials-title">
   <h2 class="container" id="testimonials-title">Zaufali nam profesjonaliści</h2>
   <p class="subtitle container">Zobacz, co nasi klienci mówią o współpracy z RPV.pl. Jakość i innowacja potwierdzona przez Google Reviews.</p>
-  <div class="carousel" tabindex="0" aria-label="Opinie — przewijaj poziomo lub zatrzymaj animację">
+  <div class="carousel" tabindex="0" aria-label="Opinie klientów">
     <div class="track">{[0,1].map(copy => <div class="review-group" aria-hidden={copy === 1 ? 'true' : undefined}>
       {reviews.map((review,i) => <figure class="review">
         <p class="stars" aria-label="5 na 5 gwiazdek">★★★★★</p>
@@ -20,17 +20,9 @@ const avatars = [avatar0,avatar1,avatar2,avatar3,avatar4];
       </figure>)}
     </div>)}</div>
   </div>
-  <button class="pause-button" type="button" aria-pressed="false">Zatrzymaj animację opinii</button>
 </section>
 <script>
   const section = document.querySelector<HTMLElement>('.testimonials');
-  const button = section?.querySelector<HTMLButtonElement>('.pause-button');
-  button?.addEventListener('click', () => {
-    const paused = button.getAttribute('aria-pressed') !== 'true';
-    button.setAttribute('aria-pressed', String(paused));
-    button.textContent = paused ? 'Wznów animację opinii' : 'Zatrzymaj animację opinii';
-    section?.classList.toggle('user-paused', paused);
-  });
   if (section) {
     new IntersectionObserver(entries => section.classList.toggle('offscreen', !entries[0].isIntersecting)).observe(section);
   }
@@ -49,12 +41,8 @@ const avatars = [avatar0,avatar1,avatar2,avatar3,avatar4];
   figcaption :global(img) { border-radius: 50%; object-fit: cover; }
   .reviewer-name { font-size: 16px; line-height: 24px; font-weight: 600; }
   .reviewer-role { font-size: 12px; line-height: 18px; color: var(--color-muted); margin-top: 4px; }
-  .pause-button { background: transparent; border: 1px solid var(--color-border); border-radius: 8px; font: 500 12px/18px var(--font-ui); padding: 8px 12px; min-height: 44px; }
-  .carousel:hover .track, .carousel:focus-within .track, .user-paused .track, .offscreen .track { animation-play-state: paused; }
-  .user-paused .carousel { overflow-x: auto; }
-  .user-paused .track { animation: none; }
-  .user-paused .review-group[aria-hidden] { display: none; }
+  .carousel:hover .track, .carousel:focus-within .track, .offscreen .track { animation-play-state: paused; }
   @keyframes review-loop { to { transform: translateX(-50%); } }
   @media (min-width: 700px) { .testimonials { --review-width: 400px; padding-block: 0 80px; } h2 { font-size: 48px; line-height: 55px; } .subtitle { font-size: 18px; line-height: 27px; } .review { min-height: 280px; padding: 32px; } }
-  @media (prefers-reduced-motion: reduce) { .track { animation: none; } .carousel { overflow-x: auto; } .review-group[aria-hidden], .pause-button { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .track { animation: none; } .carousel { overflow-x: auto; } .review-group[aria-hidden] { display: none; } }
 </style>

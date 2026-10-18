@@ -22,7 +22,7 @@ import dot from '../../assets/figma/desktop-imgEllipse2.svg?url';
     <div class="supporting-info">
       <div class="leadership"><p>{copy.leadershipTitle}</p><p class="muted">{copy.leadershipDescription}</p></div>
       <dl class="statistics"><div><dt>Instalacji</dt><dd>{copy.installationCount}</dd></div><div><dt>Lat doświadczenia</dt><dd>{copy.experienceYears}</dd></div></dl>
-      <div class="invitation"><p>{copy.invitationTitle}</p><p class="muted">{copy.invitationDescription}</p><Button href={`${import.meta.env.BASE_URL}o-nas/`}>O nas →</Button></div>
+      <div class="invitation"><p>{copy.invitationTitle}</p><p class="muted">{copy.invitationDescription}</p><Button href={`${import.meta.env.BASE_URL}o-nas/`}>O nas</Button></div>
     </div>
   </div>
 </section>
@@ -51,10 +51,23 @@ import dot from '../../assets/figma/desktop-imgEllipse2.svg?url';
   .supporting-info { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 40px; font-size: 14px; line-height: 21px; text-align: center; }
   .leadership p + p { margin-top: 8px; }
   .statistics { display: flex; justify-content: center; gap: 24px; margin: 0; width: 100%; }
-  .statistics div { display: flex; flex-direction: column-reverse; gap: 8px; flex: 1; max-width: 150px; }
+  .statistics div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 8px; flex: 1; max-width: 150px; }
   dt { color: var(--color-muted); } dd {overflow-wrap:anywhere; margin: 0; font-size: 40px; line-height: 46px; font-weight: 700; letter-spacing: -.7px; }
   .invitation { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-  .invitation :global(.button) { min-height: 44px; width: 120px; }
+  .invitation :global(.button) { width: auto; }
+  @media (max-width: 1099px) {
+    .supporting-info { display: grid; grid-template-columns: 1fr 1.15fr 1.3fr; align-items: start; gap: 16px; text-align: left; margin-top: -24px; position: relative; }
+    .statistics { padding-top: 36px; gap: 12px; text-align: center; }
+    .statistics div { min-width: 0; }
+    .invitation { align-items: end; text-align: right; }
+  }
+  @media (max-width: 699px) {
+    .supporting-info { font-size: 10px; line-height: 15px; gap: 8px; margin-top: 12px; }
+    .statistics { gap: 6px; padding-top: 28px; }
+    dd { font-size: clamp(20px, 6vw, 32px); line-height: 1.15; white-space: nowrap; }
+    .invitation { gap: 8px; }
+    .invitation :global(.button) { font-size: 12px; line-height: 18px; padding: 10px 16px; min-height: 40px; }
+  }
   @media (max-width: 359px) { .pin-label { min-width: 74px; padding-inline: 4px; } }
   @media (min-width: 700px) { .experience { padding-block: 96px 64px; gap: 0; } .brand-photo { gap: 32px; } .brand-photo :global(.team-photo) { width: 200px; height: 100px; } h2, h2 span:first-child { font-size: 72px; line-height: 83px; } .brand-statement { margin-bottom: -40px; position: relative; z-index: 1; } }
   @media (min-width: 1100px) { h2, h2 span:first-child { font-size: 96px; line-height: 110px; } .map-and-info { position: relative; } .supporting-info { position: absolute; inset: auto 0 64px; margin-inline: auto; max-width: 900px; flex-direction: row; align-items: start; justify-content: space-between; gap: 40px; text-align: left; } .leadership { flex: 1; } .statistics { flex: none; width: 328px; padding-top: 48px; text-align: center; } dd { font-size: 48px; line-height: 55px; } .invitation { flex: 1; align-items: end; text-align: right; } .pin { font-size: 8px; line-height: normal; } .pin--1 { left: 54.3%; top: 40.77%; } .pin--2 { left: 70.67%; top: 30.17%; } .pin--3 { left: 31.34%; top: 35.27%; } .pin-label { width: 160px; min-height: 60px; padding: 10px; gap: 0; border-radius: 10px; } .pin strong { font-size: 12px; margin-bottom: 6px; } .power-label { display: block; } .pin-dot { display: block; position: absolute; left: -25px; top: 72px; } }

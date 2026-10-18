@@ -26,13 +26,14 @@ const home = import.meta.env.BASE_URL;
   .hero-intro p { max-width: 680px; font: 400 16px/24px var(--font-body); color: var(--color-muted); }
   .hero-actions { display: flex; justify-content: center; gap: 8px; }
   .hero-actions :global(.button) { padding-inline: 14px; }
-  .hero-photos { display: grid; gap: 16px; width: 100%; max-width: 1392px; }
+  .hero-photos { display: none; gap: 16px; width: 100%; max-width: 1392px; }
   .hero-photos :global(picture) { display: block; border-radius: var(--radius); overflow: hidden; min-width: 0; height: 240px; }
   .hero-photos :global(picture.installer-photo) { height: 200px; }
   .hero-photos :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .partners { padding-top: 32px; font-weight: 700; text-align: center; color: var(--color-muted); font-size: 14px; line-height: 21px; }
   .partners ul { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px 20px; padding: 0; margin: 24px 0 0; list-style: none; }
   @media (max-width: 359px) { .hero-actions { flex-wrap: wrap; } }
+  @media (min-width: 700px) { .hero-photos { display: grid; } }
   @media (min-width: 700px) { .hero { padding-block: 96px; } h1 { overflow-wrap:anywhere; max-width: 896px; font-size: 56px; line-height: 64px; } .hero-intro p { font-size: 20px; line-height: 30px; } .hero-photos { grid-template-columns: 781fr 563fr; gap: 48px; } .hero-photos :global(picture), .hero-photos :global(picture.installer-photo) { height: 300px; } .hero-actions { gap: 12px; } .hero-actions :global(.button) { padding-inline: 20px; } .partners ul { font-size: 20px; line-height: 30px; gap: 16px 48px; } }
   @media (min-width: 1100px) { h1 { font-size: 72px; line-height: 83px; } .hero-photos :global(picture), .hero-photos :global(picture.installer-photo) { height: 480px; } .hero-actions :global(.button--primary) { width: 192px; } .hero-actions :global(.button--ghost) { width: 148px; } }
 </style>

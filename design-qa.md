@@ -62,3 +62,31 @@ Date: 2026-10-18. Scope: `src/components/home/Services.astro`, shared by the lan
 - [x] Build, type check and tests pass.
 
 final result: passed
+
+## Follow-up — borderless cards and copy clearance
+
+- Removed the PV quote action; the full card still opens the PV service page.
+- Removed default/hover borders. Fine-pointer hover scales the card to 1.015; reduced-motion disables the transform. Keyboard focus remains visible independently of hover.
+- Body descriptions are now 14px with 1.5 line height; headings retain their sizes. Left padding reduced to 20px (22px desktop).
+- PV and AC artwork now follows the copy in normal flow; battery/electrical descriptions reserve horizontal space for imagery.
+- Browser checked at 320, 390, 700, 834, 1100, 1280 and 1536px: no document overflow or text outside card bounds, zero PV quote actions. Desktop/tablet/mobile screenshots visually inspected for copy/art clearance.
+- Evidence: `outputs/bento/desktop-refinement.png`, `outputs/bento/mobile-refinement.png`.
+- Tests, Astro check and production build pass after the refinement.
+
+## Annotation follow-up — responsive landing page
+
+- PV artwork is contained, right/bottom aligned in its own layout area at every breakpoint; the complete bottom edge and the offer remain visible, with no cover crop or negative bottom margin.
+- Removed the services eyebrow and the manual testimonial pause button, event handler and toggle styles. Reduced-motion and hover/keyboard behavior remain supported.
+- Removed the “O nas” arrow and its fixed button width; it uses the shared button typography/proportions (compact on mobile).
+- Cookie settings now underline on hover like neighboring footer links.
+- Stats retain the horizontal leadership / numbers / invitation composition below desktop, with both values aligned on the same top edge.
+- Tablet footer uses four columns like desktop. Phone footer retains the three navigation/contact columns, with the brand above them for readability. The legal row stays horizontal.
+- Hero photographs are hidden below 700px.
+- Browser verified at 320, 390, 699, 700, 834, 1100 and 1536px: no horizontal overflow; expected image visibility; no removed controls/eyebrow; aligned stats; PV object-fit is contain. Tablet and phone section captures visually inspected.
+- `npm test`, `npm run check`, `npm run build` and `git diff --check` pass.
+
+### PV art-direction correction
+
+Supersedes the fully contained PV composition above: panel now anchors to the actual card's bottom-right edge with intentional right/bottom cropping, like the battery and switchgear. Responsive width/right offsets reserve the left-side offer area; there is no inner image-slot cutoff or floating product. Phone and tablet captures visually checked; headings/descriptions remain above the panel.
+
+Final approved adjustment: PV inherits the same charcoal surface and muted body copy as the other cards. Panel moved further down and left to close the lower edge. Tablet evidence: `outputs/bento/pv-dark-anchored.png`.
